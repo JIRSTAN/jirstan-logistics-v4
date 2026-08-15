@@ -1,0 +1,113 @@
+{
+  "CITIES": {
+    "Praha": {"x": 0.75, "y": 0.55, "isAirport": true, "isPort": false},
+    "Brno": {"x": 0.85, "y": 0.65, "isAirport": false, "isPort": false},
+    "Plzeň": {"x": 0.68, "y": 0.58, "isAirport": false, "isPort": false},
+    "Ostrava": {"x": 0.90, "y": 0.55, "isAirport": false, "isPort": false},
+    "Mnichov": {"x": 0.60, "y": 0.70, "isAirport": true, "isPort": false},
+    "Vídeň": {"x": 0.80, "y": 0.75, "isAirport": true, "isPort": false},
+    "Berlín": {"x": 0.65, "y": 0.35, "isAirport": true, "isPort": false},
+    "Varšava": {"x": 0.88, "y": 0.35, "isAirport": true, "isPort": false},
+    "Hamburk": {"x": 0.62, "y": 0.25, "isAirport": false, "isPort": true},
+    "Drážďany": {"x": 0.70, "y": 0.45, "isAirport": false, "isPort": false},
+    "Bratislava": {"x": 0.82, "y": 0.70, "isAirport": false, "isPort": false},
+    "Budapešť": {"x": 0.88, "y": 0.80, "isAirport": false, "isPort": false},
+    "Paříž": {"x": 0.55, "y": 0.50, "isAirport": true, "isPort": false},
+    "Řím": {"x": 0.70, "y": 0.90, "isAirport": true, "isPort": true},
+    "Londýn": {"x": 0.52, "y": 0.35, "isAirport": true, "isPort": true},
+    "New York": {"x": 0.25, "y": 0.40, "isAirport": true, "isPort": true},
+    "Los Angeles": {"x": 0.08, "y": 0.55, "isAirport": true, "isPort": true},
+    "Miami": {"x": 0.22, "y": 0.75, "isAirport": true, "isPort": true},
+    "Toronto": {"x": 0.20, "y": 0.30, "isAirport": true, "isPort": false},
+    "Chicago": {"x": 0.18, "y": 0.42, "isAirport": true, "isPort": false}
+  },
+  "LICENSES": [
+    {"id": "express", "n": "EXPRES", "color": "#ff9d00", "minLvl": 1, "cost": 15000},
+    {"id": "stehovani", "n": "STĚHOVÁNÍ", "color": "#8d6e63", "minLvl": 3, "cost": 20000},
+    {"id": "sypky", "n": "SYPKÉ", "color": "#ffca28", "minLvl": 5, "cost": 30000},
+    {"id": "wood", "n": "DŘEVO", "color": "#795548", "minLvl": 6, "cost": 35000},
+    {"id": "frigo", "n": "FRIGO", "color": "#00e5ff", "minLvl": 8, "cost": 40000},
+    {"id": "leky", "n": "LÉKY", "color": "#ff4081", "minLvl": 10, "cost": 50000},
+    {"id": "cars", "n": "AUTA", "color": "#ab47bc", "minLvl": 12, "cost": 60000},
+    {"id": "adr", "n": "ADR", "color": "#ff1744", "minLvl": 15, "cost": 80000},
+    {"id": "heavy", "n": "NADROZMĚR", "color": "#f57c00", "minLvl": 15, "cost": 80000},
+    {"id": "ceniny", "n": "CENINY", "color": "#ffd700", "minLvl": 20, "cost": 120000}
+  ],
+  "CARGO_TYPES": {
+    "express": ["Důležité dokumenty", "Náhradní díly do letadla", "Krevní plazma"],
+    "stehovani": ["Vybavení kanceláří", "Starožitný nábytek", "Klavír"],
+    "sypky": ["Stavební písek", "Drcený štěrk", "Zemina z výkopu"],
+    "wood": ["Smrkové klády", "Dřevní štěpka", "Nařezané desky"],
+    "frigo": ["Mražené ryby", "Zmrzlina", "Exotické ovoce"],
+    "leky": ["Vakcíny v chladu", "Antibiotika", "Chirurgické nástroje"],
+    "cars": ["Nová auta Škoda", "Luxusní vozy Porsche", "Ojetiny z Německa"],
+    "adr": ["Sudy s chemikáliemi", "Kyselina sírová", "Propan-butan"],
+    "heavy": ["Ocelové nosníky", "Turbína do elektrárny", "Bagr Caterpillar"],
+    "ceniny": ["Zlaté cihly", "Hotovost pro bankomaty", "Diamanty"],
+    "none": ["Palety papíru", "Minerální voda", "Elektronika", "Díly pro Škoda Auto", "Hračky"],
+    "sea": ["Tisíce kontejnerů s elektronikou z Asie", "Nákladní automobily pro export", "Ropa v barelech", "Tuny exotických surovin"],
+    "air": ["High-tech servery", "Záchranné zdravotní vybavení", "Zásilky z E-shopů", "Součástky pro raketoplány"]
+  },
+  "BLACK_MARKET_CARGO": [
+    "Nelegální zbraně 📦", "Neregistrované farmaceutika 💊", "Kradená luxusní auta 🏎️",
+    "Pašované diamanty 💎", "Padělané bankovky 💶", "Exotická zvířata 🦎"
+  ],
+  "CAR_DB": [
+    {"cat": "van", "model": "Fiat Ducato", "price": 250000, "spd": 1.4, "img": "van_fiat.jpg"},
+    {"cat": "van", "model": "Ford Transit Custom", "price": 280000, "spd": 1.3, "img": "van_ford.jpg"},
+    {"cat": "van", "model": "Renault Master", "price": 290000, "spd": 1.35, "img": "van_renault.jpg"},
+    {"cat": "van", "model": "VW Crafter 35", "price": 320000, "spd": 1.4, "img": "van_vw.jpg"},
+    {"cat": "van", "model": "MB Sprinter 319", "price": 350000, "spd": 1.5, "img": "van_mb.jpg"},
+    {"cat": "solo", "model": "Iveco Eurocargo", "price": 850000, "spd": 1.0, "img": "solo_iveco.jpg"},
+    {"cat": "solo", "model": "DAF LF 210", "price": 890000, "spd": 1.1, "img": "solo_daf.jpg"},
+    {"cat": "solo", "model": "MAN TGL 12.250", "price": 950000, "spd": 1.15, "img": "solo_man.jpg"},
+    {"cat": "solo", "model": "Volvo FL 250", "price": 980000, "spd": 1.15, "img": "solo_volvo.jpg"},
+    {"cat": "solo", "model": "Mercedes-Benz Atego", "price": 1050000, "spd": 1.2, "img": "solo_mb.jpg"},
+    {"cat": "solo", "model": "Tatra Phoenix (Agro)", "price": 1150000, "spd": 1.1, "img": "solo_tatra.jpg"},
+    {"cat": "semi", "model": "Scania R450 (Ojetá)", "price": 1500000, "spd": 1.2, "img": "semi_scania_old.jpg"},
+    {"cat": "semi", "model": "Iveco S-Way", "price": 2100000, "spd": 1.25, "img": "semi_iveco.jpg"},
+    {"cat": "semi", "model": "Volvo FH 460", "price": 2200000, "spd": 1.35, "img": "semi_volvo460.jpg"},
+    {"cat": "semi", "model": "Renault T-High", "price": 2700000, "spd": 1.3, "img": "semi_renault.jpg"},
+    {"cat": "semi", "model": "Mercedes Actros MP5", "price": 2900000, "spd": 1.3, "img": "semi_mb.jpg"},
+    {"cat": "semi", "model": "MAN TGX Individual", "price": 3000000, "spd": 1.4, "img": "semi_man.jpg"},
+    {"cat": "semi", "model": "DAF XG+", "price": 3200000, "spd": 1.45, "img": "semi_daf.jpg"},
+    {"cat": "semi", "model": "Volvo FH16 750", "price": 3400000, "spd": 1.6, "img": "semi_volvo.jpg"},
+    {"cat": "semi", "model": "Scania S770 V8", "price": 3500000, "spd": 1.6, "img": "semi_scania.jpg"},
+    {"cat": "semi", "model": "Kenworth W900", "price": 3800000, "spd": 1.3, "img": "semi_kenworth.jpg"},
+    {"cat": "semi", "model": "Tesla Semi (Elektro)", "price": 4500000, "spd": 1.7, "img": "semi_tesla.jpg"},
+    {"cat": "semi", "model": "Goliath TITAN 8x8", "price": 8500000, "spd": 2.0, "img": "semi_titan.jpg"}
+  ],
+  "SHIP_DB": [
+    {"cat": "ship", "model": "Pobřežní trajekt", "price": 10000000, "spd": 0.2, "fuelReq": 5, "img": "ship_ferry.jpg"},
+    {"cat": "ship", "model": "Střední kontejnerová loď", "price": 35000000, "spd": 0.3, "fuelReq": 10, "img": "ship_container.jpg"},
+    {"cat": "ship", "model": "Oceánský ropný tanker", "price": 75000000, "spd": 0.25, "fuelReq": 15, "img": "ship_tanker.jpg"},
+    {"cat": "ship", "model": "Giga-Třída Jirstan Leviathan", "price": 150000000, "spd": 0.4, "fuelReq": 25, "img": "ship_leviathan.jpg"}
+  ],
+  "PLANE_DB": [
+    {"cat": "plane", "model": "Cessna 208 Caravan", "price": 15000000, "spd": 3.5, "fuelReq": 8, "img": "plane_cessna.jpg"},
+    {"cat": "plane", "model": "Airbus A330F", "price": 85000000, "spd": 5.5, "fuelReq": 30, "img": "plane_a330.jpg"},
+    {"cat": "plane", "model": "Boeing 747-8 Freighter", "price": 150000000, "spd": 6.5, "fuelReq": 50, "img": "plane_747.jpg"},
+    {"cat": "plane", "model": "Antonov An-225 Mriya II", "price": 300000000, "spd": 7.0, "fuelReq": 100, "img": "plane_antonov.jpg"}
+  ],
+  "TRAILERS_DB": [
+    {"id": "plachta", "n": "STANDARD PLACHTA", "price": 300000, "bonus": 1.2, "img": "trailer_curtain.jpg"},
+    {"id": "mega", "n": "MEGA NÁVĚS", "price": 450000, "bonus": 1.3, "img": "trailer_mega.jpg"},
+    {"id": "klanicovy", "n": "KLANICOVÝ (Dřevo)", "price": 500000, "bonus": 1.35, "img": "trailer_wood.jpg"},
+    {"id": "sklopka", "n": "SKLOPKA (Sypké)", "price": 600000, "bonus": 1.4, "img": "trailer_tipper.jpg"},
+    {"id": "frigo", "n": "CHLADÍRNSKÝ (Frigo)", "price": 800000, "bonus": 1.6, "img": "trailer_reefer.jpg"},
+    {"id": "autoprepravnik", "n": "AUTOPŘEPRAVNÍK", "price": 900000, "bonus": 1.7, "img": "trailer_cars.jpg"},
+    {"id": "cisterna", "n": "CISTERNA (ADR)", "price": 1000000, "bonus": 1.8, "img": "trailer_tanker.jpg"},
+    {"id": "podval", "n": "HLUBINNÝ PODVALNÍK", "price": 1500000, "bonus": 2.2, "img": "trailer_lowbed.jpg"},
+    {"id": "nadrozmer_pro", "n": "NADROZMĚR PRO", "price": 2500000, "bonus": 2.8, "img": "trailer_heavypro.jpg"},
+    {"id": "road_train", "n": "SILNIČNÍ VLAK (AU)", "price": 4000000, "bonus": 3.5, "img": "trailer_roadtrain.jpg"}
+  ],
+  "MACHINES_DB": [
+    {"id": "desta", "n": "Vysokozdvižný vozík", "c": 150000, "inc": 1000, "img": "mach_forklift.jpg"},
+    {"id": "bagr", "n": "Bagr CAT 320", "c": 850000, "inc": 5500, "img": "mach_excavator.jpg"},
+    {"id": "nakladac", "n": "Kolový nakladač", "c": 1200000, "inc": 8000, "img": "mach_loader.jpg"},
+    {"id": "jerab", "n": "Autojeřáb Liebherr", "c": 3500000, "inc": 25000, "img": "mach_crane.jpg"},
+    {"id": "drtic", "n": "Mobilní drtič kamene", "c": 5000000, "inc": 40000, "img": "mach_crusher.jpg"},
+    {"id": "tezebni", "n": "Těžební rypadlo", "c": 15000000, "inc": 150000, "img": "mach_mining.jpg"},
+    {"id": "server", "n": "Kryptoměnová farma (Server)", "c": 2500000, "inc": 0, "incCrypto": 10, "img": "mach_server.jpg"}
+  ]
+}

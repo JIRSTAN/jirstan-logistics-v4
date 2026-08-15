@@ -1,0 +1,3191 @@
+
+/* ============================================================
+   JIRSTAN LOGISTICS — V4.0 (GLOBAL EXPANSION)
+   PŘIDÁNO: Lodě, Letadla, Nový kontinent, Přístavy, Letiště
+   ============================================================ */
+
+// 1. LOKACE A TYPY (UPRAVENO PRO GLOBAL V4.0)
+const CITIES = {
+    // EVROPA
+    "Praha": {x: .75, y: .55, isAirport: true, isPort: false}, 
+    "Brno": {x: .85, y: .65, isAirport: false, isPort: false}, 
+    "Plzeň": {x: .68, y: .58, isAirport: false, isPort: false}, 
+    "Ostrava": {x: .90, y: .55, isAirport: false, isPort: false}, 
+    "Mnichov": {x: .60, y: .70, isAirport: true, isPort: false}, 
+    "Vídeň": {x: .80, y: .75, isAirport: true, isPort: false}, 
+    "Berlín": {x: .65, y: .35, isAirport: true, isPort: false}, 
+    "Varšava": {x: .88, y: .35, isAirport: true, isPort: false}, 
+    "Hamburk": {x: .62, y: .25, isAirport: false, isPort: true}, 
+    "Drážďany": {x: .70, y: .45, isAirport: false, isPort: false}, 
+    "Bratislava": {x: .82, y: .70, isAirport: false, isPort: false}, 
+    "Budapešť": {x: .88, y: .80, isAirport: false, isPort: false},
+    "Paříž": {x: .55, y: .50, isAirport: true, isPort: false}, 
+    "Řím": {x: .70, y: .90, isAirport: true, isPort: true}, 
+    "Londýn": {x: .52, y: .35, isAirport: true, isPort: true},
+    // SEVERNÍ AMERIKA (NOVÉ)
+    "New York": {x: .25, y: .40, isAirport: true, isPort: true},
+    "Los Angeles": {x: .08, y: .55, isAirport: true, isPort: true},
+    "Miami": {x: .22, y: .75, isAirport: true, isPort: true},
+    "Toronto": {x: .20, y: .30, isAirport: true, isPort: false},
+    "Chicago": {x: .18, y: .42, isAirport: true, isPort: false}
+};
+
+const LICENSES = [
+    {id: 'express', n: 'EXPRES', color: '#ff9d00', minLvl: 1, cost: 15000}, 
+    {id: 'stehovani', n: 'STĚHOVÁNÍ', color: '#8d6e63', minLvl: 3, cost: 20000},
+    {id: 'sypky', n: 'SYPKÉ', color: '#ffca28', minLvl: 5, cost: 30000}, 
+    {id: 'wood', n: 'DŘEVO', color: '#795548', minLvl: 6, cost: 35000},
+    {id: 'frigo', n: 'FRIGO', color: '#00e5ff', minLvl: 8, cost: 40000},
+    {id: 'leky', n: 'LÉKY', color: '#ff4081', minLvl: 10, cost: 50000}, 
+    {id: 'cars', n: 'AUTA', color: '#ab47bc', minLvl: 12, cost: 60000},
+    {id: 'adr', n: 'ADR', color: '#ff1744', minLvl: 15, cost: 80000},
+    {id: 'heavy', n: 'NADROZMĚR', color: '#f57c00', minLvl: 15, cost: 80000}, 
+    {id: 'ceniny', n: 'CENINY', color: '#ffd700', minLvl: 20, cost: 120000}
+];
+
+const CARGO_TYPES = {
+    'express': ['Důležité dokumenty', 'Náhradní díly do letadla', 'Krevní plazma'], 
+    'stehovani': ['Vybavení kanceláří', 'Starožitný nábytek', 'Klavír'],
+    'sypky': ['Stavební písek', 'Drcený štěrk', 'Zemina z výkopu'], 
+    'wood': ['Smrkové klády', 'Dřevní štěpka', 'Nařezané desky'],
+    'frigo': ['Mražené ryby', 'Zmrzlina', 'Exotické ovoce'],
+    'leky': ['Vakcíny v chladu', 'Antibiotika', 'Chirurgické nástroje'], 
+    'cars': ['Nová auta Škoda', 'Luxusní vozy Porsche', 'Ojetiny z Německa'],
+    'adr': ['Sudy s chemikáliemi', 'Kyselina sírová', 'Propan-butan'],
+    'heavy': ['Ocelové nosníky', 'Turbína do elektrárny', 'Bagr Caterpillar'], 
+    'ceniny': ['Zlaté cihly', 'Hotovost pro bankomaty', 'Diamanty'],
+    'none': ['Palety papíru', 'Minerální voda', 'Elektronika', 'Díly pro Škoda Auto', 'Hračky'],
+    // Nové pro lodě a letadla (V4.0)
+    'sea': ['Tisíce kontejnerů s elektronikou z Asie', 'Nákladní automobily pro export', 'Ropa v barelech', 'Tuny exotických surovin'],
+    'air': ['High-tech servery', 'Záchranné zdravotní vybavení', 'Zásilky z E-shopů', 'Součástky pro raketoplány']
+};
+
+const BLACK_MARKET_CARGO = [
+    'Nelegální zbraně 📦', 'Neregistrované farmaceutika 💊', 'Kradená luxusní auta 🏎️', 
+    'Pašované diamanty 💎', 'Padělané bankovky 💶', 'Exotická zvířata 🦎'
+];
+
+const FACTIONS_DB = {
+    nexus: { id: 'nexus', n: 'NEXUS TECH', icon: '💻', img: 'faction_nexus.jpg', color: '#00f5d4', desc: 'Gigant v elektronice. Zvyšuje efektivitu tvé flotily.',
+        perks: [
+            { req: 250, desc: 'Tier 1: Rychlost všech aut +5%' },
+            { req: 500, desc: 'Tier 2: Spotřeba paliva -10%' },
+            { req: 1000, desc: 'Tier 3 (MAX): Rychlost +15%, Spotřeba -20%' }
+        ]
+    },
+    stavba: { id: 'stavba', n: 'GLOBAL STAVBA', icon: '🏗️', img: 'faction_stavba.jpg', color: '#f57c00', desc: 'Mezinárodní stavební holding. Zaměření na nadrozměr a těžké váhy.',
+        perks: [
+            { req: 250, desc: 'Tier 1: Odměny za ADR a Sypké +10%' },
+            { req: 500, desc: 'Tier 2: Opotřebení vozidel klesá o 20% pomaleji' },
+            { req: 1000, desc: 'Tier 3 (MAX): Odměny za Nadrozměr a Auta +30%' }
+        ]
+    },
+    fresh: { id: 'fresh', n: 'FRESH FOODS', icon: '🍎', img: 'faction_fresh.jpg', color: '#00f260', desc: 'Zásobuje řetězce po celé Evropě. Klade důraz na odpočinek a rychlost.',
+        perks: [
+            { req: 250, desc: 'Tier 1: Únava řidičů klesá o 10% pomaleji' },
+            { req: 500, desc: 'Tier 2: Odměny za Frigo a Expres +20%' },
+            { req: 1000, desc: 'Tier 3 (MAX): Řidiči nepotřebují spát tak dlouho (-2h spánku)' }
+        ]
+    }
+};
+
+const NAMES_F = ["Martin", "Jakub", "David", "Lukáš", "Jan", "Tomáš", "Michal", "Pavel", "Ondřej", "Marek", "Zdeněk", "Josef"];
+const NAMES_L = ["Zeman", "Krejčí", "Svoboda", "Novák", "Dvořák", "Černý", "Procházka", "Kučera", "Veselý", "Horák", "Němec"];
+const BIOS = ["Nadšenec do veteránů.", "Jezdí zásadně v noci.", "Miluje kávu z benzínky.", "Bývalý závodník rallye.", "Kliďas a flegmatik.", "Neustále nadává na dispečink.", "Mistr ve couvání.", "Bývalý voják, teď řídí."];
+const TRAITS = [ {id: 'normal', n: 'Běžný', speed: 1.0, cons: 1.0, fatigue: 1.0}, {id: 'racer', n: 'Závodník', speed: 1.15, cons: 1.2, fatigue: 1.1}, {id: 'eco', n: 'Ekolog', speed: 0.85, cons: 0.8, fatigue: 0.9}, {id: 'iron', n: 'Držák', speed: 1.0, cons: 1.0, fatigue: 0.8} ];
+
+// 2. KOMPLETNÍ DATABÁZE VYLEPŠENÍ, VÝZKUMŮ A BUDOV
+const UPGRADES_DB = [
+    {id: 'chip', n: 'CHIP ST.1', cost: 50000, desc: 'Rychlost vozidla +25%'}, 
+    {id: 'chip2', n: 'CHIP ST.2', cost: 120000, desc: 'Rychlost vozidla +40% (Vyžaduje ST.1)'},
+    {id: 'ecotires', n: 'ÉKO PNEU', cost: 40000, desc: 'Spotřeba paliva -10%'}, 
+    {id: 'aero', n: 'AEROKYT', cost: 60000, desc: 'Spotřeba paliva -15%'},
+    {id: 'seats', n: 'MASÁŽNÍ SED.', cost: 30000, desc: 'Únava řidiče -10%'}, 
+    {id: 'bed', n: 'MATRACE', cost: 25000, desc: 'Únava řidiče -10%'},
+    {id: 'ac', n: 'KLIMATIZACE', cost: 40000, desc: 'Únava řidiče -15%'}, 
+    {id: 'coffee', n: 'KÁVOVAR', cost: 15000, desc: 'Únava řidiče -5%'},
+    {id: 'fridge', n: 'LEDNICE', cost: 18000, desc: 'Únava řidiče -3%'},
+    {id: 'gps', n: 'SMART GPS', cost: 45000, desc: 'Rychlost vozidla +10%'},
+    {id: 'frame', n: 'ZESÍLENÝ RÁM', cost: 150000, desc: 'Opotřebení klesá o 50% pomaleji'},
+    {id: 'bigtank', n: 'MEGA NÁDRŽ', cost: 85000, desc: 'Dvojnásobný dojezd (Spotřeba -50%)'}
+];
+
+const TECH_DB = [
+    {id: 'bulk_buy', n: 'Hromadný nákup paliva', cost: 100000, desc: 'Nafta bude trvale o 10% levnější', req: null, time: 120, minRep: 0},
+    {id: 'recruit', n: 'HR Oddělení', cost: 150000, desc: 'Nábor nových řidičů bude o 50% levnější', req: null, time: 180, minRep: 100},
+    {id: 'logistics', n: 'Pokročilá logistika', cost: 250000, desc: 'Rychlost všech aut se zvýší o 5%', req: 'bulk_buy', time: 300, minRep: 110},
+    {id: 'branding', n: 'Firemní branding', cost: 500000, desc: 'Odběratelé budou platit o 5% více', req: 'logistics', time: 480, minRep: 120},
+    {id: 'eco_trucks', n: 'Eko Dotace', cost: 600000, desc: 'Nižší spotřeba paliva o 15%', req: 'branding', time: 400, minRep: 130},
+    {id: 'sim', n: 'Simulátor jízdy', cost: 300000, desc: 'Řidiči budou získávat zkušenosti 2x rychleji', req: 'recruit', time: 360, minRep: 115},
+    {id: 'global_lic', n: 'Globální licence', cost: 1000000, desc: 'Výdělky ze všech zakázek se zvednou o 10%', req: 'branding', time: 720, minRep: 150},
+    {id: 'gps_fleet', n: 'Satelitní flotila', cost: 800000, desc: 'Plošné zrychlení všech aut o 15%', req: 'logistics', time: 600, minRep: 140},
+    {id: 'ai_disp', n: 'AI Dispečink', cost: 2000000, desc: 'Příjmy narostou plošně o 20%', req: 'sim', time: 1000, minRep: 200},
+    {id: 'nightshift', n: 'Noční provoz', cost: 400000, desc: 'Noční zakázky (20:00-06:00) platí o +40% víc.', req: 'logistics', time: 300, minRep: 120},
+    {id: 'corp_network', n: 'Korporátní sítě', cost: 750000, desc: 'Odemyká přístup k Frakcím a VIP korporátním klientům.', req: 'branding', time: 400, minRep: 130},
+    {id: 'darkweb', n: 'Přístup na Dark Web', cost: 1500000, desc: 'Odemyká přístup k Černému trhu. Brutální odměny, ale riskantní.', req: 'logistics', time: 600, minRep: 80},
+    {id: 'mega_trailers', n: 'Vývoj Mega-Návěsů', cost: 1000000, desc: 'Zvýší výdělky všech návěsů o 20%.', req: 'logistics', time: 500, minRep: 120},
+    {id: 'aero_design', n: 'Aero Dynamika', cost: 1500000, desc: 'Opotřebení všech vozidel na cestách klesá o 30% pomaleji.', req: 'eco_trucks', time: 600, minRep: 140},
+    {id: 'drone_delivery', n: 'Dronové trasování', cost: 3000000, desc: 'Díky dronům se auta vyhnou zácpám. Rychlost +10%.', req: 'ai_disp', time: 800, minRep: 180},
+    {id: 'quantum_gps', n: 'Satelity Jirstan', cost: 4000000, desc: 'Vlastní síť satelitů. +20% Rychlost pro Zámořskou divizi (Lodě a Letadla).', req: 'gps_fleet', time: 1000, minRep: 200}
+];
+
+const HQ_DB = [
+    {id: 'garage', n: '🏗️ Garáž', desc: 'Každý level zvyšuje maximální počet aut.', maxLvl: 15, baseCost: 150000, icon: '🚛', bonus: 'Kapacita aut +2/lvl'},
+    {id: 'office', n: '🏢 Kancelář', desc: 'Od Lvl 3 ti kancelář začne pasivně generovat reputaci.', maxLvl: 5, baseCost: 150000, icon: '📋', bonus: 'Reputace +/den od L3'},
+    {id: 'workshop', n: '🔧 Dílna', desc: 'S každým levelem jsou opravy levnější o 10%.', maxLvl: 5, baseCost: 100000, icon: '⚙️', bonus: 'Opravy -10%/lvl'},
+    {id: 'logistics_center', n: '📦 Logistické centrum', desc: 'Zajišťuje ti příplatek ke každé odjeté zakázce.', maxLvl: 5, baseCost: 300000, icon: '📦', bonus: 'Výdělky +3%/lvl'},
+    {id: 'fuel_depot', n: '⛽ Nádrž', desc: 'Zvyšuje maximální kapacitu tvé firemní nádrže na naftu.', maxLvl: 5, baseCost: 120000, icon: '⛽', bonus: 'Kapacita +20k l/lvl'},
+    {id: 'relax_zone', n: '🌴 Relax Zóna', desc: 'Zpomaluje únavu řidičů na cestách o 5% za level.', maxLvl: 5, baseCost: 200000, icon: '☕', bonus: 'Únava -5%/lvl'},
+    // Nové HQ budovy V4.0
+    {id: 'port_hub', n: '⚓ Přístavní překladiště', desc: 'Odemyká možnost vlastnit nákladní lodě a přijímat lodní kontejnery. Každý lvl = +1 loď.', maxLvl: 5, baseCost: 2000000, icon: '🚢', bonus: 'Kapacita lodí +1/lvl'},
+    {id: 'airport_hangar', n: '✈️ Letištní hangár', desc: 'Odemyká možnost vlastnit nákladní letadla. Každý lvl = +1 letadlo.', maxLvl: 5, baseCost: 5000000, icon: '🛫', bonus: 'Kapacita letadel +1/lvl'},
+    {id: 'bus_terminal', n: '🚌 Autobusový terminál', desc: 'Odemyká Osobní dopravu a nákup autobusů. Každý lvl = +2 autobusy.', maxLvl: 5, baseCost: 20000000, icon: '🚌', bonus: 'Kapacita autobusů +2/lvl'}
+];
+
+const COMPETITORS_DB = [
+    {id: 'fastex', n: 'FASTEX TRANSPORT', color: '#ff2a55', skill: 'speed', desc: 'Bleskové dodávky. Vždy spěchají a nedbají na bezpečnost.', power: 1.2, baseVal: 5000000},
+    {id: 'greenroad', n: 'GREENROAD ECO', color: '#00f260', skill: 'eco', desc: 'Ekologická přeprava. Mají pomalejší, ale úsporná auta.', power: 0.9, baseVal: 3000000},
+    {id: 'atlas', n: 'ATLAS CARGO', color: '#00d4ff', skill: 'volume', desc: 'Velkokapacitní nadnárodní přeprava. Tvrdý oříšek.', power: 1.1, baseVal: 8000000},
+    {id: 'premium', n: 'PREMIUM LINKS', color: '#ffc300', skill: 'luxury', desc: 'Prémiové zakázky, ceniny a těžké náklady.', power: 1.3, baseVal: 15000000},
+    {id: 'megacorp', n: 'GLOBAL MEGA LOG', color: '#b5179e', skill: 'monopoly', desc: 'Obrovský nadnárodní gigant. Skoro neporazitelný.', power: 1.8, baseVal: 50000000}
+];
+
+const CHALLENGE_DB = [
+    {id: 'c1', n: '⚡ Rychlostní výzva', desc: 'Dokončit 5 zakázek celkem', reward: 80000, repReward: 5, target: 5, type: 'deliveries'},
+    {id: 'c2', n: '💰 Zlatá trasa', desc: 'Vydělat 1 000 000 Kč celkově', reward: 150000, repReward: 10, target: 1000000, type: 'earned'},
+    {id: 'c3', n: '🌍 Cestovatel týdne', desc: 'Ujet 5 000 km celkem', reward: 200000, repReward: 15, target: 5000, type: 'distance'},
+    {id: 'c4', n: '🤝 Mistr smluv', desc: 'Dokonči 3 firemní smlouvy', reward: 500000, repReward: 20, target: 3, type: 'contracts'},
+    {id: 'c5', n: '👑 Logistický Magnát', desc: 'Vydělat 50 000 000 Kč celkově', reward: 5000000, repReward: 50, target: 50000000, type: 'earned'}
+];
+
+const STAFF_DEFS = {
+    dispatcher: { id: 'dispatcher', n: 'DISPEČER', cost: 20000, img: 'staff_dispatcher.jpg', desc: 'Může vkládat zakázky autům přímo do fronty.', xpPerLevel: 200, skills: [{id: 'negotiator', n: 'Vyjednávač (+10% platba)', cost: 80000}, {id: 'routing', n: 'Efektivní trasy (+10% Rychlost)', cost: 80000}] },
+    mechanic: { id: 'mechanic', n: 'HLAVNÍ MECHANIK', cost: 75000, img: 'staff_mechanic.jpg', desc: 'Zajišťuje zlevnění a prevenci oprav.', xpPerLevel: 200, skills: [{id: 'preventive', n: 'Prevence (-25% rozbití)', cost: 80000}, {id: 'quickfix', n: 'Rychloservis', cost: 100000}] },
+    accountant: { id: 'accountant', n: 'KATEŘINA FUTEROVÁ', cost: 150000, img: 'katerina.jpg', desc: 'Tvá CFO. Stará se o finance a hledá skulinky v daních.', xpPerLevel: 150, skills: [{id: 'tax', n: 'Daňové ráje (-20% poplatky)', cost: 80000}, {id: 'audit', n: 'Auditní profík', cost: 100000}, {id: 'investment', n: 'Investiční guru', cost: 120000}, {id: 'costcutter', n: 'Šetřitel (-10% na nákupy)', cost: 150000}, {id: 'payroll', n: 'Mzdová (Slevy na školení)', cost: 100000}, {id: 'hedging', n: 'Palivový Hedging', cost: 80000}] }
+};
+
+const MARKET_DB = { 
+    conservative: { n: '🛡️ Konzerv. fond', risk: 0.015, drift: 0.002, base: 100, color: '#00f260' }, 
+    stock: { n: '📊 Akciový index', risk: 0.08, drift: 0.005, base: 500, color: '#00d4ff' }, 
+    crypto: { n: '🪙 JirstanCoin', risk: 0.25, drift: 0.01, base: 50, color: '#ffc300' },
+    realestate: { n: '🏢 Nemovitostní fond', risk: 0.03, drift: 0.003, base: 1000, color: '#f72585' }, 
+    techstocks: { n: '💻 Tech Startupy', risk: 0.15, drift: 0.008, base: 200, color: '#00f5d4' }
+};
+
+// 3. KOMPLETNÍ SEZNAM VŠECH VOZIDEL (vč. LODÍ A LETADEL V4.0)
+const CAR_DB = [
+    {cat: 'van', model: "Fiat Ducato", price: 250000, spd: 1.4, img: 'van_fiat.jpg'},
+    {cat: 'van', model: "Ford Transit Custom", price: 280000, spd: 1.3, img: 'van_ford.jpg'},
+    {cat: 'van', model: "Renault Master", price: 290000, spd: 1.35, img: 'van_renault.jpg'},
+    {cat: 'van', model: "VW Crafter 35", price: 320000, spd: 1.4, img: 'van_vw.jpg'},
+    {cat: 'van', model: "MB Sprinter 319", price: 350000, spd: 1.5, img: 'van_mb.jpg'},
+    {cat: 'solo', model: "Iveco Eurocargo", price: 850000, spd: 1.0, img: 'solo_iveco.jpg'},
+    {cat: 'solo', model: "DAF LF 210", price: 890000, spd: 1.1, img: 'solo_daf.jpg'},
+    {cat: 'solo', model: "MAN TGL 12.250", price: 950000, spd: 1.15, img: 'solo_man.jpg'},
+    {cat: 'solo', model: "Volvo FL 250", price: 980000, spd: 1.15, img: 'solo_volvo.jpg'},
+    {cat: 'solo', model: "Mercedes-Benz Atego", price: 1050000, spd: 1.2, img: 'solo_mb.jpg'},
+    {cat: 'solo', model: "Tatra Phoenix (Agro)", price: 1150000, spd: 1.1, img: 'solo_tatra.jpg'},
+    {cat: 'semi', model: "Scania R450 (Ojetá)", price: 1500000, spd: 1.2, img: 'semi_scania_old.jpg'},
+    {cat: 'semi', model: "Iveco S-Way", price: 2100000, spd: 1.25, img: 'semi_iveco.jpg'},
+    {cat: 'semi', model: "Volvo FH 460", price: 2200000, spd: 1.35, img: 'semi_volvo460.jpg'},
+    {cat: 'semi', model: "Renault T-High", price: 2700000, spd: 1.3, img: 'semi_renault.jpg'},
+    {cat: 'semi', model: "Mercedes Actros MP5", price: 2900000, spd: 1.3, img: 'semi_mb.jpg'},
+    {cat: 'semi', model: "MAN TGX Individual", price: 3000000, spd: 1.4, img: 'semi_man.jpg'},
+    {cat: 'semi', model: "DAF XG+", price: 3200000, spd: 1.45, img: 'semi_daf.jpg'},
+    {cat: 'semi', model: "Volvo FH16 750", price: 3400000, spd: 1.6, img: 'semi_volvo.jpg'},
+    {cat: 'semi', model: "Scania S770 V8", price: 3500000, spd: 1.6, img: 'semi_scania.jpg'},
+    {cat: 'semi', model: "Kenworth W900", price: 3800000, spd: 1.3, img: 'semi_kenworth.jpg'},
+    {cat: 'semi', model: "Tesla Semi (Elektro)", price: 4500000, spd: 1.7, img: 'semi_tesla.jpg'},
+    {cat: 'semi', model: "Goliath TITAN 8x8", price: 8500000, spd: 2.0, img: 'semi_titan.jpg'}
+];
+
+const BAZAAR_CAR_DB = [
+    {id: 'hatchback', model: 'Hatchback', basePrice: 150000, img: 'car_hatch.jpg'},
+    {id: 'sedan', model: 'Sedan', basePrice: 400000, img: 'car_sedan.jpg'},
+    {id: 'suv', model: 'SUV', basePrice: 800000, img: 'car_suv.jpg'},
+    {id: 'sport', model: 'Sport', basePrice: 2000000, img: 'car_sport.jpg'}
+];
+
+const BUS_DB = [
+    {cat: 'bus', model: "Městský autobus", price: 4000000, spd: 0.9, capacity: 50, luxury: 1, img: 'bus_city.jpg'},
+    {cat: 'bus', model: "Expresní microbus", price: 5500000, spd: 1.1, capacity: 32, luxury: 2, img: 'bus_express.jpg'},
+    {cat: 'bus', model: "Dálkový autobus", price: 7500000, spd: 1.2, capacity: 55, luxury: 3, img: 'bus_coach.jpg'},
+    {cat: 'bus', model: "Kloubový autobus (Patrový)", price: 10000000, spd: 1.15, capacity: 70, luxury: 4, img: 'bus_double.jpg'},
+    {cat: 'bus', model: "Luxusní zájezdový autobus", price: 12000000, spd: 1.3, capacity: 40, luxury: 5, img: 'bus_luxury.jpg'},
+    {cat: 'bus', model: "Super Luxusní Autobus", price: 20000000, spd: 1.5, capacity: 35, luxury: 7, img: 'bus_superlux.jpg'}
+];
+
+const BUS_ROUTES = [
+    {id:'city', name:'Městská linka', dailyIncome: 30000, fuelCost: 10, condLoss: 7, desc:'Krátké oběhy napříč městem, stabilní výnosy.'},
+    {id:'intercity', name:'Meziměstská linka', dailyIncome: 80000, fuelCost: 25, condLoss: 12, desc:'Spojení hlavních měst, výnosnější ale náročnější na údržbu.'},
+    {id:'tour', name:'Zájezdová linka', dailyIncome: 150000, fuelCost: 45, condLoss: 18, desc:'Luxusní turistické trasy s vysokou marží.'}
+];
+
+// NOVÉ DATABÁZE PRO V4.0 (Zámoří)
+const SHIP_DB = [
+    {cat: 'ship', model: "Pobřežní trajekt", price: 10000000, spd: 0.2, fuelReq: 5, img: 'ship_ferry.jpg'},
+    {cat: 'ship', model: "Střední kontejnerová loď", price: 35000000, spd: 0.3, fuelReq: 10, img: 'ship_container.jpg'},
+    {cat: 'ship', model: "Oceánský ropný tanker", price: 75000000, spd: 0.25, fuelReq: 15, img: 'ship_tanker.jpg'},
+    {cat: 'ship', model: "Giga-Třída Jirstan Leviathan", price: 150000000, spd: 0.4, fuelReq: 25, img: 'ship_leviathan.jpg'}
+];
+
+const PLANE_DB = [
+    {cat: 'plane', model: "Cessna 208 Caravan", price: 15000000, spd: 3.5, fuelReq: 8, img: 'plane_cessna.jpg'},
+    {cat: 'plane', model: "Airbus A330F", price: 85000000, spd: 5.5, fuelReq: 30, img: 'plane_a330.jpg'},
+    {cat: 'plane', model: "Boeing 747-8 Freighter", price: 150000000, spd: 6.5, fuelReq: 50, img: 'plane_747.jpg'},
+    {cat: 'plane', model: "Antonov An-225 Mriya II", price: 300000000, spd: 7.0, fuelReq: 100, img: 'plane_antonov.jpg'}
+];
+
+// 4. KOMPLETNÍ SEZNAM VŠECH NÁVĚSŮ A STROJŮ
+const TRAILERS_DB = [ 
+    {id: 'plachta', n: 'STANDARD PLACHTA', price: 300000, bonus: 1.2, img: 'trailer_curtain.jpg'}, 
+    {id: 'mega', n: 'MEGA NÁVĚS', price: 450000, bonus: 1.3, img: 'trailer_mega.jpg'}, 
+    {id: 'klanicovy', n: 'KLANICOVÝ (Dřevo)', price: 500000, bonus: 1.35, img: 'trailer_wood.jpg'},
+    {id: 'sklopka', n: 'SKLOPKA (Sypké)', price: 600000, bonus: 1.4, img: 'trailer_tipper.jpg'}, 
+    {id: 'frigo', n: 'CHLADÍRNSKÝ (Frigo)', price: 800000, bonus: 1.6, img: 'trailer_reefer.jpg'}, 
+    {id: 'autoprepravnik', n: 'AUTOPŘEPRAVNÍK', price: 900000, bonus: 1.7, img: 'trailer_cars.jpg'},
+    {id: 'cisterna', n: 'CISTERNA (ADR)', price: 1000000, bonus: 1.8, img: 'trailer_tanker.jpg'}, 
+    {id: 'podval', n: 'HLUBINNÝ PODVALNÍK', price: 1500000, bonus: 2.2, img: 'trailer_lowbed.jpg'},
+    {id: 'nadrozmer_pro', n: 'NADROZMĚR PRO', price: 2500000, bonus: 2.8, img: 'trailer_heavypro.jpg'},
+    {id: 'road_train', n: 'SILNIČNÍ VLAK (AU)', price: 4000000, bonus: 3.5, img: 'trailer_roadtrain.jpg'}
+];
+
+const MACHINES_DB = [ 
+    {id: 'desta', n: 'Vysokozdvižný vozík', c: 150000, inc: 1000, img: 'mach_forklift.jpg'}, 
+    {id: 'bagr', n: 'Bagr CAT 320', c: 850000, inc: 5500, img: 'mach_excavator.jpg'}, 
+    {id: 'nakladac', n: 'Kolový nakladač', c: 1200000, inc: 8000, img: 'mach_loader.jpg'}, 
+    {id: 'jerab', n: 'Autojeřáb Liebherr', c: 3500000, inc: 25000, img: 'mach_crane.jpg'},
+    {id: 'drtic', n: 'Mobilní drtič kamene', c: 5000000, inc: 40000, img: 'mach_crusher.jpg'},
+    {id: 'tezebni', n: 'Těžební rypadlo', c: 15000000, inc: 150000, img: 'mach_mining.jpg'},
+    {id: 'server', n: 'Kryptoměnová farma (Server)', c: 2500000, inc: 0, incCrypto: 10, img: 'mach_server.jpg'}
+];
+
+const WEATHER_TYPES = [ {id: 'sun', n: '☀️ Slunečno', speed: 1.0}, {id: 'rain', n: '🌧️ Déšť', speed: .8}, {id: 'storm', n: '⛈️ Bouřka', speed: .6}, {id: 'snow', n: '❄️ Sníh', speed: .65} ];
+const TRAINING_DB = [ {id: 'basic', n: 'Základní kurz', cost: 10000, xp: 300, icon: '📚'}, {id: 'specialist', n: 'Pokročilá jízda', cost: 40000, xp: 1500, icon: '🏎️'}, {id: 'premium', n: 'Premium Academia', cost: 80000, xp: 3000, icon: '🎓'} ];
+const ACH_DB = [ 
+    {id: 'first_mil', n: 'První milionář', desc: 'Měj 1 000 000 Kč na účtu', reward: 100000, icon: '💰', check: s => s.money >= 1000000}, 
+    {id: 'multi_mil', n: 'Multimilionář', desc: 'Měj 10 000 000 Kč na účtu', reward: 1000000, icon: '💎', check: s => s.money >= 10000000},
+    {id: 'veteran', n: 'Veterán silnic', desc: 'Dosáhni Dne 100', reward: 150000, icon: '🎖️', check: s => s.day >= 100}, 
+    {id: 'buyout', n: 'Monopol', desc: 'Odkupej první konkurenci', reward: 2000000, icon: '📈', check: s => Object.values(s.competitors).some(c => c.boughtOut)},
+    {id: 'fleet_boss', n: 'Boss flotily', desc: 'Měj alespoň 5 kamionů', reward: 300000, icon: '🚛', check: s => s.vehicles.length >= 5},
+    {id: 'collector', n: 'Sběratel Aut', desc: 'Měj alespoň 15 kamionů', reward: 2000000, icon: '🚛', check: s => s.vehicles.length >= 15},
+    {id: 'tech_guru', n: 'Tech Guru', desc: 'Vyzkoumej všechny dostupné technologie', reward: 1500000, icon: '🔬', check: s => s.tech.length >= TECH_DB.length},
+    {id: 'global_empire', n: 'Globální Impérium', desc: 'Vlastni alespoň jednu loď a jedno letadlo', reward: 5000000, icon: '🌍', check: s => s.ships.length > 0 && s.planes.length > 0}
+];
+
+const cargoToLicenseMap = {};
+Object.keys(CARGO_TYPES).forEach(lic => {
+    if (lic !== 'none' && lic !== 'sea' && lic !== 'air') {
+        CARGO_TYPES[lic].forEach(car => cargoToLicenseMap[car] = lic);
+    }
+});
+
+const allLandCargoes = Object.keys(CARGO_TYPES)
+    .filter(k => k !== 'sea' && k !== 'air')
+    .flatMap(k => CARGO_TYPES[k]);
+
+const mapBgImage = new Image();
+mapBgImage.src = 'mapa_pozadi.jpg';
+mapBgImage.onload = () => {
+    if (document.getElementById('tab-dispatch').classList.contains('active')) {
+        renderMap();
+    }
+};
+
+let fuelHistory = [35.5, 35.8, 36.1, 35.9, 36.0, 35.5];
+
+const defaultState = {
+    version: "V4.0", money: 5500000, debt: 0, day: 1, hour: 8, minute: 0, reputation: 100, bankDeposit: 0,
+    fuelPrice: 35.50, fuelTank: 0, fuelHedge: null, weather: 'sun', auctionFilter: 'all',
+    contracts: [], availableContracts: [], termDeposits: [],
+    factions: { nexus: 0, stavba: 0, fresh: 0 },
+    staff: { dispatcher: {active: false, days: 0, level: 1, xp: 0, skills: {}}, mechanic: {active: false, days: 0, level: 1, xp: 0, skills: {}}, accountant: {active: false, days: 0, level: 1, xp: 0, skills: {}, lastAudit: 0} },
+    vehicles: [ {id: 1, type: 'semi', model: 'Scania S770 V8', driverId: 1, loc: 'Praha', job: null, queue: [], progress: 0, cond: 100, fuel: 100, spd: 1.6, upgrades: [], trailer: null, cleanliness: 100} ],
+    drivers: [ 
+        {id: 1, name: "Stanislav Starosta", level: 50, xp: 0, req: 9999, skills: {spd: 5}, energy: 100, tacho: 0, restUntil: 0, lic: ['adr','frigo','heavy','express','leky','ceniny','stehovani','sypky','wood','cars'], bio: "Zakladatel", trait: 'iron', deliveries: 0, morale: 90},
+        {id: 2, name: "Jiří Čečák", level: 50, xp: 0, req: 9999, skills: {spd: 5}, energy: 100, tacho: 0, restUntil: 0, lic: ['adr','frigo','heavy','express','leky','ceniny','stehovani','sypky','wood','cars'], bio: "Spoluzakladatel, CTO", trait: 'racer', deliveries: 0, morale: 90},
+        {id: 3, name: "Karel N.", level: 10, xp: 0, req: 1000, skills: {spd: 1}, energy: 100, tacho: 0, restUntil: 0, lic: ['stehovani','sypky','wood'], bio: "Zkušený mazák", trait: 'normal', deliveries: 0, morale: 80},
+        {id: 4, name: "Čenda", level: 5, xp: 0, req: 500, skills: {spd: 0}, energy: 100, tacho: 0, restUntil: 0, lic: [], bio: "Mladé ucho", trait: 'eco', deliveries: 0, morale: 75}
+    ],
+    // NOVÉ POLE PRO V4.0
+    ships: [], planes: [],
+    // NOVÉ POLE PRO AUTOBUSY A IPO
+    buses: [], busRoutes: [], vipTours: [],
+    ipo: { active: false, sharesOwned: 100 },
+    // NOVÁ AUTOMYČKA
+    carwash: { level: 1, autoWashStaff: false, incomeMultiplier: 1.0, waxActivated: false, waxUntil: 0 },
+    trailers: [], machines: [], offers: [], tempOfferIdx: null, hq: {garage: 0, office: 0, workshop: 0, logistics_center: 0, fuel_depot: 0, relax_zone: 0, port_hub: 0, airport_hangar: 0, bus_terminal: 0},
+    competitors: { fastex: {power: 1.2, reputation: 80, boughtOut: false}, greenroad: {power: .9, reputation: 60, boughtOut: false}, atlas: {power: 1.1, reputation: 90, boughtOut: false}, premium: {power: 1.3, reputation: 120, boughtOut: false}, megacorp: {power: 1.8, reputation: 150, boughtOut: false} },
+    activeChallenges: [], 
+    stats: {totalEarned: 0, totalSpent: 0, deliveries: 0, distance: 0, fuelUsed: 0, loansTaken: 0, routes: {}, events: 0, trainings: 0, contractsDone: 0, maxMoney: 0, nightDeliveries: 0, challengesWon: 0}, 
+    tech: [], researching: null, achievements: [], currentSaveSlot: 1,
+    market: { conservative: {price: 100, history: [100]}, stock: {price: 500, history: [500]}, crypto: {price: 50, history: [50]}, realestate: {price: 1000, history: [1000]}, techstocks: {price: 200, history: [200]} },
+    investments: { conservative: 0, stock: 0, crypto: 0, realestate: 0, techstocks: 0 },
+    usedCars: [],
+    bazaarMarket: [],
+    bazaarInventory: [],
+    insurance: { active: false, days: 0 },
+    gasNetwork: { level: 0, hasDiner: false, hasShop: false, hasBistro: false }
+};
+let state = JSON.parse(JSON.stringify(defaultState));
+
+// --- INICIALIZACE ---
+function init() {
+    loadGame();
+    if (state.offers.length < 5) genOffers(true);
+    if (state.availableContracts.length === 0) genContracts();
+    
+    state.vehicles.forEach(v => { if(!v.queue) v.queue = []; });
+    if (!state.usedCars || state.usedCars.length === 0) genUsedCars(); 
+    
+    // Zajištění kompatibility pro V4.0 při načtení starého savu
+    if(!state.ships) state.ships = [];
+    if(!state.planes) state.planes = [];
+    if(state.hq.port_hub === undefined) state.hq.port_hub = 0;
+    if(state.hq.airport_hangar === undefined) state.hq.airport_hangar = 0;
+
+    renderAll();
+    if (window.gameInterval) clearInterval(window.gameInterval);
+    window.gameInterval = setInterval(tick, 1000);
+    setTimeout(fixMapSize, 500);
+    window.addEventListener('resize', fixMapSize);
+}
+
+function loadGame() {
+    let s = localStorage.getItem('jirstan_beta_v1_slot1') || localStorage.getItem('jirstan_save');
+    if (!s) return;
+    let ld = JSON.parse(s);
+    if (!ld.version) { localStorage.clear(); state = JSON.parse(JSON.stringify(defaultState)); return; }
+    
+    if(ld.investments && typeof ld.investments.conservative === 'number' && !ld.market) {
+        ld.market = JSON.parse(JSON.stringify(defaultState.market));
+        ld.investments.conservative = ld.investments.conservative / 100;
+        ld.investments.stock = ld.investments.stock / 500;
+        ld.investments.crypto = ld.investments.crypto / 50;
+    }
+
+    state = { ...state, ...ld };
+    state.version = "V4.0";
+    state.tech = state.tech || [];
+    state.researching = state.researching || null;
+    state.stats = { ...defaultState.stats, ...(ld.stats || {}) };
+    state.staff = { dispatcher: { ...defaultState.staff.dispatcher, ...(ld.staff?.dispatcher || {}) }, mechanic: { ...defaultState.staff.mechanic, ...(ld.staff?.mechanic || {}) }, accountant: { ...defaultState.staff.accountant, ...(ld.staff?.accountant || {}) } };
+    state.competitors = { fastex: { ...defaultState.competitors.fastex, ...(ld.competitors?.fastex || {}) }, greenroad: { ...defaultState.competitors.greenroad, ...(ld.competitors?.greenroad || {}) }, atlas: { ...defaultState.competitors.atlas, ...(ld.competitors?.atlas || {}) }, premium: { ...defaultState.competitors.premium, ...(ld.competitors?.premium || {}) } };
+    state.activeChallenges = state.activeChallenges || []; 
+    state.market = state.market || JSON.parse(JSON.stringify(defaultState.market));
+    state.investments = state.investments || {conservative: 0, stock: 0, crypto: 0};
+    state.trailers = state.trailers || []; state.machines = state.machines || [];
+    
+    if (state.bankDeposit === undefined) state.bankDeposit = 0;
+    if (!state.market.realestate) state.market.realestate = JSON.parse(JSON.stringify(defaultState.market.realestate));
+    if (!state.market.techstocks) state.market.techstocks = JSON.parse(JSON.stringify(defaultState.market.techstocks));
+    if (state.investments.realestate === undefined) state.investments.realestate = 0;
+    if (state.investments.techstocks === undefined) state.investments.techstocks = 0;
+    if (!state.competitors.megacorp) state.competitors.megacorp = JSON.parse(JSON.stringify(defaultState.competitors.megacorp));
+    if (state.hq.relax_zone === undefined) state.hq.relax_zone = 0;
+    if (!state.factions) state.factions = { nexus: 0, stavba: 0, fresh: 0 };
+    
+    if (!state.usedCars) state.usedCars = [];
+    if (!state.insurance) state.insurance = { active: false, days: 0 };
+
+    // Add backward compatibility for Gas Network (NEW)
+    state.gasNetwork = ld.gasNetwork || JSON.parse(JSON.stringify(defaultState.gasNetwork));
+    if (state.gasNetwork.hasBistro === undefined) state.gasNetwork.hasBistro = false;
+
+    // Backward compatibility for Bus & IPO features
+    state.buses = ld.buses || [];
+    // Ensure all buses have new properties for management depth
+    state.buses.forEach(bus => {
+        if (bus.cleanliness === undefined) bus.cleanliness = 100;
+        if (bus.upgrades === undefined) bus.upgrades = {};
+    });
+    state.busRoutes = ld.busRoutes || [];
+    state.vipTours = ld.vipTours || [];
+    state.ipo = ld.ipo || { active: false, sharesOwned: 100 };
+    if (state.hq.bus_terminal === undefined) state.hq.bus_terminal = 0;
+
+    if (!state.ships) state.ships = [];
+    if (!state.planes) state.planes = [];
+    if (!state.bazaarMarket) state.bazaarMarket = [];
+    if (!state.bazaarInventory) state.bazaarInventory = [];
+    if (!state.termDeposits) state.termDeposits = [];
+    if (state.hq.port_hub === undefined) state.hq.port_hub = 0;
+    if (state.hq.airport_hangar === undefined) state.hq.airport_hangar = 0;
+    
+    // FIX: Sanitize machines array to prevent errors from old/corrupt saves
+    if (state.machines) {
+        state.machines = state.machines.filter(m => m && m.id && m.n);
+    }
+
+    // Migration for V4.0 ships/planes missing the 'type' property from 'cat'
+    if (state.ships) state.ships.forEach(s => { if (!s.type && s.cat) s.type = s.cat; });
+    if (state.planes) state.planes.forEach(p => { if (!p.type && p.cat) p.type = p.cat; });
+    
+    // NOVÁ V4.0 AUTOMYČKA — Bezpečná inicializace
+    if (!state.carwash) {
+        state.carwash = { level: 1, autoWashStaff: false, incomeMultiplier: 1.0, waxActivated: false, waxUntil: 0 };
+    } else {
+        // Ověření, že všechny properties existují
+        if (state.carwash.level === undefined) state.carwash.level = 1;
+        if (state.carwash.autoWashStaff === undefined) state.carwash.autoWashStaff = false;
+        if (state.carwash.incomeMultiplier === undefined) state.carwash.incomeMultiplier = 1.0;
+        if (state.carwash.waxActivated === undefined) state.carwash.waxActivated = false;
+        if (state.carwash.waxUntil === undefined) state.carwash.waxUntil = 0;
+    }
+
+    // Zajistění, aby všechna vozidla měla cleanliness
+    state.vehicles.forEach(v => {
+        if (v.cleanliness === undefined) v.cleanliness = 100;
+    });
+    state.ships.forEach(s => {
+        if (s.cleanliness === undefined) s.cleanliness = 100;
+    });
+    state.planes.forEach(p => {
+        if (p.cleanliness === undefined) p.cleanliness = 100;
+    });
+    
+    // Zamezení NaN chyb u investic z historických verzí uložení
+    ['conservative', 'stock', 'crypto', 'realestate', 'techstocks'].forEach(k => {
+        if (isNaN(state.investments[k]) || state.investments[k] === undefined) {
+            state.investments[k] = 0;
+        }
+    });
+}
+function saveGame() { localStorage.setItem(`jirstan_beta_v1_slot${state.currentSaveSlot}`, JSON.stringify(state)); }
+
+function renderAll() {
+    updateUI(); renderStats(); renderOverview(); renderDispatch(); renderFleet(); renderTrailers(); 
+    renderMachines(); renderAuction(); renderContracts(); renderWorkshop(); renderDealer(); renderHQ();
+    renderTech(); renderAchievements(); renderHR(); renderStaffHire(); renderCompetition();
+    renderBuses(); renderCarwash(); renderChallenges(); renderBank(); renderInvestments(); updateFuelUI(); drawFuelChart(); drawMarketChart();
+    renderFactions(); renderInsurance(); renderOverseas(); renderGasNetwork(); renderBazaar();
+}
+function renderBank() { renderInsurance(); }
+
+function generateCarMarket() {
+    if (!state.bazaarMarket) state.bazaarMarket = [];
+    const available = [...BAZAAR_CAR_DB];
+    const market = [];
+    for (let i = 0; i < 3; i++) {
+        const idx = Math.floor(Math.random() * available.length);
+        const base = available.splice(idx, 1)[0];
+        if (!base) break;
+        const condition = Math.floor(20 + Math.random() * 60); // 20-80%
+        const cleanliness = Math.floor(10 + Math.random() * 50); // 10-60%
+        const buyPrice = Math.max(10000, Math.floor(base.basePrice * (0.3 + Math.random() * 0.25))); // 30-55% základní ceny
+        market.push({
+            id: Date.now() + Math.floor(Math.random() * 1000) + i,
+            model: base.model,
+            basePrice: base.basePrice,
+            img: base.img,
+            condition,
+            cleanliness,
+            buyPrice,
+            status: 'koupit'
+        });
+    }
+    state.bazaarMarket = market;
+}
+
+function buyBazaarCar(idx) {
+    if (!state.bazaarMarket || !state.bazaarMarket[idx]) return;
+    const car = state.bazaarMarket[idx];
+    if (state.money < car.buyPrice) { notify('CHYBA', 'Nedostatek peněz pro nákup auta.', 'warning'); return; }
+    addMoney(-car.buyPrice);
+    state.bazaarInventory = state.bazaarInventory || [];
+    state.bazaarInventory.push({ ...car });
+    state.bazaarMarket.splice(idx, 1);
+    notify('AUTOBAZAR', `Zakoupeno ${car.model} za ${car.buyPrice.toLocaleString()} Kč.`, 'success');
+    saveGame(); renderBazaar(); updateUI();
+}
+
+function repairBazaarCar(idx) {
+    if (!state.bazaarInventory || !state.bazaarInventory[idx]) return;
+    const car = state.bazaarInventory[idx];
+    if (car.condition >= 100) { notify('INFO', 'Auto je již plně opravené.', 'info'); return; }
+    const cost = Math.max(5000, Math.floor((100 - car.condition) * 1400));
+    if (state.money < cost) { notify('CHYBA', 'Nedostatek peněz na opravu.', 'warning'); return; }
+    addMoney(-cost);
+    car.condition = 100;
+    notify('AUTOBAZAR', `Auto bylo opraveno za ${cost.toLocaleString()} Kč.`, 'success');
+    saveGame(); renderBazaar(); updateUI();
+}
+
+function washBazaarCar(idx) {
+    if (!state.bazaarInventory || !state.bazaarInventory[idx]) return;
+    const car = state.bazaarInventory[idx];
+    if (car.cleanliness >= 100) { notify('INFO', 'Auto je již čisté.', 'info'); return; }
+    const cost = 5000;
+    if (state.money < cost) { notify('CHYBA', 'Nedostatek peněz na umytí.', 'warning'); return; }
+    addMoney(-cost);
+    car.cleanliness = 100;
+    notify('AUTOBAZAR', `Auto bylo umyto za ${cost.toLocaleString()} Kč.`, 'success');
+    saveGame(); renderBazaar(); updateUI();
+}
+
+function sellBazaarCar(idx) {
+    if (!state.bazaarInventory || !state.bazaarInventory[idx]) return;
+    const car = state.bazaarInventory[idx];
+    const condFactor = Math.max(0, Math.min(1, car.condition / 100));
+    const cleanFactor = Math.max(0, Math.min(1, car.cleanliness / 100));
+    let multiplier = 0.7 + (condFactor * 0.2) + (cleanFactor * 0.3);
+    if (car.condition === 100 && car.cleanliness === 100) multiplier = 1.2; // zisk
+    const sellPrice = Math.max(10000, Math.floor(car.basePrice * multiplier));
+    addMoney(sellPrice);
+    state.bazaarInventory.splice(idx, 1);
+    notify('AUTOBAZAR', `Prodáno ${car.model} za ${sellPrice.toLocaleString()} Kč.`, 'success');
+    saveGame(); renderBazaar(); updateUI();
+}
+
+function renderBazaar() {
+    const marketGrid = document.getElementById('bazaar-market-grid');
+    const inventoryGrid = document.getElementById('bazaar-inventory-grid');
+    if (!marketGrid || !inventoryGrid) return;
+
+    if (!state.bazaarMarket || state.bazaarMarket.length === 0) {
+        generateCarMarket();
+    }
+
+    marketGrid.innerHTML = (state.bazaarMarket || []).map((car, idx) => `
+        <div class="card">
+            <img src="${car.img}" class="card-img" onerror="this.style.display='none'">
+            <div class="card-body">
+                <h3>${car.model}</h3>
+                <p>Stav: ${car.condition}% | Čistota: ${car.cleanliness}%</p>
+                <p>Cena: ${car.buyPrice.toLocaleString()} Kč</p>
+                <button class="btn btn-green" onclick="buyBazaarCar(${idx})">Koupit</button>
+            </div>
+        </div>
+    `).join('');
+
+    inventoryGrid.innerHTML = (state.bazaarInventory || []).map((car, idx) => `
+        <div class="card">
+            <img src="${car.img}" class="card-img" onerror="this.style.display='none'">
+            <div class="card-body">
+                <h3>${car.model}</h3>
+                <p>Stav: ${car.condition}% | Čistota: ${car.cleanliness}%</p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                    <button class="btn btn-blue btn-sm" onclick="repairBazaarCar(${idx})">Opravit</button>
+                    <button class="btn btn-teal btn-sm" onclick="washBazaarCar(${idx})">Umýt</button>
+                    <button class="btn btn-orange btn-sm" onclick="sellBazaarCar(${idx})">Prodat</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderInsurance() {
+    const el = document.getElementById('insurance-status');
+    if(!el) return;
+    if(state.insurance.active) {
+        el.innerHTML = `<div style="background:rgba(0,212,255,0.1); border-left:4px solid var(--blue); padding:10px; border-radius:6px; color:white; font-size:13px"><b style="color:var(--blue)">✅ POJIŠTĚNÍ AKTIVNÍ</b><br>Kryje 80% všech pokut a oprav na cestách.<br><span style="color:var(--orange); font-size:12px; margin-top:4px; display:inline-block">Platnost zbývá: ${state.insurance.days} dní</span></div>`;
+    } else {
+        el.innerHTML = `<div style="background:rgba(255,42,85,0.1); border-left:4px solid var(--red); padding:10px; border-radius:6px; color:white; font-size:13px"><b style="color:var(--red)">❌ FLOTILA NENÍ POJIŠTĚNA</b><br>Veškeré defekty a pokuty platíš v plné výši.</div>`;
+    }
+}
+function buyInsurance() {
+    if (state.money >= 150000) {
+        addMoney(-150000);
+        state.insurance.active = true;
+        state.insurance.days += 7;
+        notify("POJIŠŤOVNA", "Flotila pojištěna na 7 dní!", "info");
+        renderInsurance();
+        saveGame();
+    } else notify("CHYBA", "Nemáš peníze na zaplacení pojištění.", "warning");
+}
+
+function updateUI() {
+    document.getElementById('ui-money').innerText = Math.floor(state.money || 0).toLocaleString();
+    if(document.getElementById('bank-debt')) document.getElementById('bank-debt').innerText = (state.debt || 0).toLocaleString();
+    if(document.getElementById('bank-deposit-val')) document.getElementById('bank-deposit-val').innerText = Math.floor(state.bankDeposit || 0).toLocaleString();
+    document.getElementById('ui-rep').innerText = state.reputation || 100;
+    if(document.getElementById('ui-rep2')) document.getElementById('ui-rep2').innerText = state.reputation || 100;
+    document.getElementById('ui-fuel-price').innerText = Number(state.fuelPrice || 35.5).toFixed(2);
+    
+    const s = state.staff;
+    if(document.getElementById('st-disp')) document.getElementById('st-disp').innerHTML = s.dispatcher.active ? `<span style="color:var(--green)">L${s.dispatcher.level} (${s.dispatcher.days}d)</span>` : '<span style="color:var(--red)">NEAKTIVNÍ</span>';
+    if(document.getElementById('st-mech')) document.getElementById('st-mech').innerHTML = s.mechanic.active ? `<span style="color:var(--green)">L${s.mechanic.level} (${s.mechanic.days}d)</span>` : '<span style="color:var(--red)">NEAKTIVNÍ</span>';
+    if(document.getElementById('st-kat')) document.getElementById('st-kat').innerHTML = s.accountant.active ? `<span style="color:var(--pink)">L${s.accountant.level} (${s.accountant.days}d)</span>` : '<span style="color:var(--red)">NEAKTIVNÍ</span>';
+
+    const bmBtn = document.getElementById('filter-bm-btn');
+    if(bmBtn) {
+        if(state.tech.includes('darkweb')) bmBtn.style.display = 'block';
+        else bmBtn.style.display = 'none';
+    }
+    
+    if (typeof renderTermDeposits === 'function') renderTermDeposits();
+}
+
+function gainDispatcherXP(amount) {
+    if(!state.staff.dispatcher.active) return;
+    state.staff.dispatcher.xp += amount;
+    
+    let reqXp = state.staff.dispatcher.level * 100;
+    if(state.staff.dispatcher.xp >= reqXp) {
+        state.staff.dispatcher.xp -= reqXp;
+        state.staff.dispatcher.level++;
+        pushToTicker(`<b>PERSONÁL:</b> Dispečer Jirka postoupil na Level ${state.staff.dispatcher.level}! Bude nacházet lepší zakázky častěji.`, "success");
+        updateUI();
+    }
+}
+
+function createTermDeposit() {
+    let amount = parseInt(document.getElementById('term-amount').value);
+    let days = parseInt(document.getElementById('term-days').value);
+    
+    if(isNaN(amount) || amount <= 0 || amount > state.money) {
+        notify("CHYBA", "Neplatná částka nebo nedostatek hotovosti pro vklad.", "danger");
+        return;
+    }
+    
+    let rate = days === 3 ? 1.03 : (days === 7 ? 1.10 : 1.25);
+    addMoney(-amount);
+    
+    state.termDeposits.push({ 
+        id: Math.random().toString(36).substr(2, 5),
+        amount: amount, 
+        daysLeft: days, 
+        rate: rate, 
+        initialAmount: amount 
+    });
+    
+    pushToTicker(`<b>BANKA:</b> Hotovost ${amount.toLocaleString()} Kč uzamčena na ${days} dní.`, "success");
+    renderTermDeposits();
+    saveGame();
+}
+
+function renderTermDeposits() {
+    const list = document.getElementById('term-list');
+    if(!list) return;
+    if(!state.termDeposits || state.termDeposits.length === 0) {
+        list.innerHTML = `<div style="color:#555; font-size:12px; font-style:italic">Nemáš žádné aktivní vklady.</div>`;
+        return;
+    }
+    list.innerHTML = state.termDeposits.map(d => {
+        let expected = Math.floor(d.initialAmount * d.rate);
+        return `<div style="background:rgba(0,255,136,0.1); border:1px solid var(--teal); padding:10px; margin-top:10px; border-radius:6px; font-size:13px;">
+            <div style="display:flex; justify-content:space-between">
+                <b>Vklad: ${d.initialAmount.toLocaleString()} Kč</b>
+                <span style="color:var(--green)">Výnos: ${expected.toLocaleString()} Kč</span>
+            </div>
+            <div style="color:var(--text-muted); margin-top:5px;">Zbývá: <b style="color:white">${d.daysLeft} dní</b></div>
+        </div>`;
+    }).join('');
+}
+
+function renderStats() {
+    if(!document.getElementById('stat-total-earned')) return;
+    document.getElementById('stat-total-earned').innerText = Math.floor(state.stats.totalEarned).toLocaleString() + ' Kč';
+    document.getElementById('stat-deliveries').innerText = state.stats.deliveries;
+    document.getElementById('stat-distance').innerText = Math.floor(state.stats.distance) + ' km';
+    document.getElementById('stat-fuel-used').innerText = Math.floor(state.stats.fuelUsed) + ' l';
+    document.getElementById('stat-events').innerText = state.stats.events;
+    document.getElementById('stat-trainings').innerText = state.stats.trainings;
+    document.getElementById('stat-contracts-done').innerText = state.stats.contractsDone;
+    document.getElementById('stat-max-money').innerText = Math.floor(state.stats.maxMoney).toLocaleString() + ' Kč';
+}
+
+function renderStaffHire() {
+    const el = document.getElementById('staff-hire-grid');
+    if(!el) return;
+    el.innerHTML = Object.keys(STAFF_DEFS).map(k => {
+        const s = STAFF_DEFS[k]; const st = state.staff[k];
+        if(st.active) {
+            const skHtml = s.skills.map(sk => {
+                const has = st.skills[sk.id];
+                return `<div class="skill-btn ${has?'sk-owned':''}" ${has?'':`onclick="learnStaffSkill('${k}', '${sk.id}', ${sk.cost})"`}>
+                    <span class="sk-name">${sk.n}</span><span class="sk-cost">${has ? '✅ AKTIVNÍ' : sk.cost.toLocaleString() + ' Kč'}</span>
+                </div>`;
+            }).join('');
+            
+            const extCost = s.cost / 2;
+            const extHtml = `<div style="display:flex; justify-content:space-between; align-items:center; margin: 12px 0; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-light); border-radius: 8px;">
+                <div><div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px">Smlouva zbývá</div><b style="color:${st.days < 3 ? 'var(--red)' : 'var(--green)'}; font-size:16px">${st.days} dní</b></div>
+                <button class="btn btn-sm btn-orange" style="margin:0" onclick="extendStaff('${k}', 7, ${extCost})">PRODLOUŽIT (+7D / ${extCost.toLocaleString()})</button>
+            </div>`;
+
+            return `<div class="card staff-card" style="border-left:4px solid var(--orange)"><img src="${s.img}" class="staff-img" onerror="this.src='https://via.placeholder.com/160x200/111/555?text=${s.n}'">
+                <div class="staff-content"><h3 style="margin:0; color:var(--orange)">${s.n} <span style="color:var(--green); float:right; font-size:14px; background:rgba(0,242,96,0.1); padding:4px 10px; border-radius:12px">Level ${st.level}</span></h3>
+                    ${extHtml}
+                    ${k === 'accountant' ? `<div style="display:flex;gap:8px; margin-bottom:8px"><button class="btn btn-pink btn-sm" onclick="runAudit()">🔎 PROVÉST AUDIT</button><button class="btn btn-orange btn-sm" onclick="buyChocolate()">🍫 KOUPIT ČOKOLÁDU (5k)</button></div>` : ''}
+                    <div style="margin-top:auto"><div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:1px">Speciální dovednosti:</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">${skHtml}</div></div>
+                </div></div>`;
+        } else {
+            return `<div class="card staff-card" style="opacity:0.85; border:1px dashed var(--border-light)"><img src="${s.img}" class="staff-img" style="filter:grayscale(1)" onerror="this.src='https://via.placeholder.com/160x200/111/555?text=${s.n}'">
+                <div class="staff-content" style="justify-content:center; text-align:center"><h3 style="margin:0; color:var(--text-muted)">${s.n}</h3><p style="font-size:13px; color:#888">${s.desc}</p>
+                    <div style="background:rgba(0,0,0,0.5); border:1px solid var(--border-light); border-radius:8px; padding:15px; margin:15px 0"><div style="font-size:11px; color:#aaa; margin-bottom:6px">Nástupní bonus a smlouva na 7 dní</div><b style="color:var(--orange); font-size:24px; font-family:'Rajdhani'">${s.cost.toLocaleString()} Kč</b></div>
+                    <button class="btn btn-green" onclick="hireStaff('${k}')">PODEPSAT SMLOUVU</button>
+                </div></div>`;
+        }
+    }).join('');
+}
+function hireStaff(role) { const sDef = STAFF_DEFS[role]; if (state.money >= sDef.cost) { addMoney(-sDef.cost); state.staff[role].active = true; state.staff[role].days = 7; notify("HR", `${sDef.n} najat na 7 dní.`, "success"); renderStaffHire(); saveGame(); } else notify("CHYBA", "Nedostatek peněz", "warning"); }
+function extendStaff(role, days, cost) { if (state.money >= cost) { addMoney(-cost); state.staff[role].days += days; notify("HR", `Smlouva prodloužena o ${days} dní.`, "success"); renderStaffHire(); saveGame(); } else notify("CHYBA", "Nemáš peníze na prodloužení!", "warning"); }
+function learnStaffSkill(role, skillId, cost) { if (state.money >= cost) { addMoney(-cost); state.stats.totalSpent += cost; state.staff[role].skills[skillId] = true; notify("HR", `Dovednost naučena!`, "pink"); renderStaffHire(); saveGame(); } else notify("CHYBA", "Nemáš dost peněz!", "warning"); }
+function runAudit() { if (!state.staff.accountant.active) return; const now = state.day * 1440 + state.hour * 60 + state.minute; if (now - (state.staff.accountant.lastAudit || 0) < 1440) { notify("AUDIT", "Audit lze provést 1x denně.", "warning"); return; } let pct = 0.03 + (state.staff.accountant.level * 0.005); if (state.staff.accountant.skills.audit) pct *= 2; let bonus = Math.floor(state.money * pct); addMoney(bonus); state.stats.totalEarned += bonus; state.staff.accountant.lastAudit = now; notify("AUDIT", `Nalezeno ${bonus.toLocaleString()} Kč!`, "gold"); state.staff.accountant.xp += 50; renderStaffHire(); }
+function buyChocolate() { if (state.money >= 5000) { addMoney(-5000); notify("KATEŘINA", "Účetní je potěšena.", "pink"); } }
+
+function fixMapSize() { 
+    const c = document.getElementById('gameMap'); 
+    if(!c || !c.parentElement || c.parentElement.clientWidth === 0) return;
+    c.width = c.parentElement.clientWidth; 
+    c.height = 500; 
+    renderMap(); 
+}
+function renderMap() { 
+    const c = document.getElementById('gameMap'); if(!c || !c.getContext) return; 
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height); 
+    ctx.beginPath(); // FIX: Reset path state to prevent style bleeding between frames
+    
+    // Draw background
+    if (mapBgImage.complete && mapBgImage.naturalHeight !== 0) {
+        ctx.globalAlpha = 0.6; // Make background slightly transparent to blend
+        ctx.drawImage(mapBgImage, 0, 0, c.width, c.height);
+        ctx.globalAlpha = 1.0; // Reset alpha
+    } else {
+        // Fallback background color if image fails
+        ctx.fillStyle = '#ff00ff';
+        ctx.fillRect(0, 0, c.width, c.height);
+    }
+    
+    // Grid (Cyberpunk style)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)'; ctx.lineWidth = 1;
+    for(let i=0; i<c.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,c.height); ctx.stroke(); }
+    for(let i=0; i<c.height; i+=40) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(c.width,i); ctx.stroke(); }
+    
+    // ATLANTIC OCEAN DIVIDER (V4.0)
+    ctx.fillStyle = 'rgba(0, 100, 255, 0.05)';
+    ctx.fillRect(c.width * 0.35, 0, c.width * 0.20, c.height);
+    ctx.strokeStyle = 'rgba(0, 212, 255, 0.2)'; ctx.lineWidth = 2; ctx.setLineDash([10, 10]);
+    ctx.beginPath(); ctx.moveTo(c.width * 0.45, 0); ctx.lineTo(c.width * 0.45, c.height); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(0, 212, 255, 0.3)'; ctx.font = '700 16px Rajdhani';
+    ctx.fillText("ATLANTICKÝ OCEÁN", c.width * 0.45 - 60, 30);
+    
+    // Connections (Tady propojíme jen stejný kontinent pro vizuál, nebo i letadla)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)'; ctx.lineWidth = 1;
+    const cityKeys = Object.keys(CITIES);
+    for(let i=0; i<cityKeys.length; i++) {
+        for(let j=i+1; j<cityKeys.length; j++) {
+            if(Math.random() > 0.3) continue;
+            let c1 = CITIES[cityKeys[i]]; let c2 = CITIES[cityKeys[j]];
+            // Nepropojovat čárami pevninu přes oceán (jen vizuál)
+            if ((c1.x < 0.4 && c2.x > 0.4) || (c1.x > 0.4 && c2.x < 0.4)) continue;
+            ctx.beginPath(); ctx.moveTo(c1.x*c.width, c1.y*c.height); ctx.lineTo(c2.x*c.width, c2.y*c.height); ctx.stroke();
+        }
+    }
+    
+    // Nodes
+    for(let key in CITIES) {
+        let cx = CITIES[key].x * c.width; let cy = CITIES[key].y * c.height;
+        let isPort = CITIES[key].isPort;
+        let isAir = CITIES[key].isAirport;
+        
+        ctx.fillStyle = isAir ? '#00e5ff' : (isPort ? '#0072ff' : '#ff9d00'); 
+        ctx.beginPath(); ctx.arc(cx, cy, isAir || isPort ? 6 : 4, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle; ctx.fill(); ctx.shadowBlur = 0; // Glow
+        ctx.fillStyle = '#94a3b8'; ctx.font = '500 11px Inter'; 
+        ctx.fillText(key.toUpperCase(), cx + 10, cy + 4);
+        
+        if(isAir) ctx.fillText("✈️", cx - 20, cy + 4);
+        if(isPort && !isAir) ctx.fillText("⚓", cx - 20, cy + 4);
+    }
+    
+    // Vykreslování všech aktivních dopravních prostředků
+    let allActive = [];
+    state.vehicles.forEach(v => { if(v.job) allActive.push({...v, vCat: 'truck'}) });
+    state.ships.forEach(s => { if(s.job) allActive.push({...s, vCat: 'ship'}) });
+    state.planes.forEach(p => { if(p.job) allActive.push({...p, vCat: 'plane'}) });
+
+    allActive.forEach(v => {
+        let start = CITIES[v.loc] || CITIES['Praha']; let end = CITIES[v.job.dest];
+        if(start && end) {
+            let p = v.progress / 100;
+            let px = start.x + (end.x - start.x) * p; let py = start.y + (end.y - start.y) * p;
+            px *= c.width; py *= c.height;
+            
+            // Route Line
+            if (v.vCat === 'ship') ctx.strokeStyle = 'rgba(0, 114, 255, 0.8)';
+            else if (v.vCat === 'plane') ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            else ctx.strokeStyle = v.job.isBlackMarket ? 'rgba(255, 42, 85, 0.6)' : 'rgba(0, 212, 255, 0.6)'; 
+            
+            ctx.lineWidth = v.vCat === 'plane' ? 1 : 2; 
+            ctx.setLineDash(v.vCat === 'plane' ? [2, 8] : [5, 5]);
+            ctx.beginPath(); ctx.moveTo(start.x*c.width, start.y*c.height); ctx.lineTo(end.x*c.width, end.y*c.height); ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Dot
+            if (v.vCat === 'ship') ctx.fillStyle = '#0072ff';
+            else if (v.vCat === 'plane') ctx.fillStyle = '#ffffff';
+            else ctx.fillStyle = v.job.isBlackMarket ? '#ff2a55' : '#00d4ff'; 
+            
+            ctx.beginPath(); ctx.arc(px, py, v.vCat === 'plane' ? 4 : 6, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle; ctx.fill(); ctx.shadowBlur = 0;
+            ctx.fillStyle = 'white'; ctx.font = 'bold 11px Inter'; 
+            
+            let iconStr = '';
+            if(v.vCat === 'ship') iconStr = '🚢 ';
+            if(v.vCat === 'plane') iconStr = '✈️ ';
+            ctx.fillText(iconStr + v.model, px + 10, py - 6);
+        }
+    });
+}
+
+function renderInvestments() {
+    const list = document.getElementById('invest-list');
+    if(!list) return;
+    list.innerHTML = Object.keys(MARKET_DB).map(id => {
+        const db = MARKET_DB[id]; const m = state.market[id]; const shares = state.investments[id] || 0;
+        const val = shares * m.price;
+        return `<div class="invest-card"><div><b style="color:${db.color}; font-size:15px">${db.n}</b><br><span style="font-size:12px; color:var(--text-muted)">Kurz: ${m.price.toFixed(2)} Kč / ks</span></div>
+            <div style="text-align:right"><div style="color:var(--text-main); font-weight:bold; font-size:16px">Hodnota: ${Math.floor(val || 0).toLocaleString()} Kč</div>
+                <div style="font-size:11px; color:#888; margin-bottom:8px">Vlastníš: ${shares.toFixed(2)} ks</div>
+                <div class="invest-actions">${id !== 'crypto' ? `<button class="btn btn-sm btn-dark" onclick="buyFund('${id}', 10000)">+10k</button><button class="btn btn-sm btn-dark" onclick="buyFund('${id}', 100000)">+100k</button>` : `<span style="font-size:10px; color:var(--gold); display:flex; align-items:center; margin-right:5px">Těží serverovna</span>`}<button class="btn btn-sm btn-red" onclick="sellFund('${id}')">PRODAT</button></div>
+            </div></div>`;
+    }).join('');
+}
+function buyFund(id, amount) { 
+    if(id==='crypto')return; 
+    if(state.money >= amount) { 
+        addMoney(-amount); 
+        state.investments[id] = (state.investments[id] || 0) + (amount / state.market[id].price); 
+        notify("BURZA", `Nakoupeny akcie za ${amount.toLocaleString()} Kč`, "success"); 
+        renderInvestments(); saveGame(); 
+    } else notify("CHYBA", "Nemáš dost peněz na investici!", "warning"); 
+}
+function sellFund(id) { 
+    const shares = state.investments[id] || 0; 
+    if(shares > 0) { 
+        const val = shares * state.market[id].price; 
+        state.investments[id] = 0; 
+        addMoney(val); 
+        notify("PRODEJ", `Investice prodána: +${Math.floor(val).toLocaleString()} Kč`, "success"); 
+        renderInvestments(); saveGame(); 
+    } 
+}
+function drawMarketChart() {
+    const c = document.getElementById('market-chart'); if(!c) return;
+    let w = c.parentElement.clientWidth; if (w === 0) w = 800; // Ochrana
+    c.width = w - 50; c.height = 180;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth=1;
+    for(let i=0; i<c.height; i+=30) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(c.width,i); ctx.stroke(); }
+    Object.keys(MARKET_DB).forEach(id => {
+        const m = state.market[id]; const color = MARKET_DB[id].color;
+        if(m.history.length < 2) return;
+        const min = Math.min(...m.history) * 0.9; const max = Math.max(...m.history) * 1.1;
+        const dx = c.width / Math.max(1, m.history.length - 1);
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
+        m.history.forEach((val, i) => { const x = i * dx; const y = c.height - ((val - min) / (max - min)) * c.height; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+        ctx.stroke();
+    });
+}
+function drawFuelChart() {
+    const c = document.getElementById('fuel-chart'); if(!c) return;
+    let w = c.parentElement.clientWidth; if (w === 0) w = 800;
+    c.width = w - 50; c.height = 90;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth=1;
+    for(let i=0; i<c.height; i+=20) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(c.width,i); ctx.stroke(); }
+    if(fuelHistory.length < 2) return;
+    const min = Math.min(...fuelHistory) * 0.95; const max = Math.max(...fuelHistory) * 1.05;
+    const dx = c.width / Math.max(1, fuelHistory.length - 1);
+    ctx.beginPath(); ctx.strokeStyle = 'var(--red)'; ctx.lineWidth = 3;
+    fuelHistory.forEach((val, i) => {
+        const x = i * dx;
+        const y = c.height - ((val - min) / (max - min)) * c.height;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+}
+
+function takeLoan(type) { 
+    let amount = 0; let rate = 0; 
+    if(type==='biz') {amount=500000; rate=0.05;} 
+    if(type==='corp') {amount=5000000; rate=0.03;} 
+    if(type==='vip') {amount=50000000; rate=0.02;} 
+    if(type==='global') {amount=200000000; rate=0.01;} 
+    
+    state.debt += amount * (1 + rate); 
+    addMoney(amount); 
+    state.stats.loansTaken = (state.stats.loansTaken || 0) + 1; 
+    notify("PŮJČKA", `Banka ti půjčila ${amount.toLocaleString()} Kč!`, "info"); 
+    pushToTicker(`<b>BANKA:</b> Načerpána půjčka ve výši ${amount.toLocaleString()} Kč.`, "info");
+    updateUI(); saveGame(); 
+}
+
+function payLoan(amount) { 
+    if (state.debt <= 0) { 
+        notify("BANKA", "Nemáš žádné dluhy k zaplacení.", "info"); 
+        return; 
+    }
+    
+    let payAmount = amount;
+    if (amount === 'all' || amount > state.debt) payAmount = state.debt;
+    
+    if (state.money >= payAmount) { 
+        state.debt -= payAmount; 
+        addMoney(-payAmount); 
+        
+        if (state.debt <= 0) {
+            state.debt = 0;
+            notify("SPLÁTKA", "Dluh byl plně splacen!", "success"); 
+            pushToTicker(`<b>BANKA:</b> Firemní dluh byl plně splacen.`, "success");
+        } else {
+            notify("SPLÁTKA", `Splatil jsi ${payAmount.toLocaleString()} Kč ze svého dluhu.`, "success"); 
+            pushToTicker(`<b>BANKA:</b> Odeslána splátka ${payAmount.toLocaleString()} Kč. Zbývá: ${Math.floor(state.debt).toLocaleString()} Kč`, "info");
+        }
+    } else { 
+        notify("CHYBA", "Nedostatek hotovosti na tuto splátku.", "warning"); 
+    } 
+    updateUI(); saveGame(); 
+}
+
+function depositMoney(amount) {
+    if (state.money >= amount) {
+        addMoney(-amount);
+        state.bankDeposit += amount;
+        notify("BANKA", `Vloženo ${amount.toLocaleString()} Kč na spoření.`, "success");
+        updateUI();
+        saveGame();
+    } else notify("CHYBA", "Nemáš dost peněz!", "warning");
+}
+
+function withdrawMoney(amount) {
+    if (amount === 'all') {
+        if(state.bankDeposit > 0) {
+            addMoney(state.bankDeposit);
+            notify("BANKA", `Vybráno ${Math.floor(state.bankDeposit).toLocaleString()} Kč ze spoření.`, "success");
+            state.bankDeposit = 0;
+        }
+    } else if (state.bankDeposit >= amount) {
+        state.bankDeposit -= amount;
+        addMoney(amount);
+        notify("BANKA", `Vybráno ${amount.toLocaleString()} Kč.`, "success");
+    } else {
+        notify("CHYBA", "Na spořicím účtu není tolik peněz!", "warning");
+    }
+    updateUI();
+    saveGame();
+}
+
+function autoDispatch(absTime) {
+    const dispatcherLevel = state.staff.dispatcher.active ? state.staff.dispatcher.level : 0;
+    if (dispatcherLevel < 1) return;
+
+    // 1. Ensure there are offers to choose from
+    if (state.offers.length === 0) {
+        genOffers(true);
+        pushToTicker(`<b>DISPEČER:</b> Žádné nabídky, právě hledám nové zakázky...`, "info");
+    }
+    if (state.offers.length === 0) return;
+
+    if (state.offers.length < 3) {
+        genOffers(true);
+    }
+
+    // 2. Find all vehicles that can accept more jobs
+    const availableVehicles = state.vehicles.filter(v => {
+        if (!v.driverId) return false;
+        const d = state.drivers.find(x => x.id == v.driverId);
+        if (!d || d.restUntil > absTime || d.energy < 25) return false;
+
+        const maxJobs = 2 + Math.floor(dispatcherLevel / 2);
+        const currentJobs = (v.job ? 1 : 0) + (v.queue ? v.queue.length : 0);
+        return currentJobs < maxJobs;
+    });
+
+    if (availableVehicles.length === 0) return;
+
+    let assignedCount = 0;
+    const sortedOffers = [...state.offers].sort((a, b) => b.pay - a.pay);
+    let offersToRemove = [];
+
+    // 3. Iterate through offers and assign them
+    for (const offer of sortedOffers) {
+        if (offer.isBlackMarket) continue;
+
+        const vehicle = availableVehicles.find(v => 
+            !v.newlyAssigned &&
+            v.type === offer.type &&
+            getEligibility(v, offer).eligible
+        );
+
+        if (vehicle) {
+            if (!vehicle.job) {
+                vehicle.job = offer;
+                notify("CHYTRÝ DISPEČINK", `${vehicle.model} automaticky vyslán do ${offer.dest}.`, "info");
+            } else {
+                vehicle.queue.push(offer);
+                notify("CHYTRÝ DISPEČINK", `Zakázka do ${offer.dest} přidána do fronty vozu ${vehicle.model}.`, "info");
+            }
+            
+            vehicle.newlyAssigned = true;
+            offersToRemove.push(offer.id);
+            assignedCount++;
+            gainDispatcherXP(5);
+        }
+    }
+
+    // 4. Clean up state
+    state.vehicles.forEach(v => delete v.newlyAssigned);
+    if (offersToRemove.length > 0) {
+        state.offers = state.offers.filter(o => !offersToRemove.includes(o.id));
+    }
+
+    if (assignedCount > 0) {
+        if (document.getElementById('tab-overview').classList.contains('active')) renderOverview();
+        if (document.getElementById('tab-dispatch').classList.contains('active')) renderDispatch();
+        if (document.getElementById('tab-auction').classList.contains('active')) renderAuction();
+        saveGame();
+    }
+}
+
+// --- TICK & ČAS ---
+function processMovement(v, type, w, absTime) {
+    // type: 'truck', 'ship', 'plane'
+    if (!v.job) return false;
+    
+    let speedBonus = 1;
+    let fuelRate = 0;
+    let condRate = 0.01;
+
+    if (type === 'truck') {
+        const d = state.drivers.find(x => x.id == v.driverId);
+        if (!d || d.restUntil > absTime) return false;
+        
+        speedBonus += (d.skills.spd || 0) * 0.05;
+        if (v.upgrades && v.upgrades.includes('chip')) speedBonus += 0.25;
+        if (v.upgrades && v.upgrades.includes('gps')) speedBonus += 0.10;
+        if (state.tech.includes('logistics')) speedBonus += 0.05;
+        if (state.tech.includes('gps_fleet')) speedBonus += 0.15;
+        if (state.tech.includes('drone_delivery')) speedBonus += 0.10; // NOVÉ V4.0 VÝZKUM
+        if (state.staff.dispatcher.active && state.staff.dispatcher.skills.routing) speedBonus += 0.1;
+        if (state.factions.nexus >= 250) speedBonus += 0.05;
+        if (state.factions.nexus >= 1000) speedBonus += 0.10;
+        
+        const traitObj = TRAITS.find(t => t.id === d.trait) || TRAITS[0];
+        speedBonus *= traitObj.speed;
+        
+        fuelRate = 0.03 * traitObj.cons; 
+        if (state.tech.includes('eco_trucks')) fuelRate *= 0.85; 
+        if (v.upgrades && v.upgrades.includes('bigtank')) fuelRate *= 0.5;
+        if (state.factions.nexus >= 500) fuelRate *= 0.90;
+        if (state.factions.nexus >= 1000) fuelRate *= 0.90;
+        
+        // Apply gas network discount
+        if (state.gasNetwork && state.gasNetwork.level > 0) {
+            fuelRate *= (1 - (state.gasNetwork.level * 0.02));
+        }
+        
+        if (v.upgrades && v.upgrades.includes('frame')) condRate *= 0.5;
+        if (state.factions.stavba >= 500) condRate *= 0.8; 
+        if (state.tech.includes('aero_design')) condRate *= 0.70; // NOVÉ V4.0 VÝZKUM
+        
+        let _eLoss = (0.04 * traitObj.fatigue);
+        if(state.hq.relax_zone) _eLoss *= (1 - state.hq.relax_zone * 0.05); 
+        if(state.factions.fresh >= 250) _eLoss *= 0.9;
+        // Apply gas network diner bonus
+        if (state.gasNetwork && state.gasNetwork.hasDiner) {
+            _eLoss *= 0.9;
+        }
+        if(d.level >= 20) _eLoss *= 0.85; 
+        d.energy -= _eLoss;
+    } else if (type === 'ship') {
+        // Lodě nepotřebují řidiče (mají posádku), ale žerou hodně paliva
+        fuelRate = v.fuelReq * 0.1; 
+        condRate = 0.005; 
+        speedBonus = 1.0; 
+        if (state.tech.includes('quantum_gps')) speedBonus += 0.20; // NOVÉ V4.0 VÝZKUM
+        if (state.tech.includes('aero_design')) condRate *= 0.70; // Aplikováno i na lodě
+    } else if (type === 'plane') {
+        // Letadla
+        fuelRate = v.fuelReq * 0.2; 
+        condRate = 0.02; 
+        speedBonus = 1.0;
+        if (state.tech.includes('quantum_gps')) speedBonus += 0.20; // NOVÉ V4.0 VÝZKUM
+        if (state.tech.includes('aero_design')) condRate *= 0.70; // Aplikováno i na letadla
+    }
+
+    let speed = (v.spd || 1) * speedBonus * w.speed;
+    if (v.trailer && type === 'truck') speed *= 0.92;
+
+    v.progress += speed; 
+    v.fuel -= fuelRate; 
+    v.cond -= condRate; 
+    state.stats.fuelUsed += fuelRate;
+
+    if (v.fuel <= 0) {
+        v.fuel = 0; let pCost = state.fuelHedge ? state.fuelHedge : state.fuelPrice;
+        if (state.tech.includes('bulk_buy')) pCost *= 0.9;
+        
+        let refillAmt = 100;
+        if(type === 'ship') refillAmt = 1000;
+        if(type === 'plane') refillAmt = 500;
+
+        if (state.fuelTank >= refillAmt) { state.fuelTank -= refillAmt; v.fuel = 100; updateFuelUI(); } 
+        else if (state.money >= refillAmt * pCost) { addMoney(-(refillAmt*pCost)); v.fuel = 100; } 
+        else { v.progress -= speed; } // Nemá peníze ani naftu = stojí
+    }
+
+    return true; // Pohnul se
+}
+
+function completeJob(v, type) {
+    let pay = v.job.pay || 0;
+    if (v.trailer && type === 'truck') {
+        let tb = v.trailer.bonus;
+        if (state.tech.includes('mega_trailers')) tb += 0.20; // NOVÉ V4.0 VÝZKUM
+        pay = Math.floor(pay * tb);
+    }
+    if (state.hq.logistics_center > 0) pay += Math.floor(pay * (state.hq.logistics_center * 0.03));
+    if (state.staff.dispatcher.active && state.staff.dispatcher.skills.negotiator) pay += Math.floor(pay * 0.1);
+    
+    if(type === 'truck') {
+        const d = state.drivers.find(x => x.id == v.driverId);
+        if (d && d.level >= 10) pay += Math.floor(pay * 0.05); 
+        if (d && d.level >= 20) pay += Math.floor(pay * 0.10); 
+        if (state.factions.stavba >= 250 && (v.job.reqLic === 'adr' || v.job.reqLic === 'sypky')) pay = Math.floor(pay * 1.1);
+        if (state.factions.stavba >= 1000 && (v.job.reqLic === 'heavy' || v.job.reqLic === 'cars')) pay = Math.floor(pay * 1.3);
+        if (state.factions.fresh >= 500 && (v.job.reqLic === 'frigo' || v.job.reqLic === 'express')) pay = Math.floor(pay * 1.2);
+    }
+
+    if (state.tech.includes('global_lic')) pay = Math.floor(pay * 1.1);
+    if (state.tech.includes('ai_disp')) pay = Math.floor(pay * 1.2);
+    if (state.tech.includes('nightshift') && (state.hour >= 20 || state.hour < 6)) {
+        pay = Math.floor(pay * 1.4);
+        state.stats.nightDeliveries = (state.stats.nightDeliveries || 0) + 1;
+    }
+
+    // NEW V4.0: Penalizace za nízkou čistotu vozidla (Dirty Vehicle Penalty)
+    if (v.cleanliness && v.cleanliness < 50) {
+        let cleanDiff = 50 - v.cleanliness; // Jak moc pod 50% je?
+        let penaltyPercent = Math.floor(cleanDiff / 10) * 10; // -10% za každých 10% pod 50%
+        pay = Math.floor(pay * (1 - (penaltyPercent / 100)));
+        if (penaltyPercent > 0) {
+            pushToTicker(`<b>REPUTACE:</b> ${v.model} doručeno na cestě špinavé (-${penaltyPercent}% zisk, -1 reputace).`, "warning");
+            state.reputation = Math.max(0, state.reputation - 1);
+        }
+    }
+    
+    // NEW V4.0: Bonus za čistotu s voskováním (Shiny Bonus)
+    if (v.shinyUntil && v.shinyUntil > state.day) {
+        pay = Math.floor(pay * 1.05); // +5% bonus
+    }
+
+    addMoney(pay); state.stats.totalEarned += pay; state.stats.deliveries++; state.stats.distance += v.job.dist || 0;
+    v.loc = v.job.dest; 
+    
+    let icon = type === 'ship' ? '🚢' : (type === 'plane' ? '✈️' : '🚛');
+    notify("DORUČENO", `${icon} ${v.model} → ${v.job.dest}. +${pay.toLocaleString()} Kč`, "success");
+    
+    if (v.job.factionId && !v.job.isBlackMarket) {
+        state.factions[v.job.factionId] += Math.floor(Math.random() * 5) + 5;
+        if(state.factions[v.job.factionId] > 1000) state.factions[v.job.factionId] = 1000;
+        renderFactions();
+    }
+
+    if (type === 'truck') {
+        const d = state.drivers.find(x => x.id == v.driverId);
+        let xpGain = state.tech.includes('sim') ? 200 : 100; 
+        d.xp += xpGain; 
+        if(d.xp >= d.req) { d.level++; d.xp=0; d.req*=1.5; d.skills.spd++; notify("LEVEL UP", `${d.name} dosáhl levelu ${d.level}!`, "gold"); renderHR(); }
+    }
+    
+    gainDispatcherXP(15); // Dispečer získává XP za každou doručenou zásilku
+    
+    // Contracts
+    state.contracts.forEach(c => {
+        if(c.dest === v.loc && c.progress < c.count) {
+            c.progress++;
+            if(c.progress >= c.count) {
+                addMoney(c.reward); state.stats.totalEarned += c.reward;
+                notify("SMLOUVA SPLNĚNA", `Doručen poslední náklad pro ${c.dest}. Odměna: ${c.reward.toLocaleString()} Kč!`, "gold");
+            }
+        }
+    });
+    state.contracts = state.contracts.filter(c => c.progress < c.count);
+    
+    if (v.queue && v.queue.length > 0) {
+        v.job = v.queue.shift();
+        v.progress = 0;
+        notify("PLÁNOVAČ TRAS", `${v.model} ihned pokračuje další zakázkou → ${v.job.dest}.`, "info");
+    } else {
+        v.job = null;
+        v.progress = 0;
+    }
+}
+
+function tick() {
+    state.minute++;
+    if (state.minute >= 60) { state.minute = 0; state.hour++; hourly(); }
+    if (state.hour >= 24) { state.hour = 0; state.day++; daily(); }
+
+    const absTime = state.day * 1440 + state.hour * 60 + state.minute;
+    const w = WEATHER_TYPES.find(x => x.id === state.weather) || WEATHER_TYPES[0];
+    let mapUpdate = false;
+
+    if (state.money > state.stats.maxMoney) { state.stats.maxMoney = state.money; renderStats(); }
+    
+    if (state.researching) {
+        state.researching.progress++;
+        if (state.researching.progress >= state.researching.duration) { 
+            state.tech.push(state.researching.id); 
+            notify("VÝZKUM DOKONČEN", `Výzkum technologie dokončen!`, "success"); 
+            state.researching = null; 
+            renderTech(); updateUI();
+            saveGame(); 
+        } else if (state.minute % 10 === 0 && document.getElementById('tab-tech').classList.contains('active')) {
+            renderTech();
+        }
+    }
+
+    if (state.staff.dispatcher.active && state.minute % 15 === 0) autoDispatch(absTime);
+
+    // Kamiony
+    state.vehicles.forEach(v => {
+        if(!v.job) return;
+        // Black Market
+        if (v.job.isBlackMarket && Math.random() < 0.005) { 
+            let fine = v.job.pay * 1.5;
+            if (state.insurance.active) {
+                fine = Math.floor(fine * 0.2);
+                notify("POLICIE ZASAHUJE!", `Auto ${v.model} chyceno! Pojišťovna ale uhradila většinu pokuty. Stálo tě to jen ${fine.toLocaleString()} Kč!`, "warning");
+            } else {
+                notify("POLICIE ZASAHUJE!", `Vozidlo ${v.model} chyceno! Pokuta ${fine.toLocaleString()} Kč a obří pokles reputace!`, "danger");
+                state.reputation -= 15;
+            }
+            addMoney(-fine);
+            v.job = null; v.progress = 0;
+            if(v.queue && v.queue.length > 0) { v.job = v.queue.shift(); }
+            updateUI(); return; 
+        }
+
+        if(processMovement(v, 'truck', w, absTime)) {
+            mapUpdate = true;
+            if(v.progress >= 100) completeJob(v, 'truck');
+        }
+    });
+
+    // Lodě
+    state.ships.forEach(s => {
+        if(!s.job) return;
+        if(processMovement(s, 'ship', w, absTime)) {
+            mapUpdate = true;
+            if(s.progress >= 100) completeJob(s, 'ship');
+        }
+    });
+
+    // Letadla
+    state.planes.forEach(p => {
+        if(!p.job) return;
+        if(processMovement(p, 'plane', w, absTime)) {
+            mapUpdate = true;
+            if(p.progress >= 100) completeJob(p, 'plane');
+        }
+    });
+
+    document.getElementById('ui-time').innerText = `${pad(state.hour)}:${pad(state.minute)}`; document.getElementById('ui-day').innerText = state.day;
+    updateUI();
+    if (mapUpdate && document.getElementById('tab-dispatch').classList.contains('active')) renderMap();
+    if (state.minute % 5 === 0 && document.getElementById('tab-dispatch').classList.contains('active')) renderDispatch();
+}
+
+function pushToTicker(msg, type) {
+    const timeStr = `DEN ${state.day} | ${pad(state.hour)}:${pad(state.minute)}`;
+    
+    // 1. Spodní běžící lišta
+    const track = document.getElementById('ticker-track');
+    if (track) {
+        const span = document.createElement('span');
+        span.className = `ticker-item ${type}`;
+        span.innerHTML = `<span style="color:#aaa; font-family:'Orbitron'; font-size:11px; margin-right:8px">[${timeStr}]</span> <span>${msg}</span>`;
+        track.appendChild(span);
+        if(track.children.length > 20) track.removeChild(track.firstChild);
+    }
+
+    // 2. Dispečerský Terminál
+    const term = document.getElementById('dispatch-terminal');
+    if (term) {
+        if(term.innerHTML.includes("Čekám na události")) term.innerHTML = "";
+        let color = "var(--text-main)";
+        if(type === 'success') color = "var(--green)";
+        if(type === 'warning') color = "var(--gold)";
+        if(type === 'danger') color = "var(--red)";
+        if(type === 'info') color = "var(--blue)";
+        
+        const log = document.createElement('div');
+        log.style.cssText = `border-left: 3px solid ${color}; padding-left: 12px; background: rgba(255,255,255,0.04); padding-top: 8px; padding-bottom: 8px; border-radius: 0 6px 6px 0; animation: fadeInScale 0.3s ease-out forwards;`;
+        log.innerHTML = `<span style="color:#888; font-family:'Orbitron'; font-size:11px; margin-right:8px; display:block; margin-bottom:4px">[${timeStr}]</span> <span style="color:${color}; font-weight:600">${msg}</span>`;
+        term.prepend(log);
+        if(term.children.length > 50) term.removeChild(term.lastChild);
+    }
+}
+
+function triggerInteractiveEvent() {
+    if (state.vehicles.filter(v => v.job).length === 0) return; 
+    
+    const scenarios = [
+        {
+            title: "🛑 PODEZŘELÝ STOPAŘ",
+            desc: "Jeden z tvých řidičů hlásí, že u cesty stojí chlap v obleku s kufříkem a nabízí 50 000 Kč v hotovosti za okamžitý odvoz. Vypadá ale dost nervózně...",
+            choices: [
+                { text: "VZÍT HO (Šance na 50k, ale riziko)", action: () => {
+                    if(Math.random() > 0.4) {
+                        addMoney(50000); notify("STOPAŘ", "Chlápek zaplatil a zmizel. +50 000 Kč!", "success"); pushToTicker("<b>BOKOVKA:</b> Řidič vzal stopaře a získal tučnou odměnu v hotovosti.", "success");
+                    } else {
+                        addMoney(-20000); state.reputation -= 10; notify("POLICIE!", "Chlápek byl hledaný zločinec! Pokuta a vyšetřování.", "danger"); pushToTicker("<b>SKANDÁL:</b> Jirstan Logistics vyšetřován za napomáhání zločinci. Reputace klesá.", "danger");
+                    }
+                }},
+                { text: "IGNOROVAT (Bezpečí)", action: () => {
+                    notify("BEZPEČÍ", "Řidič projel kolem. Jistota je jistota.", "info"); pushToTicker("<b>DISPEČINK:</b> Podezřelý stopař nahlášen policii, jedeme dál bez zdržení.", "info");
+                }}
+            ]
+        },
+        {
+            title: "⛈️ ZKRATKA PŘES HORY",
+            desc: "Kamion s důležitým nákladem uvízl ve strašlivé koloně kvůli nehodě. Dispečer navrhuje riskantní zkratku přes neudržovaný horský průsmyk. Ušetříme čas?",
+            choices: [
+                { text: "RISKNOUT TO (Zrychlení zakázky)", action: () => {
+                    if(Math.random() > 0.4) {
+                        state.vehicles.filter(v=>v.job).forEach(v => v.progress = Math.min(99, v.progress + 15));
+                        notify("ZKRATKA", "Vyšlo to! Kamiony se výrazně posunuly k cíli.", "success"); pushToTicker("<b>LOGISTIKA:</b> Riskantní zkratka ušetřila několik hodin cesty.", "success");
+                    } else {
+                        state.vehicles.filter(v=>v.job).forEach(v => v.cond = Math.max(0, v.cond - 25));
+                        notify("NEHODA", "Špatný nápad. Extrémní poškození podvozků na kamenité cestě (-25% stav).", "warning"); pushToTicker("<b>NEHODA:</b> Pokus o zkratku skončil poškozením flotily.", "warning");
+                    }
+                }},
+                { text: "POČKAT V KOLONĚ", action: () => {
+                    notify("KOLONA", "Čekáme. Zdržíme se, ale auta jsou celá.", "info"); pushToTicker("<b>DOPRAVA:</b> Kamiony stojí v obrovské koloně, nabírají zpoždění.", "warning");
+                }}
+            ]
+        },
+        {
+            title: "🤑 KORUPCE NA CELNICI",
+            desc: "Celník na hranicích zdržuje náš kamion a zjevně očekává 'všimné'. Pokud nezaplatíme 20 000 Kč, prý vozidlo zdrží o půl dne.",
+            choices: [
+                { text: "ZAPLATIT ÚPLATEK (Rychlý průjezd)", action: () => {
+                    addMoney(-20000);
+                    notify("CELNICE", "Zaplaceno. Kamion okamžitě projel.", "success"); pushToTicker("<b>HRANICE:</b> Kamion prošel celnicí nečekaně rychle díky 'všimnému'.", "success");
+                }},
+                { text: "ODMÍTNOUT (Ztráta času)", action: () => {
+                    state.vehicles.filter(v=>v.job).forEach(v => v.progress = Math.max(0, v.progress - 15));
+                    notify("CELNICE", "Celník se naštval a kamion rozebral do šroubku. Obří zdržení.", "danger"); pushToTicker("<b>HRANICE:</b> Dlouhá a nepříjemná celní kontrola masivně zdržuje dodávku.", "danger");
+                }}
+            ]
+        }
+    ];
+    
+    let s = scenarios[Math.floor(Math.random() * scenarios.length)];
+    let h = `<h2 style="color:var(--orange)">${s.title}</h2>
+             <p style="font-size:15px; margin-bottom:25px; line-height:1.5; color:var(--text-main)">${s.desc}</p>
+             <div style="display:flex; gap:15px; flex-wrap:wrap">`;
+    
+    s.choices.forEach((c, idx) => {
+        window[`tempAction${idx}`] = () => { c.action(); closeModal(); updateUI(); saveGame(); };
+        let btnClass = idx === 0 ? 'btn-orange' : 'btn-dark';
+        h += `<button class="btn ${btnClass}" style="flex:1; padding:15px; font-size:13px" onclick="window.tempAction${idx}()"><b>${c.text}</b></button>`;
+    });
+    h += `</div>`;
+    
+    document.getElementById('modal-content').innerHTML = h;
+    document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function triggerRandomEvent() {
+    if (state.vehicles.filter(v => v.job).length === 0 && state.ships.filter(s=>s.job).length === 0 && state.planes.filter(p=>p.job).length === 0) return; 
+    const events = [
+        { msg: "Jeden z řidičů dostal pokutu za rychlost!", cost: -15000, rep: -1, type: "bad" },
+        { msg: "Obrovská zácpa na dálnici zdržela dopravu. Řidiči jsou naštvaní.", energy: -10, morale: -15, type: "bad" },
+        { msg: "Pomoc uvízlému vozidlu! Skvělé PR pro Jirstan.", rep: 3, reward: 5000, type: "good" },
+        { msg: "Zákazník ocenil bleskové doručení extrémním dýškem.", reward: 25000, type: "good" },
+        { msg: "Běžná silniční a celní kontrola proběhla bez problému.", type: "neutral" },
+        { msg: "Prasklá pneumatika si vyžádala rychlý a drahý servis na cestě.", cost: -8000, type: "bad" },
+        { msg: "Řidiči našli skvělou zkratku, ušetřili trochu paliva a energie.", energy: 15, type: "good" }
+    ];
+    let ev = JSON.parse(JSON.stringify(events[Math.floor(Math.random() * events.length)]));
+    state.stats.events++;
+
+    if (ev.cost && ev.cost < 0 && state.insurance.active) {
+        ev.cost = Math.floor(ev.cost * 0.2); 
+        ev.msg += " (Pojišťovna uhradila 80% škody!)";
+    }
+
+    if (ev.cost) addMoney(ev.cost);
+    if (ev.reward) addMoney(ev.reward);
+    if (ev.rep) state.reputation += ev.rep;
+    if (ev.energy || ev.morale) {
+        state.drivers.forEach(d => {
+            if (ev.energy) d.energy = Math.min(100, Math.max(0, d.energy + ev.energy));
+            if (ev.morale) d.morale = Math.min(100, Math.max(0, d.morale + ev.morale));
+        });
+    }
+
+    let color = ev.type === "good" ? "success" : (ev.type === "bad" ? "warning" : "info");
+    notify("UDÁLOST", ev.msg, color);
+    pushToTicker(`<b>DISPEČINK HLÁSÍ:</b> ${ev.msg}`, color);
+    updateUI();
+}
+
+function genUsedCars() {
+    state.usedCars = [];
+    let numCars = Math.floor(Math.random() * 3) + 1; // 1-3 auta denně
+    for(let i=0; i<numCars; i++) {
+        let baseCar = CAR_DB[Math.floor(Math.random() * CAR_DB.length)];
+        let wear = 0.3 + (Math.random() * 0.4); 
+        let discount = 0.4 + (Math.random() * 0.3); 
+        state.usedCars.push({
+            id: Date.now() + i,
+            baseId: baseCar.model,
+            model: baseCar.model + " (Ojetina)",
+            cat: baseCar.cat,
+            price: Math.floor(baseCar.price * discount),
+            spd: baseCar.spd * (0.85 + (Math.random()*0.1)), 
+            cond: Math.floor(wear * 100),
+            img: baseCar.img
+        });
+    }
+}
+
+function hourly() {
+    state.fuelPrice = Math.max(29.5, Math.min(45, Number(state.fuelPrice || 35.5) + (Math.random() - 0.5) * 1.5));
+    fuelHistory.push(state.fuelPrice); if (fuelHistory.length > 24) fuelHistory.shift();
+    updateFuelUI();
+    if (document.getElementById('tab-bank').classList.contains('active')) drawFuelChart();
+    
+    // Dispečer aktualizuje burzu zakázek (Jirka se leveluje)
+    if (state.staff.dispatcher.active) {
+        let refreshRate = Math.max(1, 6 - Math.floor(state.staff.dispatcher.level / 2));
+        if (state.hour % refreshRate === 0) {
+            genOffers(true);
+            pushToTicker(`<b>DISPEČER:</b> Jirka právě prohledal trh a aktualizoval Burzu zakázek.`, "info");
+        }
+    }
+    
+    let rand = Math.random();
+    if (rand < 0.08) {
+        triggerInteractiveEvent();
+    } else if (rand < 0.18) {
+        triggerRandomEvent();
+    }
+}
+
+function daily() {
+    let cost = 2000 + (state.vehicles.length * 500) + (state.ships.length * 50000) + (state.planes.length * 100000); 
+    addMoney(-cost);
+    
+    if (state.bankDeposit > 0) {
+        state.bankDeposit = state.bankDeposit + (state.bankDeposit * 0.015);
+    }
+    
+    // --- LOGIKA DLUHŮ A BANKY ---
+    if (state.debt > 0) {
+        let dailyInterest = Math.floor(state.debt * 0.005); // 0.5% denní úrok z nesplacené částky
+        state.debt += dailyInterest;
+        pushToTicker(`<b>BANKA:</b> Úrok z dluhu naúčtován: ${dailyInterest.toLocaleString()} Kč. Tvoje dluhy rostou!`, "warning");
+        
+        // Exekuce a penále při dlouhodobém nesplácení (když máš malou hotovost a velký dluh)
+        if (state.money < dailyInterest) {
+            let penalty = Math.floor(state.debt * 0.05); // 5% tvrdé penále
+            state.debt += penalty;
+            state.reputation = Math.max(0, state.reputation - 5);
+            pushToTicker(`<b>EXEKUCE:</b> Banka ti kvůli nedostatku hotovosti na splátky napařila drsné penále ${penalty.toLocaleString()} Kč!`, "danger");
+            notify("BANKA", "Kritické varování! Banka penalizuje tvůj účet.", "danger");
+        }
+    }
+    
+    // Vyplácení termínovaných vkladů
+    if (state.termDeposits && state.termDeposits.length > 0) {
+        for(let i = state.termDeposits.length - 1; i >= 0; i--) {
+            let d = state.termDeposits[i];
+            d.daysLeft--;
+            if(d.daysLeft <= 0) {
+                let payout = Math.floor(d.initialAmount * d.rate);
+                addMoney(payout);
+                pushToTicker(`<b>BANKA:</b> Termínovaný vklad vypršel. Na účet připsáno +${payout.toLocaleString()} Kč!`, "success");
+                state.termDeposits.splice(i, 1);
+            }
+        }
+    }
+    
+    let machInc = 0; let cryptoInc = 0;
+    state.machines.forEach(m => { 
+        const mdb = MACHINES_DB.find(x=>x.id===m.id); 
+        if(mdb) {
+            machInc += mdb.inc; 
+            if(mdb.incCrypto) cryptoInc += mdb.incCrypto;
+        } else {
+            // Pasivní příjem z odkoupených firem
+            machInc += m.inc || 0;
+        }
+    });
+    if(machInc > 0) { addMoney(machInc); state.stats.totalEarned += machInc; notify("TĚŽBA & DIVIDENDY", `Pasivní příjmy přes noc vydělaly +${machInc.toLocaleString()} Kč!`, "success"); }
+    if(cryptoInc > 0) { state.investments.crypto += cryptoInc; notify("SERVERY", `Kryptofarma přes noc vytěžila +${cryptoInc} JirstanCoinů!`, "gold"); renderInvestments(); }
+
+    Object.keys(state.market).forEach(id => {
+        const db = MARKET_DB[id]; const m = state.market[id];
+        let change = 1 + (Math.random() * db.risk * 2 - db.risk) + db.drift;
+        
+        // FIX: Add positive drift and price floor for crypto to prevent it from crashing to zero.
+        if(id === 'crypto') {
+            change += 0.01; // Add extra positive drift
+            if (Math.random() < 0.1) { // 10% chance of a bull run
+                change += Math.random() * 0.4; // Add a significant positive boost
+            }
+        }
+
+        m.price *= change; 
+        
+        if(id === 'crypto' && m.price < 15) {
+            m.price = 15; // Set a hard price floor for crypto
+        } else if (m.price < 1) {
+            m.price = 1;
+        }
+
+        m.history.push(m.price); if(m.history.length > 30) m.history.shift();
+    });
+
+    Object.keys(state.staff).forEach(k => {
+        if(state.staff[k].active) {
+            state.staff[k].days--;
+            if(state.staff[k].days <= 0) { state.staff[k].active = false; notify("HR ODDĚLENÍ", `${STAFF_DEFS[k].n} nemá smlouvu a přestal pracovat!`, "warning"); }
+        }
+    });
+    
+    if (state.insurance.active) {
+        state.insurance.days--;
+        if (state.insurance.days <= 0) {
+            state.insurance.active = false;
+            notify("POJIŠŤOVNA", "Vypršela ti platnost firemního pojištění!", "warning");
+        }
+        renderInsurance();
+    }
+    
+    // Gas Network Income
+    if (state.gasNetwork && state.gasNetwork.level > 0) {
+        let gasIncome = state.gasNetwork.level * 15000;
+        if (state.gasNetwork.hasShop) gasIncome *= 1.2;
+        if (state.gasNetwork.hasDiner) gasIncome += 35000;
+        if (state.gasNetwork.hasBistro) gasIncome += 25000;
+        
+        if (gasIncome > 0) {
+            gasIncome = Math.floor(gasIncome);
+            addMoney(gasIncome);
+            state.stats.totalEarned += gasIncome;
+            pushToTicker(`<b>SÍŤ BENZÍNEK:</b> Denní příjem z tvých benzínek činí +${gasIncome.toLocaleString()} Kč.`, "success");
+        }
+    }
+
+    // Autobusová divize - denní příjmy z linky a spotřeba
+    state.buses.forEach(bus => {
+        if(!bus.routeId) return;
+        const route = BUS_ROUTES.find(r => r.id === bus.routeId);
+        if(!route) return;
+
+        // Cleanliness decay
+        bus.cleanliness = Math.max(0, bus.cleanliness - 5);
+
+        // Calculate income with cleanliness penalty and upgrade bonuses
+        let incomeMultiplier = 1 + (state.hq.logistics_center * 0.03);
+        
+        // Cleanliness penalty: -20% income if cleanliness < 50
+        if (bus.cleanliness < 50) {
+            incomeMultiplier *= 0.8;
+        }
+        
+        // Upgrade bonuses
+        if (bus.upgrades.engine) incomeMultiplier *= 1.1; // 10% bonus
+        if (bus.upgrades.interior) incomeMultiplier *= 1.05; // 5% bonus
+        
+        const revenue = Math.floor(route.dailyIncome * incomeMultiplier);
+        addMoney(revenue);
+        state.stats.totalEarned += revenue;
+
+        bus.fuel = Math.max(0, bus.fuel - route.fuelCost);
+        bus.cond = Math.max(0, bus.cond - route.condLoss);
+
+        if(bus.fuel <= 5 || bus.cond <= 10 || bus.cleanliness <= 20) {
+            notify("AUTOBUSY", `Autobus ${bus.model} potřebuje doplnit palivo, servis nebo úklid na trase ${route.name}.`, "warning");
+            if(bus.fuel <= 5) bus.routeId = null;
+            if(bus.cond <= 10) bus.routeId = null;
+            if(bus.cleanliness <= 20) bus.routeId = null;
+        }
+    });
+
+    genUsedCars();
+    if(document.getElementById('tab-dealer').classList.contains('active')) renderDealer();
+
+    const beforeCount = state.contracts.length;
+    state.contracts = state.contracts.filter(c => c.deadlineDay > state.day);
+    if(state.contracts.length < beforeCount) notify("PENÁLE", "Některé firemní smlouvy expirovaly!", "warning");
+
+    // ===== NEW V4.0: CLEANLINESS DECAY & WASH LOGIC =====
+    // Čistota klesá u vozidel na cestách
+    state.vehicles.forEach(v => {
+        if(v.job) {
+            // Vozidla na cestě ztrácejí čistotu
+            v.cleanliness = Math.max(0, v.cleanliness - 5); // -5% denně pro kamiony
+        }
+    });
+    
+    state.ships.forEach(s => {
+        if(s.job) {
+            // Lodě na cestě ztrácejí čistotu
+            s.cleanliness = Math.max(0, s.cleanliness - 8); // -8% denně pro lodě
+        }
+    });
+
+    // Autobusy mají už logiku čistoty v revenue sekci výše
+    
+    // Automatické mytí pokud je aktivní autoWashStaff
+    if (state.carwash.autoWashStaff) {
+        let autoWashCost = 0;
+        
+        // Kamiony
+        state.vehicles.forEach(v => {
+            if (v.cleanliness < 40) {
+                let washCost = Math.max(100000, 200000 - (state.carwash.level * 20000));
+                if (state.money >= washCost) {
+                    addMoney(-washCost);
+                    v.cleanliness = 100;
+                    autoWashCost += washCost;
+                    if (state.carwash.waxActivated && state.carwash.waxUntil > state.day) {
+                        v.shinyUntil = state.day + 3;
+                    }
+                }
+            }
+        });
+        
+        // Lodě
+        state.ships.forEach(s => {
+            if (s.cleanliness < 40) {
+                let washCost = Math.max(100000, 200000 - (state.carwash.level * 20000));
+                if (state.money >= washCost) {
+                    addMoney(-washCost);
+                    s.cleanliness = 100;
+                    autoWashCost += washCost;
+                    if (state.carwash.waxActivated && state.carwash.waxUntil > state.day) {
+                        s.shinyUntil = state.day + 3;
+                    }
+                }
+            }
+        });
+        
+        if (autoWashCost > 0) {
+            pushToTicker(`<b>AUTOMYČKA:</b> Automatický personál umyl vozidla. Výdaje: -${autoWashCost.toLocaleString()} Kč`, "info");
+        }
+    }
+
+    // Penalizace za nízkou čistotu (u všech vozidel co mají naloženou trasu/job)
+    state.vehicles.forEach(v => {
+        if (v.job) {
+            if (v.cleanliness < 50) {
+                // Penalizace: -10% zisk za každých 10% čistoty pod 50%
+                let cleanDiff = 50 - v.cleanliness;
+                let penaltyPercent = Math.floor(cleanDiff / 10) * 10; // Each 10% below 50 = -10% income
+                if (penaltyPercent > 0) {
+                    state.reputation = Math.max(0, state.reputation - 1); // Lehké snížení reputace
+                    // Penalizace se aplikuje v completeJob(), když se zaplacení počítá
+                }
+            }
+        }
+    });
+    
+    state.ships.forEach(s => {
+        if (s.job && s.cleanliness < 50) {
+            state.reputation = Math.max(0, state.reputation - 1);
+        }
+    });
+    
+    // Ukončení voskování pokud vypršela lhůta
+    if (state.carwash.waxActivated && state.carwash.waxUntil <= state.day) {
+        state.carwash.waxActivated = false;
+        pushToTicker(`<b>AUTOMYČKA:</b> Voskování PREMIUM vypršelo.`, "warning");
+    }
+
+    // Obměna nabídky v Autobazaru každým dnem
+    generateCarMarket();
+    renderBazaar();
+
+    notify("DENNÍ VÝPIS", `Odečteny náklady: -${cost.toLocaleString()} Kč`, "info");
+    checkAchievements(); renderInvestments(); renderStaffHire(); drawMarketChart(); renderStats(); renderContracts(); saveGame();
+}
+
+// --- VYKRESLOVACÍ FUNKCE A AKCE ---
+
+function renderOverview() { 
+    const tbody = document.getElementById('overview-body'); 
+    const tbodyOv = document.getElementById('overview-overseas-body');
+    if(!tbody || !tbodyOv) return; 
+    
+    tbody.innerHTML = state.vehicles.map(v => { 
+        const d = state.drivers.find(x => x.id == v.driverId); 
+        
+        let status = '';
+        if (v.job) {
+            status = `<span style="color:${v.job.isBlackMarket ? 'var(--red)' : 'var(--orange)'}; font-weight:600">${v.job.isBlackMarket ? '☠️ ILLEGÁLNÍ TRASA' : 'Trasa'} → ${v.job.dest} (${Math.floor(v.progress)}%)</span>`;
+            if (v.queue && v.queue.length > 0) {
+                status += `<br><span style="font-size:11px; color:var(--gold); display:inline-block; margin-top:4px">+ ${v.queue.length} čeká ve frontě</span>`;
+            }
+        } else {
+            status = '<span style="color:var(--green)">Čeká v garáži</span>';
+        }
+
+        let acts = ''; 
+        if (d && !v.job) acts = `<button class="btn btn-dark btn-sm" onclick="forceRest(${d.id})">POSLAT SPÁT</button>`; 
+        if (v.queue && v.queue.length > 0) acts += `<button class="btn btn-red btn-sm" onclick="clearQueue(${v.id}, 'truck')">ZRUŠIT FRONTU</button>`;
+        if (d && !v.job && d.energy < 100) acts += `<button class="btn btn-dark btn-sm" onclick="giveCoffee(${d.id})">☕ KÁVA (5k)</button>`;
+
+        let dTitle = "";
+        if(d) {
+            if(d.level >= 20) dTitle = '<span style="color:var(--gold); font-size:10px; border:1px solid var(--gold); padding:2px; border-radius:3px">MISTR</span>';
+            else if (d.level >= 10) dTitle = '<span style="color:var(--purple); font-size:10px; border:1px solid var(--purple); padding:2px; border-radius:3px">ELITA</span>';
+        }
+
+        return `<tr>
+          <td><b style="color:var(--blue); font-size:15px">${v.model}</b> <span style="font-size:11px; color:var(--text-muted)">(${v.type})</span>${v.trailer ? `<br><span style="font-size:11px; color:var(--gold)">+ Návěs</span>`:''}</td>
+          <td>${d ? `<b style="color:white">${d.name}</b> ${dTitle}` : '<span style="color:var(--red)">Bez řidiče</span>'}</td>
+          <td>${status}</td>
+          <td style="width: 15%">
+            <div class="xp-bar-bg" style="margin:0"><div class="xp-bar-fill" style="width:${Math.floor(v.fuel)}%; background:var(--red)"></div></div>
+          </td>
+          <td><b style="color:${d && d.energy>50?'var(--green)':'var(--red)'}">${d ? Math.floor(d.energy)+'%' : '-'}</b></td>
+          <td><b style="color:white">${d ? Math.floor(d.morale)+'%' : '-'}</b></td>
+          <td>${acts}</td>
+        </tr>`; 
+    }).join(''); 
+    
+    // ZÁMOŘÍ V OVERVIEW
+    let ovHtml = '';
+    const renderOvRow = (v, isShip) => {
+        let status = '';
+        if (v.job) {
+            status = `<span style="color:var(--cyan); font-weight:600">Trasa → ${v.job.dest} (${Math.floor(v.progress)}%)</span>`;
+            if (v.queue && v.queue.length > 0) status += `<br><span style="font-size:11px; color:var(--gold); display:inline-block; margin-top:4px">+ ${v.queue.length} čeká ve frontě</span>`;
+        } else {
+            status = `<span style="color:var(--green)">V ${isShip?'přístavu':'hangáru'}</span>`;
+        }
+        let acts = (v.queue && v.queue.length > 0) ? `<button class="btn btn-red btn-sm" onclick="clearQueue(${v.id}, '${isShip?'ship':'plane'}')">ZRUŠIT FRONTU</button>` : '';
+        return `<tr>
+          <td><b style="color:${isShip?'#0072ff':'#ffffff'}; font-size:15px">${isShip?'🚢':'✈️'} ${v.model}</b></td>
+          <td><span style="color:var(--text-muted)">Automatická Posádka</span></td>
+          <td>${status}</td>
+          <td style="width: 15%"><div class="xp-bar-bg" style="margin:0"><div class="xp-bar-fill" style="width:${Math.floor(v.fuel)}%; background:var(--orange)"></div></div></td>
+          <td><b style="color:${v.cond < 50 ? 'var(--red)' : 'var(--green)'}">${Math.floor(v.cond)}%</b></td>
+          <td>-</td>
+          <td>${acts}</td>
+        </tr>`;
+    };
+    state.ships.forEach(s => ovHtml += renderOvRow(s, true));
+    state.planes.forEach(p => ovHtml += renderOvRow(p, false));
+    tbodyOv.innerHTML = ovHtml || '<tr><td colspan="7" style="text-align:center; color:var(--text-muted)">Zámořská divize zatím nevlastní žádné stroje.</td></tr>';
+}
+
+function clearQueue(vid, type) {
+    let arr = state.vehicles;
+    if(type === 'ship') arr = state.ships;
+    if(type === 'plane') arr = state.planes;
+    
+    const v = arr.find(x => x.id == vid);
+    if (v && v.queue && v.queue.length > 0) {
+        state.offers.push(...v.queue);
+        v.queue = [];
+        notify("PLÁNOVAČ", `Fronta pro ${v.model} byla zrušena. Zakázky jsou zpět na burze.`, "info");
+        renderOverview(); renderDispatch(); renderAuction(); saveGame();
+    }
+}
+
+function forceRest(did) { const d = state.drivers.find(x=>x.id==did); if(d) { const absTime = state.day * 1440 + state.hour * 60 + state.minute; let hours = 8; if(state.factions.fresh >= 1000) hours = 6; d.restUntil = absTime + (hours * 60); d.energy = 100; notify("ODPOČINEK", `${d.name} poslán spát na ${hours} hodin.`, "info"); renderOverview(); renderHR(); saveGame(); } }
+
+function giveCoffee(did) {
+    if(state.money >= 5000) {
+        addMoney(-5000);
+        let d = state.drivers.find(x=>x.id==did);
+        if(d) {
+            d.energy = Math.min(100, d.energy + 30);
+            notify("KÁVA", `${d.name} doplnil energii energetickým drinkem!`, "info");
+            renderOverview(); renderHR(); saveGame();
+        }
+    } else {
+        notify("CHYBA", "Na kávu chybí peníze.", "warning");
+    }
+}
+
+function renderDispatch() { 
+    const el = document.getElementById('dispatch-grid'); if (!el) return; 
+    let active = [];
+    state.vehicles.forEach(v => { if(v.job) active.push({...v, vCat: 'truck'}) });
+    state.ships.forEach(s => { if(s.job) active.push({...s, vCat: 'ship'}) });
+    state.planes.forEach(p => { if(p.job) active.push({...p, vCat: 'plane'}) });
+    
+    el.innerHTML = active.length ? active.map(v => {
+        let qText = (v.queue && v.queue.length > 0) ? `<span style="color:var(--gold); font-size:12px; margin-left:10px;">(Další: ${v.queue[0].dest} + ${v.queue.length - 1})</span>` : '';
+        let bColor = v.job.isBlackMarket ? 'var(--red)' : 'var(--blue)';
+        let driverName = state.drivers.find(x=>x.id==v.driverId)?.name || 'Neznámý';
+        if(v.vCat === 'ship') { bColor = '#0072ff'; driverName = 'Lodní posádka'; }
+        if(v.vCat === 'plane') { bColor = '#ffffff'; driverName = 'Piloti a obsluha'; }
+        
+        return `<div class="card" style="border-left:4px solid ${bColor}; ${v.job.isBlackMarket ? 'animation: pulseGlow 2s infinite;' : ''}">
+            <div class="card-body">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+                    <b style="font-size:16px; color:${bColor}">${v.vCat==='ship'?'🚢':v.vCat==='plane'?'✈️':''} ${v.model}</b>
+                    <b style="color:white; font-size:15px">→ ${v.job.dest} ${qText}</b>
+                </div>
+                <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px">
+                    Náklad: <span style="color:${v.job.isBlackMarket ? 'var(--red)' : 'var(--orange)'}; font-weight:bold">${v.job.cargo || 'Zboží'} ${v.job.isBlackMarket ? '☠️' : ''}</span><br>
+                    Posádka: <span style="color:white">${driverName}</span>
+                </div>
+                <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${v.progress}%; background:${bColor}; transition:width 1s linear"></div></div>
+            </div>
+        </div>`;
+    }).join('') : '<div style="color:var(--text-muted); font-style:italic">Nikdo není momentálně na cestě.</div>'; 
+}
+
+function renderFleet() { const el = document.getElementById('fleet-grid'); if (!el) return; el.innerHTML = state.vehicles.map(v => { const drOpts = state.drivers.map(dr => `<option value="${dr.id}" ${dr.id == v.driverId ? 'selected' : ''}>${dr.name}</option>`).join(''); return `<div class="card"><div class="card-body"><h3 style="margin:0; color:var(--blue)">${v.model}</h3><div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; margin-top:5px">Typ podvozku: ${v.type.toUpperCase()}</div><select style="width:100%; padding:10px; background:rgba(0,0,0,0.5); color:white; border:1px solid var(--border-light); border-radius:6px; font-family:'Inter'" onchange="assignDriver(${v.id}, this.value)"><option value="">- Vyber řidiče -</option>${drOpts}</select><button class="btn btn-red" style="margin-top:15px" onclick="sellCar(${v.id})">PRODAT DO BAZARU</button></div></div>`; }).join(''); }
+function assignDriver(vid, did) { const v = state.vehicles.find(x => x.id == vid); if(v) v.driverId = did ? parseInt(did) : null; saveGame(); renderOverview(); renderFleet(); }
+function sellCar(vid) { const v = state.vehicles.find(x => x.id == vid); if(v && !v.job) { state.vehicles = state.vehicles.filter(x => x.id != vid); addMoney(150000); renderAll(); saveGame(); } else notify("CHYBA", "Auto je na cestě!", "warning"); }
+
+// --- ZÁMOŘÍ RENDERING (V4.0) ---
+function renderOverseas() {
+    const elMy = document.getElementById('overseas-my-grid');
+    const elShop = document.getElementById('overseas-shop-grid');
+    if (!elMy || !elShop) return;
+
+    elMy.innerHTML = [
+        ...state.ships.map(s => `<div class="card" style="border-top:3px solid #0072ff"><div class="card-body"><h3 style="color:#0072ff;margin-top:0">🚢 ${s.model}</h3><div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Stav: ${Math.floor(s.cond)}% | Palivo: ${Math.floor(s.fuel)}%</div><div class="xp-bar-bg" style="margin-bottom:10px"><div class="xp-bar-fill" style="width:${s.cond}%;background:${s.cond<50?'red':'green'}"></div></div></div></div>`),
+        ...state.planes.map(p => `<div class="card" style="border-top:3px solid #ffffff"><div class="card-body"><h3 style="color:white;margin-top:0">✈️ ${p.model}</h3><div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Stav: ${Math.floor(p.cond)}% | Palivo: ${Math.floor(p.fuel)}%</div><div class="xp-bar-bg" style="margin-bottom:10px"><div class="xp-bar-fill" style="width:${p.cond}%;background:${p.cond<50?'red':'green'}"></div></div></div></div>`)
+    ].join('') || '<div style="color:var(--text-muted); grid-column: span 3;">Zatím nevlastníš žádné zámořské stroje. Vylepši HQ a zakup je v sekci níže.</div>';
+
+    elShop.innerHTML = [
+        ...SHIP_DB.map((s,i) => `<div class="card"><img src="${s.img}" class="card-img" onerror="this.src='https://via.placeholder.com/400x240/111/0072ff?text=${s.model.replace(/\s/g,'+')}'"><div class="card-body"><h3 style="margin-top:0">🚢 ${s.model}</h3><div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Rychlost: ${s.spd} | Spotřeba: ${s.fuelReq}</div><b style="color:var(--orange);font-size:18px">${s.price.toLocaleString()} Kč</b><button class="btn btn-blue" onclick="buyOverseas('ship', ${i})">KOUPIT</button></div></div>`),
+        ...PLANE_DB.map((p,i) => `<div class="card"><img src="${p.img}" class="card-img" onerror="this.src='https://via.placeholder.com/400x240/111/fff?text=${p.model.replace(/\s/g,'+')}'"><div class="card-body"><h3 style="margin-top:0">✈️ ${p.model}</h3><div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Rychlost: ${p.spd} | Spotřeba: ${p.fuelReq}</div><b style="color:var(--orange);font-size:18px">${p.price.toLocaleString()} Kč</b><button class="btn btn-dark" onclick="buyOverseas('plane', ${i})">KOUPIT</button></div></div>`)
+    ].join('');
+}
+
+function buyOverseas(type, idx) {
+    let db = type === 'ship' ? SHIP_DB : PLANE_DB;
+    let item = db[idx];
+    let reqLvl = type === 'ship' ? state.hq.port_hub : state.hq.airport_hangar;
+    let amt = type === 'ship' ? state.ships.length : state.planes.length;
+
+    if (reqLvl <= amt) return notify("KAPACITA", `Vylepši v HQ ${type==='ship'?'Přístav':'Hangár'}!`, "warning");
+    if (state.money < item.price) return notify("FINANCE", "Nemáš dostatek peněz!", "warning");
+
+    addMoney(-item.price);
+    let newItem = {...item, type: item.cat, id: Date.now(), progress: 0, fuel: 100, cond: 100, job: null, queue: []};
+    if(type === 'ship') state.ships.push(newItem); else state.planes.push(newItem);
+    notify("NÁKUP", `Zakoupen ${item.model}`, "success");
+    renderOverseas(); saveGame();
+}
+
+function renderTrailers() {
+    const my = document.getElementById('trailers-my');
+    const shop = document.getElementById('trailers-shop');
+    if(!my || !shop) return;
+    my.innerHTML = state.trailers.map((t,i) => {
+        let opts = state.vehicles.filter(v=>v.type!=='van').map(v=>`<option value="${v.id}" ${v.trailer&&v.trailer.id===t.id?'selected':''}>${v.model}</option>`).join('');
+        return `<div class="card"><div class="card-body"><h3>🔗 ${t.n}</h3><div style="color:var(--green); margin-bottom:15px">Bonus k výdělku: +${Math.round((t.bonus-1)*100)}%</div><select class="btn-dark" style="width:100%;padding:8px" onchange="assignTrailer(${i}, this.value)"><option value="">-- Bez tahače --</option>${opts}</select></div></div>`;
+    }).join('') || '<div style="color:#555">Nemáš žádné návěsy.</div>';
+    
+    shop.innerHTML = TRAILERS_DB.map((t,i) => `<div class="card"><img src="${t.img}" class="card-img" onerror="this.style.display='none'"><div class="card-body"><h3>${t.n}</h3><div style="font-size:12px;margin-bottom:10px">+${Math.round((t.bonus-1)*100)}% k výdělku</div><b style="color:var(--orange)">${t.price.toLocaleString()} Kč</b><button class="btn btn-teal" onclick="buyTrailer(${i})">KOUPIT</button></div></div>`).join('');
+}
+
+function buyTrailer(idx) {
+    let t = TRAILERS_DB[idx];
+    if(state.money >= t.price) { addMoney(-t.price); state.trailers.push({...t, id: Date.now()}); notify("NÁKUP", `Zakoupen návěs ${t.n}`, "success"); renderTrailers(); saveGame(); }
+    else notify("FINANCE", "Nemáš dost peněz!", "warning");
+}
+
+function assignTrailer(tIdx, vId) {
+    let t = state.trailers[tIdx];
+    state.vehicles.forEach(v => { if(v.trailer && v.trailer.id===t.id) v.trailer = null; });
+    if(vId) { let v = state.vehicles.find(x=>x.id==vId); if(v) v.trailer = t; }
+    notify("LOGISTIKA", "Návěs přiřazen.", "info"); renderTrailers(); renderOverview(); saveGame();
+}
+
+// BURZA A SMLOUVY
+function filterAuction(type, btn) {
+    state.auctionFilter = type;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderAuction();
+}
+
+const getEligibility = (vehicle, offer) => {
+    // Rule 1: Strict vehicle types
+    if (offer.type === 'van' && vehicle.type !== 'van') return { eligible: false, reason: 'Tuto zakázku může vzít jen dodávka.' };
+    if (offer.type === 'solo' && vehicle.type !== 'solo') return { eligible: false, reason: 'Tuto zakázku může vzít jen solo náklaďák.' };
+    if (offer.type === 'semi' && vehicle.type !== 'semi') return { eligible: false, reason: 'Tuto zakázku může vzít jen kamion (tahač).' };
+
+    // Ships and planes are already filtered by type, so we just check for land vehicles
+    if (vehicle.type !== 'ship' && vehicle.type !== 'plane') {
+        const startCity = CITIES[vehicle.loc];
+        const destCity = CITIES[offer.dest];
+        if (startCity && destCity) {
+            const isOverseas = (startCity.x < 0.4 && destCity.x > 0.4) || (startCity.x > 0.4 && destCity.x < 0.4);
+            if (isOverseas) {
+                return { eligible: false, reason: 'Pozemní vozidla nemohou přes oceán.' };
+            }
+        }
+        const driver = state.drivers.find(d => d.id === vehicle.driverId);
+        if (!driver) return { eligible: false, reason: 'Vozidlo nemá přiřazeného řidiče.' };
+
+        // Rule 2: License check
+        if (offer.reqLic && !driver.lic.includes(offer.reqLic)) {
+            const licenseName = LICENSES.find(l => l.id === offer.reqLic)?.n || offer.reqLic.toUpperCase();
+            return { eligible: false, reason: `Řidič nemá licenci: ${licenseName}.` };
+        }
+
+        // Rule 3: Trailer check for semi
+        if (vehicle.type === 'semi' && offer.type === 'semi') {
+            if (!vehicle.trailer) {
+                return { eligible: false, reason: 'Kamion musí mít připojený návěs.' };
+            }
+        }
+    }
+
+    return { eligible: true, reason: '' };
+};
+
+function genOffers(force = false) {
+    if (!force && state.money >= 500) addMoney(-500);
+    state.offers = [];
+    let num = 15 + Math.floor(state.reputation / 10) + (state.hq.office * 2);
+    const dests = Object.keys(CITIES);
+
+    for (let i = 0; i < num; i++) {
+        let type;
+        const wantsShip = Math.random() < 0.3 && state.hq.port_hub > 0;
+        const wantsPlane = Math.random() < 0.3 && state.hq.airport_hangar > 0;
+
+        if (wantsShip && wantsPlane) {
+            type = Math.random() < 0.5 ? 'ship' : 'plane';
+        } else if (wantsShip) {
+            type = 'ship';
+        } else if (wantsPlane) {
+            type = 'plane';
+        } else {
+            type = (Math.random() < 0.5 ? 'semi' : (Math.random() < 0.5 ? 'solo' : 'van'));
+        }
+
+        let dList = [...dests];
+        if (type === 'ship') {
+            dList = dests.filter(k => CITIES[k].isPort);
+        } else if (type === 'plane') {
+            dList = dests.filter(k => CITIES[k].isAirport);
+        }
+
+        if (dList.length === 0) continue;
+        let dest = dList[Math.floor(Math.random() * dList.length)];
+        
+        let pay = Math.floor(Math.random() * 50000) + 10000;
+        if(type === 'semi') pay *= 3; if(type === 'ship') pay *= 15; if(type === 'plane') pay *= 25;
+
+        let reqLic = null;
+        let cargo;
+        let isBM = false;
+
+        if (type === 'ship' || type === 'plane') {
+            const cargoKey = type === 'ship' ? 'sea' : 'air';
+            const cList = CARGO_TYPES[cargoKey];
+            cargo = cList[Math.floor(Math.random() * cList.length)];
+        } else {
+            // Land vehicles can be black market
+            isBM = state.tech.includes('darkweb') && Math.random() < 0.1; // Increased chance for BM to be noticeable
+            if (isBM) {
+                cargo = BLACK_MARKET_CARGO[Math.floor(Math.random() * BLACK_MARKET_CARGO.length)];
+                pay *= 4;
+            } else {
+                cargo = allLandCargoes[Math.floor(Math.random() * allLandCargoes.length)];
+                reqLic = cargoToLicenseMap[cargo] || null;
+                if (reqLic) pay *= 1.5;
+            }
+        }
+        
+        state.offers.push({ id: Date.now() + i, type, dest, pay, cargo, reqLic, isBlackMarket: isBM, dist: Math.floor(Math.random() * 1500) + 100 });
+    }
+
+    state.auctionFilter = 'all';
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    const allBtn = document.querySelector('.filter-btn[onclick*="\'all\'"]');
+    if (allBtn) allBtn.classList.add('active');
+
+    renderAuction();
+    saveGame();
+}
+
+function renderAuction() {
+    const el = document.getElementById('auction-list'); if(!el) return;
+    let offers = state.offers.filter(o => state.auctionFilter === 'all' || o.type === state.auctionFilter || (state.auctionFilter==='blackmarket' && o.isBlackMarket));
+    
+    if (offers.length === 0) {
+        let msg = '<div style="color:var(--text-muted); text-align:center; padding: 40px 0;">Žádné dostupné zakázky pro tento filtr. Zkuste obnovit nabídku.</div>';
+        if (state.auctionFilter === 'ship') {
+            if (state.hq.port_hub === 0) {
+                msg = '<div style="color:var(--text-muted); text-align:center; padding: 40px 0;">Pro odemčení lodních zakázek musíš vylepšit <b>Přístavní překladiště</b> v sekci Sídlo firmy (HQ).</div>';
+            } else {
+                msg = '<div style="color:var(--text-muted); text-align:center; padding: 40px 0;">Momentálně žádné lodní zakázky. Zkus obnovit nabídku.</div>';
+            }
+        }
+        if (state.auctionFilter === 'plane') {
+             if (state.hq.airport_hangar === 0) {
+                msg = '<div style="color:var(--text-muted); text-align:center; padding: 40px 0;">Pro odemčení leteckých zakázek musíš vylepšit <b>Letištní hangár</b> v sekci Sídlo firmy (HQ).</div>';
+            } else {
+                msg = '<div style="color:var(--text-muted); text-align:center; padding: 40px 0;">Momentálně žádné letecké zakázky. Zkus obnovit nabídku.</div>';
+            }
+        }
+        el.innerHTML = msg;
+    } else {
+        el.innerHTML = offers.map(o => `<div class="card ${o.isBlackMarket?'bm-card':''}"><div class="card-body"><div style="display:flex;justify-content:space-between"><h3 style="margin:0;color:${o.isBlackMarket?'var(--red)':'var(--orange)'}">${o.dest}</h3><b style="font-size:16px">${o.pay.toLocaleString()} Kč</b></div><div style="font-size:12px;color:var(--text-muted);margin:10px 0">${o.cargo}</div><div style="font-size:11px;margin-bottom:10px">${o.reqLic ? '<span class="lic-badge">'+LICENSES.find(l=>l.id===o.reqLic).n+'</span>' : 'Běžný náklad'} | ${o.type.toUpperCase()}</div><button class="btn btn-blue" onclick="takeJobModal(${o.id})">PŘIJMOUT</button></div></div>`).join('');
+    }
+}
+
+function takeJobModal(offerId) {
+    const o = state.offers.find(x => x.id === offerId);
+    if (!o) return;
+
+    let availableVehicles = [];
+    if (o.type === 'ship') {
+        availableVehicles = state.ships;
+    } else if (o.type === 'plane') {
+        availableVehicles = state.planes;
+    } else {
+        availableVehicles = state.vehicles;
+    }
+
+    let html = `<h2 style="color:var(--orange)">VYBER STROJ PRO ZAKÁZKU</h2>
+                <p style="font-size:14px;color:var(--text-muted)">Cíl: <b>${o.dest}</b> | Odměna: <b>${o.pay.toLocaleString()} Kč</b> | Náklad: <b>${o.cargo}</b></p>
+                <div style="display:flex;flex-direction:column;gap:10px; max-height: 60vh; overflow-y: auto; padding-right: 10px;">`;
+
+    let suitableVehicles = availableVehicles.filter(v => {
+        if (o.type === 'van') return v.type === 'van';
+        if (o.type === 'solo') return v.type === 'solo';
+        if (o.type === 'semi') return v.type === 'semi';
+        if (o.type === 'ship') return v.type === 'ship';
+        if (o.type === 'plane') return v.type === 'plane';
+        return false;
+    });
+
+    if (suitableVehicles.length === 0) {
+        html += `<div style="color:var(--red); text-align: center; padding: 20px 0;">Pro tento typ zakázky (${o.type.toUpperCase()}) nevlastníš žádné vozidlo.</div>`;
+    } else {
+        suitableVehicles.forEach(v => {
+            const eligibility = getEligibility(v, o);
+            let dName = 'Automatická posádka';
+            if (v.driverId) {
+                const driver = state.drivers.find(d => d.id === v.driverId);
+                if (driver) dName = driver.name;
+            }
+
+            if (eligibility.eligible) {
+                html += `<button class="btn btn-dark" style="text-align:left; justify-content:space-between" onclick="assignJobToVehicle(${v.id}, ${o.id}, '${v.type}')">
+                            <span>
+                                <b>${v.model}</b> 
+                                <span style="font-size:11px;color:#888">(${dName})</span>
+                                ${v.trailer ? `<span style="font-size:11px; color:var(--gold)"> + ${v.trailer.n}</span>` : ''}
+                            </span>
+                            <span style="color:var(--blue)">${v.job ? 'Fronta: ' + (v.queue?.length || 0) : 'Připraven'}</span>
+                         </button>`;
+            } else {
+                html += `<div class="btn btn-dark" style="text-align:left; justify-content:space-between; opacity:0.5; cursor:not-allowed;">
+                            <span>
+                                <b>${v.model}</b>
+                                <span style="font-size:11px;color:#888">(${dName})</span>
+                                ${v.trailer ? `<span style="font-size:11px; color:var(--gold)"> + ${v.trailer.n}</span>` : ''}
+                            </span>
+                            <span style="color:var(--red); font-size:11px;">${eligibility.reason}</span>
+                         </div>`;
+            }
+        });
+    }
+
+    html += `</div><button class="btn btn-dark" style="margin-top:20px" onclick="closeModal()">ZAVŘÍT</button>`;
+    document.getElementById('modal-content').innerHTML = html;
+    document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function assignJobToVehicle(vid, offerId, type) {
+    const o = state.offers.find(x => x.id === offerId);
+    if (!o) return;
+
+    let v;
+    if (type === 'ship') v = state.ships.find(x => x.id === vid);
+    else if (type === 'plane') v = state.planes.find(x => x.id === vid);
+    else v = state.vehicles.find(x => x.id === vid);
+
+    if (!v) return;
+
+    const eligibility = getEligibility(v, o);
+    if (!eligibility.eligible) {
+        notify("CHYBA PŘIŘAZENÍ", eligibility.reason, "danger");
+        return;
+    }
+    
+    if(!v.job) v.job = o; else v.queue.push(o);
+    state.offers = state.offers.filter(x=>x.id!==offerId);
+    closeModal(); renderAuction(); renderOverview(); renderDispatch(); saveGame();
+}
+
+function genContracts() {
+    state.availableContracts = [];
+    const dests = Object.keys(CITIES);
+    for(let i=0; i<3; i++) {
+        let dest = dests[Math.floor(Math.random() * dests.length)];
+        let count = Math.floor(Math.random() * 10) + 5;
+        let reward = count * 60000;
+        let time = state.day + Math.floor(count * 1.5);
+        state.availableContracts.push({id: Date.now()+i, dest, count, progress: 0, reward, deadlineDay: time});
+    }
+    renderContracts();
+}
+
+function renderContracts() {
+    const elAct = document.getElementById('active-contracts'); const elAv = document.getElementById('available-contracts');
+    if(!elAct || !elAv) return;
+    elAct.innerHTML = state.contracts.map(c => `<div class="card" style="margin-bottom:10px;border-left:4px solid var(--gold)"><div class="card-body"><h4 style="margin:0;color:var(--gold)">Cíl: ${c.dest}</h4><div style="font-size:12px;margin:5px 0">Pokrok: ${c.progress}/${c.count} zásilek | Čas do Dne: ${c.deadlineDay}</div><div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${(c.progress/c.count)*100}%;background:var(--gold)"></div></div><b style="color:white;display:block;margin-top:5px">Odměna: ${c.reward.toLocaleString()} Kč</b></div></div>`).join('') || '<div style="color:#555">Nemáš aktivní smlouvy.</div>';
+    elAv.innerHTML = state.availableContracts.map((c, i) => `<div class="card" style="margin-bottom:10px"><div class="card-body"><div style="display:flex;justify-content:space-between"><b style="color:var(--orange)">${c.dest} (${c.count}x)</b><button class="btn btn-sm btn-gold" onclick="signContract(${i})">PODEPSAT</button></div><div style="font-size:12px;margin-top:5px">Odměna: ${c.reward.toLocaleString()} Kč | Limit do Dne: ${c.deadlineDay}</div></div></div>`).join('');
+}
+
+function signContract(idx) {
+    state.contracts.push(state.availableContracts[idx]);
+    state.availableContracts.splice(idx, 1);
+    notify("SMLOUVA", "Smlouva podepsána!", "success"); renderContracts(); saveGame();
+}
+
+// FACTIONS
+function renderFactions() {
+    const el = document.getElementById('factions-grid'); if(!el) return;
+    el.innerHTML = Object.keys(FACTIONS_DB).map(k => {
+        const f = FACTIONS_DB[k]; const rep = state.factions[k];
+        const pks = f.perks.map(p => `<div class="faction-perk ${rep>=p.req?'unlocked':''}">${p.desc}<span>${rep>=p.req?'✅':'🔒'}</span></div>`).join('');
+        return `<div class="faction-card"><div class="faction-header"><img src="${f.img}" class="faction-img" onerror="this.style.display='none'"><div class="faction-logo">${f.icon}</div></div><div class="faction-body"><h2 style="color:${f.color};margin:0">${f.n}</h2><p style="font-size:12px;color:var(--text-muted)">${f.desc}</p><div class="faction-rep-bar"><div class="faction-rep-fill" style="width:${(rep/1000)*100}%;background:${f.color}"></div></div><div style="font-size:12px;margin-bottom:15px">Reputace: <b>${rep} / 1000</b></div>${pks}</div></div>`;
+    }).join('');
+}
+
+// MACHINES
+function renderMachines() {
+    const my = document.getElementById('mach-grid'); const shop = document.getElementById('mach-shop');
+    if(!my || !shop) return;
+    my.innerHTML = (state.machines || []).map(m => {
+        const sellPrice = m.c ? Math.floor(m.c / 2) : 0;
+        const income = m.inc > 0 ? `${m.inc.toLocaleString()} Kč/den` : (m.incCrypto ? `${m.incCrypto} JC/den` : 'z akvizice');
+        return `<div class="card"><div class="card-body"><h3>${m.n}</h3><div style="color:var(--green); margin-bottom:15px">Výnos: +${income}</div>` + 
+        (sellPrice > 0 ? `<button class="btn btn-red btn-sm" onclick="sellMachine('${m.id}', ${sellPrice})">PRODAT STROJ (${sellPrice.toLocaleString()} Kč)</button>` : '') +
+        `</div></div>`
+    }).join('') || '<div style="color:#555">Zatím žádné stroje.</div>';
+    shop.innerHTML = MACHINES_DB.map((m,i) => `<div class="card"><img src="${m.img}" class="card-img" onerror="this.style.display='none'"><div class="card-body"><h3>${m.n}</h3><div style="font-size:12px;margin-bottom:10px">Pasivní příjem: ${m.inc>0 ? m.inc.toLocaleString() + ' Kč/den' : m.incCrypto + ' JC/den'}</div><b style="color:var(--orange)">${m.c.toLocaleString()} Kč</b><button class="btn btn-orange" onclick="buyMachine(${i})">KOUPIT</button></div></div>`).join('');
+}
+
+function buyMachine(idx) {
+    let m = MACHINES_DB[idx];
+    if(state.money >= m.c) { addMoney(-m.c); state.machines.push({...m, id: Date.now()}); notify("NÁKUP", `Zakoupen stroj ${m.n}`, "success"); renderMachines(); saveGame(); }
+    else notify("FINANCE", "Nemáš peníze!", "warning");
+}
+
+function sellMachine(id, sellPrice) {
+    if (confirm(`Opravdu chcete prodat tuto položku za ${sellPrice.toLocaleString()} Kč?`)) {
+        const machineIndex = state.machines.findIndex(m => m.id == id);
+        if (machineIndex > -1) {
+            state.machines.splice(machineIndex, 1);
+            addMoney(sellPrice);
+            notify("PRODEJ", `Položka prodána za ${sellPrice.toLocaleString()} Kč.`, "success");
+            renderMachines();
+            saveGame();
+        }
+    }
+}
+
+// WORKSHOP & TUNING
+function renderWorkshop() {
+    const el = document.getElementById('workshop-grid'); if(!el) return;
+    let html = '';
+    const renderItem = (v, type) => {
+        if(v.cond >= 100 && type !== 'truck') return ''; // Auta ukazujeme vždy kvůli tuningu
+        let cost = Math.floor((100 - v.cond) * (type==='ship'?10000:type==='plane'?25000:1000));
+        if(state.hq.workshop > 0) cost = Math.floor(cost * (1 - (state.hq.workshop * 0.1)));
+        if(state.staff.mechanic.active) cost = Math.floor(cost * 0.7);
+        let icon = type==='ship'?'🚢':type==='plane'?'✈️':'🚛';
+        
+        return `<div class="card"><div class="card-body"><div style="display:flex;justify-content:space-between"><h3>${icon} ${v.model}</h3><b style="color:${v.cond<50?'var(--red)':'var(--green)'}">Stav: ${Math.floor(v.cond)}%</b></div>${v.cond<100 ? `<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center"><span>Oprava: <b>${cost.toLocaleString()} Kč</b></span><button class="btn btn-sm btn-green" onclick="repairVehicle(${v.id}, '${type}', ${cost})">OPRAVIT</button></div>` : '<div style="margin-top:10px;color:var(--text-muted);font-size:12px">V perfektním stavu</div>'} ${type==='truck' ? renderUpgrades(v) : ''}</div></div>`;
+    };
+    state.vehicles.forEach(v => html += renderItem(v, 'truck'));
+    state.ships.forEach(v => html += renderItem(v, 'ship'));
+    state.planes.forEach(v => html += renderItem(v, 'plane'));
+    el.innerHTML = html || '<div style="color:#555">Flotila je plně opravena.</div>';
+}
+
+function renderUpgrades(v) {
+    if(!v.upgrades) v.upgrades = [];
+    return `<div style="margin-top:15px;padding-top:10px;border-top:1px solid var(--border-light)"><div style="font-size:11px;color:#888;margin-bottom:5px">TUNING:</div><div style="display:flex;flex-wrap:wrap;gap:5px">` + UPGRADES_DB.map(u => {
+        let has = v.upgrades.includes(u.id);
+        return `<button class="btn btn-sm ${has?'btn-dark':'btn-purple'}" ${has?'disabled':''} onclick="upgradeVehicle(${v.id}, '${u.id}', ${u.cost})" title="${u.desc}">${u.n} ${has?'(Koupeno)':'('+u.cost.toLocaleString()+')'}</button>`;
+    }).join('') + `</div></div>`;
+}
+
+function repairVehicle(vid, type, cost) {
+    if(state.money >= cost) {
+        addMoney(-cost);
+        let v = type==='ship' ? state.ships.find(x=>x.id===vid) : (type==='plane' ? state.planes.find(x=>x.id===vid) : state.vehicles.find(x=>x.id===vid));
+        if(v) { v.cond = 100; notify("OPRAVA", "Stroj kompletně opraven!", "success"); renderWorkshop(); saveGame(); }
+    } else notify("FINANCE", "Nemáš dost peněz!", "warning");
+}
+
+function repairAll() {
+    let totalCost = 0;
+    const calcCost = (v, t) => { if(v.cond>=100)return 0; let c=Math.floor((100-v.cond)*(t==='ship'?10000:t==='plane'?25000:1000)); if(state.hq.workshop>0)c*=1-(state.hq.workshop*0.1); if(state.staff.mechanic.active)c*=0.7; return Math.floor(c); };
+    state.vehicles.forEach(v => totalCost += calcCost(v, 'truck'));
+    state.ships.forEach(v => totalCost += calcCost(v, 'ship'));
+    state.planes.forEach(v => totalCost += calcCost(v, 'plane'));
+    
+    if(totalCost === 0) return notify("DÍLNA", "Všechny stroje jsou již opravené.", "info");
+    
+    if(state.money >= totalCost) {
+        addMoney(-totalCost);
+        state.vehicles.forEach(v => v.cond = 100); state.ships.forEach(v => v.cond = 100); state.planes.forEach(v => v.cond = 100);
+        notify("DÍLNA", `Celá flotila hromadně opravena za ${totalCost.toLocaleString()} Kč.`, "success"); renderWorkshop(); saveGame();
+    } else notify("FINANCE", "Nemáš dost peněz na kompletní servis!", "warning");
+}
+
+function upgradeVehicle(vid, upId, cost) {
+    if(state.money >= cost) {
+        let v = state.vehicles.find(x=>x.id===vid);
+        if(v && !v.upgrades.includes(upId)) {
+            addMoney(-cost); v.upgrades.push(upId); notify("TUNING", "Díl úspěšně nainstalován!", "success"); renderWorkshop(); saveGame();
+        }
+    } else notify("FINANCE", "Nemáš peníze!", "warning");
+}
+
+// DEALER
+function renderDealer() {
+    const el = document.getElementById('dealer-grid'); const elU = document.getElementById('used-dealer-grid');
+    if(!el || !elU) return;
+    el.innerHTML = CAR_DB.map((c,i) => `<div class="card"><img src="${c.img}" class="card-img" onerror="this.style.display='none'"><div class="card-body"><h3>${c.model}</h3><div style="font-size:12px;margin-bottom:10px">Typ: ${c.cat.toUpperCase()} | Rychlostní index: ${c.spd}</div><b style="color:var(--orange)">${c.price.toLocaleString()} Kč</b><button class="btn btn-blue" onclick="buyCar(${i})">KOUPIT NOVÉ</button></div></div>`).join('');
+    elU.innerHTML = state.usedCars.map(c => `<div class="card"><img src="${c.img}" class="card-img" onerror="this.style.display='none'"><div class="card-body"><h3>${c.model}</h3><div style="font-size:12px;margin-bottom:10px;color:var(--red)">Stav: ${Math.floor(c.cond)}% | Výrazná sleva</div><b style="color:var(--orange)">${c.price.toLocaleString()} Kč</b><button class="btn btn-dark" onclick="buyUsedCar(${c.id})">KOUPIT BAZAROVÉ</button></div></div>`).join('') || '<div style="color:#555">Bazar je dnes prázdný. Zkus to zítra.</div>';
+}
+
+function buyCar(idx) {
+    let c = CAR_DB[idx];
+    if(state.vehicles.length >= (5 + state.hq.garage * 2)) return notify("GARÁŽ", "Tvá garáž je plná! Vylepši HQ.", "warning");
+    if(state.money >= c.price) { addMoney(-c.price); state.vehicles.push({id: Date.now(), type: c.cat, model: c.model, driverId: null, loc: 'Praha', job: null, queue: [], progress: 0, cond: 100, fuel: 100, spd: c.spd, upgrades: [], trailer: null}); notify("NÁKUP", "Auto úspěšně zakoupeno!", "success"); renderDealer(); renderFleet(); saveGame(); }
+    else notify("FINANCE", "Nemáš peníze!", "warning");
+}
+
+function buyUsedCar(id) {
+    let c = state.usedCars.find(x=>x.id===id); if(!c) return;
+    if(state.vehicles.length >= (5 + state.hq.garage * 2)) return notify("GARÁŽ", "Garáž je plná!", "warning");
+    if(state.money >= c.price) { addMoney(-c.price); state.vehicles.push({id: Date.now(), type: c.cat, model: c.model, driverId: null, loc: 'Praha', job: null, queue: [], progress: 0, cond: c.cond, fuel: 100, spd: c.spd, upgrades: [], trailer: null}); state.usedCars = state.usedCars.filter(x=>x.id!==id); notify("NÁKUP", "Ojetina zakoupena, nezapomeň ji opravit v Dílně!", "success"); renderDealer(); renderFleet(); saveGame(); }
+    else notify("FINANCE", "Nemáš peníze!", "warning");
+}
+
+// HQ
+function renderHQ() {
+    const el = document.getElementById('hq-grid'); if(!el) return;
+    el.innerHTML = HQ_DB.map(h => {
+        let lvl = state.hq[h.id] || 0; let cost = h.baseCost * (lvl + 1); let isMax = lvl >= h.maxLvl;
+        return `<div class="hq-building ${isMax?'hq-maxed':''}" onclick="${isMax?'':`upgradeHQ('${h.id}', ${cost})`}"><div style="font-size:32px;margin-bottom:10px">${h.icon}</div><h3 style="margin:0">${h.n}</h3><div style="font-size:12px;color:var(--text-muted);margin:5px 0">${h.desc}</div><div style="font-size:11px;color:var(--teal);margin-bottom:10px">${h.bonus}</div><div style="display:flex;justify-content:space-between;align-items:center"><b>Level ${lvl}/${h.maxLvl}</b> ${isMax?'<span style="color:var(--green)">MAX</span>':`<span style="color:var(--orange)">${cost.toLocaleString()} Kč</span>`}</div><div class="hq-lvl-bar"><div class="hq-lvl-fill" style="width:${(lvl/h.maxLvl)*100}%"></div></div></div>`;
+    }).join('');
+}
+
+function upgradeHQ(id, cost) {
+    if(state.money >= cost) { addMoney(-cost); state.hq[id]++; notify("HQ", "Infrastruktura vylepšena!", "success"); renderHQ(); saveGame(); }
+    else notify("FINANCE", "Nemáš peníze na vylepšení HQ!", "warning");
+}
+
+// GAS NETWORK (NEW)
+function renderGasNetwork() {
+    const el = document.getElementById('tab-gas');
+    if (!el) return;
+    const gn = state.gasNetwork;
+
+    const levelUpCost = 300000 * (gn.level + 1) * (gn.level > 0 ? (gn.level * 1.5) : 1);
+    const dinerCost = 500000;
+    const shopCost = 250000;
+    const bistroCost = 400000;
+
+    let income = gn.level * 15000;
+    if (gn.hasShop) income *= 1.2;
+    if (gn.hasDiner) income += 35000;
+    if (gn.hasBistro) income += 25000;
+
+    let html = `
+        <div class="banner">
+            <img src="JIRSTAN BENZINKA.JPG" alt="Benzínka" style="width:100%; height:200px; object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/1000x200/111/ff9d00?text=JIRSTAN+GAS'">
+             <div class="banner-overlay"><h2>⛽ SÍŤ ČERPACÍCH STANIC JIRSTAN</h2></div>
+        </div>
+        <p style="color:var(--text-muted); margin-bottom:30px; font-size:15px">Buduj vlastní impérium čerpacích stanic. Generují pasivní příjem a poskytují slevy a bonusy pro tvou flotilu.</p>
+        
+        <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 25px;">
+            <!-- Upgrade 1: Network Level -->
+            <div class="card hq-building ${gn.level >= 5 ? 'hq-maxed' : ''}" ${gn.level < 5 ? `onclick="buyGasUpgrade('level', ${levelUpCost})"` : ''}>
+                <div class="card-body">
+                    <div style="font-size:32px;margin-bottom:10px">⛽</div>
+                    <h3>ROZŠÍŘENÍ SÍTĚ</h3>
+                    <p style="font-size:12px; color:var(--text-muted);min-height:40px;">Zvyšuje denní zisk a slevu na palivo pro tvou flotilu.</p>
+                    <div style="font-size:12px;color:var(--teal);margin-bottom:10px">Příjem: +15,000 Kč/den | Sleva na palivo: +2%</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center; margin-top: auto;">
+                        <b>Level ${gn.level}/5</b> 
+                        ${gn.level >= 5 ? '<span style="color:var(--green)">MAX</span>' : `<span style="color:var(--orange)">${Math.floor(levelUpCost).toLocaleString()} Kč</span>`}
+                    </div>
+                    <div class="hq-lvl-bar"><div class="hq-lvl-fill" style="width:${(gn.level/5)*100}%"></div></div>
+                </div>
+            </div>
+
+            <!-- Upgrade 2: Diner -->
+            <div class="card hq-building ${gn.hasDiner ? 'hq-maxed' : ''}" ${!gn.hasDiner ? `onclick="buyGasUpgrade('diner', ${dinerCost})"` : ''}>
+                <div class="card-body">
+                    <div style="font-size:32px;margin-bottom:10px">🍔</div>
+                    <h3>MOTOREST U BRATRŮ</h3>
+                    <p style="font-size:12px; color:var(--text-muted);min-height:40px;">Řidiči se mají kde najíst. Zpomaluje jejich únavu a generuje extra zisk.</p>
+                    <div style="font-size:12px;color:var(--teal);margin-bottom:10px">Zisk: +35,000 Kč/den | Únava řidičů: -10%</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center; margin-top: auto;">
+                        <b>Jednorázový nákup</b>
+                        ${gn.hasDiner ? '<span style="color:var(--green)">VLASTNĚNO</span>' : `<span style="color:var(--orange)">${dinerCost.toLocaleString()} Kč</span>`}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upgrade 3: Shop -->
+            <div class="card hq-building ${gn.hasShop ? 'hq-maxed' : ''}" ${!gn.hasShop ? `onclick="buyGasUpgrade('shop', ${shopCost})"` : ''}>
+                <div class="card-body">
+                    <div style="font-size:32px;margin-bottom:10px">🛒</div>
+                    <h3>OBCHOD (SHOP)</h3>
+                    <p style="font-size:12px; color:var(--text-muted);min-height:40px;">Zvyšuje základní pasivní příjem ze sítě čerpacích stanic.</p>
+                    <div style="font-size:12px;color:var(--teal);margin-bottom:10px">Bonus k příjmu ze sítě: +20%</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center; margin-top: auto;">
+                        <b>Jednorázový nákup</b> 
+                        ${gn.hasShop ? '<span style="color:var(--green)">VLASTNĚNO</span>' : `<span style="color:var(--orange)">${shopCost.toLocaleString()} Kč</span>`}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upgrade 4: Bistro -->
+            <div class="card hq-building ${gn.hasBistro ? 'hq-maxed' : ''}" ${!gn.hasBistro ? `onclick="buyGasUpgrade('bistro', ${bistroCost})"` : ''}>
+                <div class="card-body">
+                    <div style="font-size:32px;margin-bottom:10px">☕</div>
+                    <h3>BISTRO</h3>
+                    <p style="font-size:12px; color:var(--text-muted);min-height:40px;">Kavárna s občerstvením pro řidiče a cestující. Generuje pasivní příjem.</p>
+                    <div style="font-size:12px;color:var(--teal);margin-bottom:10px">Zisk: +25,000 Kč/den</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center; margin-top: auto;">
+                        <b>Jednorázový nákup</b>
+                        ${gn.hasBistro ? '<span style="color:var(--green)">VLASTNĚNO</span>' : `<span style="color:var(--orange)">${bistroCost.toLocaleString()} Kč</span>`}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card" style="margin-top: 30px; text-align:left; padding: 25px; border-left: 4px solid var(--orange);">
+            <h3 style="margin-top:0; color:var(--orange)">SOUHRNNÉ STATISTIKY SÍTĚ</h3>
+            <p style="margin:0; font-size:14px; color:var(--text-main)">Celkový denní příjem: <b style="color:var(--green); font-size: 18px;">+${Math.floor(income).toLocaleString()} Kč</b></p>
+            <p style="margin:5px 0 0 0; font-size:14px; color:var(--text-main)">Globální sleva na palivo pro flotilu: <b style="color:var(--teal); font-size: 18px;">-${gn.level * 2}%</b></p>
+        </div>
+    `;
+    el.innerHTML = html;
+}
+
+function buyGasUpgrade(type, cost) {
+    if (state.money < cost) {
+        return notify("FINANCE", "Nemáš dostatek peněz na toto vylepšení!", "warning");
+    }
+
+    addMoney(-cost);
+    const gn = state.gasNetwork;
+
+    if (type === 'level') {
+        if (gn.level < 5) {
+            gn.level++;
+            notify("SÍŤ BENZÍNEK", `Síť rozšířena na Level ${gn.level}!`, "success");
+        }
+    } else if (type === 'diner') {
+        if (!gn.hasDiner) {
+            gn.hasDiner = true;
+            notify("SÍŤ BENZÍNEK", "Motorest 'U Bratrů' byl úspěšně zakoupen a otevřen!", "success");
+        }
+    } else if (type === 'shop') {
+        if (!gn.hasShop) {
+            gn.hasShop = true;
+            notify("SÍŤ BENZÍNEK", "Obchod na benzínce byl otevřen, zisky porostou!", "success");
+        }
+    } else if (type === 'bistro') {
+        if (!gn.hasBistro) {
+            gn.hasBistro = true;
+            notify("SÍŤ BENZÍNEK", "Bistro bylo otevřeno, hosté si užívají kávu a zákusky!", "success");
+        }
+    }
+
+    renderGasNetwork();
+    saveGame();
+}
+
+// BUS & IPO (NEW)
+function renderIPO() {
+    const el = document.getElementById('ipo-section'); if (!el) return;
+    const ipo = state.ipo;
+    let html = '';
+    if (!ipo.active) {
+        html = `<p style="font-size:13px;color:var(--text-muted)">Vstup na globální burzu přinese firmě obrovský kapitál, ale zavazuje tě k vyplácení dividend akcionářům.</p>
+                <button class="btn btn-gold" style="margin-top:15px" onclick="goPublic()">VSTOUPIT NA BURZU (50M Kč)</button>`;
+    } else {
+        html = `<p style="font-size:13px;color:var(--text-muted)">Tvá firma je nyní veřejně obchodovaná. Vlastníš <b>${ipo.sharesOwned.toFixed(2)}%</b> akcií.</p>
+                <p style="font-size:12px;color:var(--red)">Denně musíš vyplácet 5% ze zisku jako dividendy.</p>
+                <button class="btn btn-dark" style="margin-top:15px" onclick="buyBackShares()">Odkoupit 1% akcií zpět (25M Kč)</button>`;
+    }
+    el.innerHTML = html;
+}
+
+function goPublic() {
+    if (state.money < 50000000) return notify("FINANCE", "Nemáš dostatek hotovosti (50M) pro vstup na burzu.", "warning");
+    if (confirm("Opravdu chceš vstoupit na burzu? Získáš 250M Kč, ale budeš muset vyplácet dividendy!")) {
+        addMoney(-50000000);
+        addMoney(250000000);
+        state.ipo.active = true;
+        state.ipo.sharesOwned = 40; // Player sells 60% of the company
+        notify("IPO", "Vstup na burzu byl úspěšný! Na účet přiteklo 250,000,000 Kč kapitálu.", "gold");
+        pushToTicker(`<b>JIRSTAN, a.s.</b> je nyní na burze! Cena akcií raketově roste!`, "gold");
+        renderIPO();
+        saveGame();
+    }
+}
+
+function buyBackShares() {
+    if (state.money < 25000000) return notify("FINANCE", "Nemáš dostatek hotovosti (25M) na odkup akcií.", "warning");
+    if (state.ipo.sharesOwned >= 100) return notify("AKCIE", "Již vlastníš 100% firmy.", "info");
+    
+    addMoney(-25000000);
+    state.ipo.sharesOwned = Math.min(100, state.ipo.sharesOwned + 1);
+    notify("AKCIE", `Úspěšně jsi odkoupil 1% akcií. Nyní vlastníš ${state.ipo.sharesOwned.toFixed(2)}%.`, "success");
+    renderIPO();
+    saveGame();
+}
+
+function renderBuses() {
+    const el = document.getElementById('tab-buses'); if(!el) return;
+
+    if (state.hq.bus_terminal === 0) {
+        el.innerHTML = `<div style="text-align:center; padding: 50px 20px; background: var(--surface-1); border-radius:12px;">
+            <h2 style="color:var(--green)">🚌 DIVIZE OSOBNÍ DOPRAVY JE ZAMČENÁ</h2>
+            <p style="color:var(--text-muted)">Pro odemčení této funkce musíš nejprve postavit "Autobusový terminál" v sekci Sídlo firmy (HQ).</p>
+            <button class="btn btn-green" onclick="switchTab('hq', document.querySelector('[onclick*=\\'hq\\']'))">Přejít do HQ</button>
+        </div>`;
+        return;
+    }
+    
+    el.innerHTML = `
+        <h2 style="color:var(--green)">🚌 OSOBNÍ DOPRAVA</h2>
+        <p style="color:var(--text-muted); margin-bottom:30px; font-size:15px">Spravuj flotilu autobusů, obsluhuj pravidelné linky a voz turisty na lukrativní zájezdy.</p>
+        
+        <h3 style="margin-top:40px;">TVOJE AUTOBUSY</h3>
+        <div class="grid" id="bus-fleet-grid"></div>
+
+        <h3 style="margin-top:40px; border-bottom:1px solid var(--border-light); padding-bottom:10px;">PRODEJNA AUTOBUSŮ</h3>
+        <div class="grid" id="bus-shop-grid"></div>
+    `;
+
+    const fleetEl = document.getElementById('bus-fleet-grid');
+    const shopEl = document.getElementById('bus-shop-grid');
+
+    if (fleetEl) {
+        fleetEl.innerHTML = state.buses.map(b => {
+            const route = BUS_ROUTES.find(r => r.id === b.routeId);
+            return `
+            <div class="card">
+                <div class="card-body">
+                    <h3 style="color:var(--green);margin:0">${b.model}</h3>
+                    <div style="font-size:12px;color:var(--text-muted);margin:5px 0">Stav: ${Math.floor(b.cond)}% | Palivo: ${Math.floor(b.fuel)}%</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin:5px 0">Čistota: ${Math.floor(b.cleanliness)}%</div>
+                    <div class="progress-bar" style="width:100%; height:6px; background:var(--surface-2); border-radius:3px; margin:5px 0;">
+                        <div style="width:${b.cleanliness}%; height:100%; background:linear-gradient(90deg, #ff6b6b, #4ecdc4); border-radius:3px;"></div>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-muted);margin:5px 0">Linka: ${route ? route.name : '<span style=\"color:#bbb\">žádná</span>'}</div>
+                    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+                        <select id="bus-route-${b.id}" style="flex:1;min-width:150px;">${BUS_ROUTES.map(rt => `<option value='${rt.id}' ${b.routeId===rt.id?'selected':''}>${rt.name}</option>`).join('')}</select>
+                        <button class="btn btn-sm btn-blue" onclick="assignBusRoute(${b.id}, document.getElementById('bus-route-${b.id}').value)">Přiřadit linku</button>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-green" onclick="repairBus(${b.id})">Opravit (+20% stav)</button>
+                        <button class="btn btn-sm btn-orange" onclick="refuelBus(${b.id})">Doplnit palivo (100)</button>
+                        <button class="btn btn-sm btn-blue" onclick="washBus(${b.id})">Umyť (100% čistota)</button>
+                    </div>
+                    <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn btn-sm ${b.upgrades.engine ? 'btn-disabled' : 'btn-purple'}" onclick="upgradeBus(${b.id}, 'engine')" ${b.upgrades.engine ? 'disabled' : ''}>Motor +10%</button>
+                        <button class="btn btn-sm ${b.upgrades.interior ? 'btn-disabled' : 'btn-purple'}" onclick="upgradeBus(${b.id}, 'interior')" ${b.upgrades.interior ? 'disabled' : ''}>Interiér +5%</button>
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('') || '<div style="color:var(--text-muted); grid-column: span 3;">Zatím nevlastníš žádné autobusy.</div>';
+    }
+
+    if (shopEl) {
+        shopEl.innerHTML = BUS_DB.map(b => `
+            <div class="card">
+                <img src="${b.img}" class="card-img" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(45deg, #333, #555)'; this.parentElement.innerHTML+='<span style=&quot;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);padding:10px 15px;border-radius:6px;font-size:12px;color:#999&quot;>Foto chybí</span>'">
+                <div class="card-body">
+                    <h3>${b.model}</h3>
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Kapacita: ${b.capacity} | Luxus: ${'⭐'.repeat(b.luxury)}</div>
+                    <b style="color:var(--orange);font-size:18px">${b.price.toLocaleString()} Kč</b>
+                    <button class="btn btn-green" onclick="buyBus('${b.model}')">KOUPIT</button>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+function buyBus(model) {
+    const busData = BUS_DB.find(b => b.model === model);
+    if (!busData) return;
+
+    const maxBuses = state.hq.bus_terminal * 2;
+    if (state.buses.length >= maxBuses) {
+        return notify("KAPACITA", `Autobusový terminál je plný! Vylepši ho v HQ pro více míst.`, "warning");
+    }
+
+    if (state.money >= busData.price) {
+        addMoney(-busData.price);
+        state.buses.push({
+            id: Date.now(),
+            ...busData,
+            cond: 100,
+            fuel: 100,
+            cleanliness: 100,
+            upgrades: {},
+            driverId: null,
+            routeId: null,
+            tourId: null 
+        });
+        notify("NÁKUP", `Zakoupen nový autobus: ${model}!`, "success");
+        renderBuses();
+        saveGame();
+    } else {
+        notify("FINANCE", "Nemáš dost peněz na nákup tohoto autobusu.", "warning");
+    }
+}
+
+function assignBusRoute(busId, routeId) {
+    const bus = state.buses.find(b => b.id === busId);
+    const route = BUS_ROUTES.find(r => r.id === routeId);
+    if (!bus || !route) {
+        return notify("AUTOBUSY", "Chybná linka nebo autobus nebyl nalezen.", "warning");
+    }
+
+    bus.routeId = route.id;
+    notify("AUTOBUSY", `Linka ${route.name} byla přiřazena k ${bus.model}.`, "success");
+    renderBuses();
+    saveGame();
+}
+
+function repairBus(busId) {
+    const bus = state.buses.find(b => b.id === busId);
+    if (!bus) return;
+    if (state.money < 250000) return notify("AUTOBUSY", "Potřebuješ 250 000 Kč na servis.", "warning");
+    addMoney(-250000);
+    bus.cond = Math.min(100, bus.cond + 20);
+    notify("SERVIS", `${bus.model} opraven na ${Math.floor(bus.cond)}%.`, "success");
+    renderBuses(); saveGame();
+}
+
+function refuelBus(busId) {
+    const bus = state.buses.find(b => b.id === busId);
+    if (!bus) return;
+    const cost = Math.floor(state.fuelPrice * 50);
+    if (state.money < cost) return notify("AUTOBUSY", "Nemáš peníze na natankování autobusu.", "warning");
+    addMoney(-cost);
+    bus.fuel = Math.min(100, bus.fuel + 50);
+    notify("PALIVO", `${bus.model} natankován o 50%.`, "success");
+    renderBuses(); saveGame();
+}
+
+function washBus(busId) {
+    const bus = state.buses.find(b => b.id === busId);
+    if (!bus) return;
+    if (state.money < 50000) return notify("AUTOBUSY", "Potřebuješ 50 000 Kč na umytí autobusu.", "warning");
+    addMoney(-50000);
+    bus.cleanliness = 100;
+    notify("ÚKLID", `${bus.model} kompletně umyt a vyleštěn!`, "success");
+    renderBuses(); saveGame();
+}
+
+function upgradeBus(busId, type) {
+    const bus = state.buses.find(b => b.id === busId);
+    if (!bus) return;
+    if (bus.upgrades[type]) return notify("UPGRADES", "Tento upgrade už máš!", "warning");
+    
+    const costs = { engine: 1000000, interior: 750000 };
+    const cost = costs[type];
+    if (state.money < cost) return notify("AUTOBUSY", `Potřebuješ ${cost.toLocaleString()} Kč na upgrade.`, "warning");
+    
+    addMoney(-cost);
+    bus.upgrades[type] = true;
+    const names = { engine: "Motor", interior: "Interiér" };
+    notify("UPGRADE", `${bus.model} vylepšen: ${names[type]}!`, "success");
+    renderBuses(); saveGame();
+}
+
+// ====== NEW: AUTOMYČKA JIRSTAN ======
+function renderCarwash() {
+    const el = document.getElementById('tab-carwash');
+    if (!el || !el.classList.contains('active')) return;
+
+    // Compute average cleanliness
+    let totalClean = 0;
+    let activeVehicles = state.vehicles.length + state.ships.length + state.buses.length;
+    state.vehicles.forEach(v => { totalClean += v.cleanliness || 100; });
+    state.ships.forEach(s => { totalClean += s.cleanliness || 100; });
+    state.buses.forEach(b => { totalClean += b.cleanliness || 100; });
+    let avgClean = activeVehicles > 0 ? Math.floor(totalClean / activeVehicles) : 100;
+
+    // Update status section
+    document.getElementById('cw-level').innerText = state.carwash.level;
+    document.getElementById('cw-avg-cleanliness').innerText = avgClean;
+    document.getElementById('cw-wax-status').innerText = state.carwash.waxActivated ? ('✅ AKTIVNÍ (' + (state.carwash.waxUntil - state.day) + ' dní)') : '❌ NE';
+    document.getElementById('cw-auto-staff-status').innerText = state.carwash.autoWashStaff ? '✅ AKTIVNÍ' : '❌ NENÍ';
+
+    const baseCost = 200000 - (state.carwash.level * 20000); // Zlevňuje se s úrovní
+    document.getElementById('cw-wash-cost').innerText = (baseCost / 1000).toFixed(0);
+
+    // Upgradable buttons
+    document.getElementById('cw-upgrade-level-btn').innerText = state.carwash.level >= 5 ? '✅ MAX ÚROVEŇ' : `Koupit upgrade (+1 level) (${500000 * state.carwash.level} Kč)`;
+    document.getElementById('cw-upgrade-level-btn').disabled = state.carwash.level >= 5;
+    
+    document.getElementById('cw-wax-btn').innerText = state.carwash.waxActivated ? '✅ JIŽ KOUPEN' : 'Koupit voskování (2,5M)';
+    document.getElementById('cw-wax-btn').disabled = state.carwash.waxActivated;
+    
+    document.getElementById('cw-auto-staff-btn').innerText = state.carwash.autoWashStaff ? '✅ JIŽ KOUPEN' : 'Koupit tým (100M)';
+    document.getElementById('cw-auto-staff-btn').disabled = state.carwash.autoWashStaff;
+
+    // Manual wash list (sorted by dirtiness)
+    const allVehicles = [];
+    state.vehicles.forEach(v => { allVehicles.push({...v, vType: 'truck', driverId: v.driverId || null}); });
+    state.ships.forEach(s => { allVehicles.push({...s, vType: 'ship'}); });
+    state.buses.forEach(b => { allVehicles.push({...b, vType: 'bus'}); });
+    
+    allVehicles.sort((a, b) => (a.cleanliness || 100) - (b.cleanliness || 100)); // Nejšpinavěji nahoře
+
+    const manualList = document.getElementById('carwash-manual-list');
+    manualList.innerHTML = allVehicles.map(v => {
+        const washCost = Math.max(100000, baseCost);
+        let icon = v.vType === 'truck' ? '🚛' : (v.vType === 'ship' ? '🚢' : '🚌');
+        return `
+            <div style="background:var(--surface-1); border:1px solid var(--border-light); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center">
+                <div style="flex:1">
+                    <h4 style="margin:0; color:${(v.cleanliness || 100) < 50 ? 'var(--red)' : 'white'}">${icon} ${v.model}</h4>
+                    <div style="font-size:12px; color:var(--text-muted); margin:5px 0">Čistota: <b style="color:${(v.cleanliness || 100) < 50 ? 'var(--red)' : 'var(--green)'}">${Math.floor(v.cleanliness || 100)}%</b></div>
+                </div>
+                <button class="btn btn-sm btn-blue" onclick="manualWashVehicle(${v.id}, '${v.vType}', ${washCost})">UMYŤ (${(washCost/1000).toFixed(0)}k)</button>
+            </div>
+        `;
+    }).join('') || '<div style="color:var(--text-muted); text-align:center; padding:20px">Žádná vozidla nejsou dostupná.</div>';
+}
+
+function manualWashVehicle(vehicleId, vType, cost) {
+    if (state.money < cost) {
+        return notify("AUTOMYČKA", `Nemáš dost peněz! Potřebuješ ${cost.toLocaleString()} Kč.`, "warning");
+    }
+
+    addMoney(-cost);
+    
+    if (vType === 'truck') {
+        const v = state.vehicles.find(x => x.id === vehicleId);
+        if (v) {
+            v.cleanliness = 100;
+            if (state.carwash.waxActivated && state.carwash.waxUntil > state.day) {
+                v.shinyUntil = state.day + 3; // +5% bonus
+            }
+        }
+    } else if (vType === 'ship') {
+        const s = state.ships.find(x => x.id === vehicleId);
+        if (s) {
+            s.cleanliness = 100;
+            if (state.carwash.waxActivated && state.carwash.waxUntil > state.day) {
+                s.shinyUntil = state.day + 3;
+            }
+        }
+    } else if (vType === 'bus') {
+        const b = state.buses.find(x => x.id === vehicleId);
+        if (b) {
+            b.cleanliness = 100;
+            if (state.carwash.waxActivated && state.carwash.waxUntil > state.day) {
+                b.shinyUntil = state.day + 3;
+            }
+        }
+    }
+
+    notify("AUTOMYČKA", "Vozidlo bylo umyto na 100% čistotu!", "success");
+    renderCarwash();
+    updateUI();
+    saveGame();
+}
+
+function upgradeCarwashLevel() {
+    if (state.carwash.level >= 5) {
+        return notify("AUTOMYČKA", "Myčka už je na maximální úrovni!", "info");
+    }
+
+    const cost = 500000 * state.carwash.level;
+    if (state.money < cost) {
+        return notify("AUTOMYČKA", `Nemáš dost peněz! Potřebuješ ${cost.toLocaleString()} Kč.`, "warning");
+    }
+
+    addMoney(-cost);
+    state.carwash.level++;
+    notify("AUTOMYČKA", `Úroveň myčky zvýšena na ${state.carwash.level}!`, "success");
+    renderCarwash();
+    updateUI();
+    saveGame();
+}
+
+function buyCarwashWax() {
+    if (state.carwash.waxActivated) {
+        return notify("AUTOMYČKA", "Voskování je již aktivní!", "info");
+    }
+
+    const cost = 2500000;
+    if (state.money < cost) {
+        return notify("AUTOMYČKA", `Nemáš dost peněz! Potřebuješ ${cost.toLocaleString()} Kč.`, "warning");
+    }
+
+    addMoney(-cost);
+    state.carwash.waxActivated = true;
+    state.carwash.waxUntil = state.day + 3;
+    notify("AUTOMYČKA", "Voskování PREMIUM bylo zakoupeno! Nove umytá vozidla budou mít +5% bonus k zisku na 3 dny.", "success");
+    renderCarwash();
+    updateUI();
+    saveGame();
+}
+
+function buyAutoWashStaff() {
+    if (state.carwash.autoWashStaff) {
+        return notify("AUTOMYČKA", "Automatický personál je již koupen!", "info");
+    }
+
+    const cost = 100000000; // 100M
+    if (state.money < cost) {
+        return notify("AUTOMYČKA", `Nemáš dost peněz! Potřebuješ ${cost.toLocaleString()} Kč.`, "warning");
+    }
+
+    addMoney(-cost);
+    state.carwash.autoWashStaff = true;
+    notify("AUTOMYČKA", "Automatický personál koupen! Myčka nyní automaticky umyje všechna vozidla vrátivší se pod 40% čistotu.", "success");
+    renderCarwash();
+    updateUI();
+    saveGame();
+}
+
+// TECH
+function renderTech() {
+    const status = document.getElementById('tech-status'); const el = document.getElementById('tech-grid'); if(!status || !el) return;
+    if(state.researching) status.innerHTML = `<div style="background:rgba(255,215,0,0.1);border-left:4px solid var(--gold);padding:15px;border-radius:6px"><b>Probíhá výzkum: ${state.researching.n}</b><div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${(state.researching.progress/state.researching.duration)*100}%;background:var(--gold)"></div></div></div>`;
+    else status.innerHTML = `<div style="color:#555">Aktuálně nic nevyzkoumáváš. Zvol projekt níže.</div>`;
+
+    el.innerHTML = TECH_DB.map(t => {
+        let has = state.tech.includes(t.id); let reqMet = !t.req || state.tech.includes(t.req); let repMet = state.reputation >= t.minRep;
+        let cls = has ? 'owned' : ((!reqMet || !repMet || state.researching) ? 'locked' : '');
+        let stTxt = has ? 'VYZKOUMÁNO' : (!reqMet ? `Chybí predrekvizita: ${TECH_DB.find(x=>x.id===t.req)?.n}` : (!repMet ? `Potřeba Reputace: ${t.minRep}` : `${t.cost.toLocaleString()} Kč | ${t.time} min`));
+        return `<div class="tech-node ${cls}" ${cls==='' ? `onclick="startResearch('${t.id}', ${t.cost}, ${t.time}, '${t.n}')"` : ''}><h3 style="margin:0;font-size:15px">${t.n}</h3><div style="font-size:11px;color:var(--text-muted);margin:8px 0">${t.desc}</div><b style="font-size:12px;color:${has?'var(--green)':'var(--gold)'}">${stTxt}</b></div>`;
+    }).join('');
+}
+
+function startResearch(id, cost, time, n) {
+    if(state.money >= cost) { addMoney(-cost); state.researching = {id, n, duration: time, progress: 0}; notify("VÝZKUM", "Technologický výzkum zahájen!", "info"); renderTech(); saveGame(); }
+    else notify("FINANCE", "Nemáš dost peněz na tento výzkum!", "warning");
+}
+
+// ACHIEVEMENTS
+function checkAchievements() {
+    ACH_DB.forEach(a => {
+        if(!state.achievements.includes(a.id) && a.check(state)) {
+            state.achievements.push(a.id);
+            addMoney(a.reward);
+            notify("🏆 ÚSPĚCH ODBLOKOVÁN", `${a.n}! Získáváš ${a.reward.toLocaleString()} Kč.`, "gold");
+        }
+    });
+}
+
+function renderAchievements() {
+    const el = document.getElementById('achievements-list'); if(!el) return;
+    let c = 0;
+    el.innerHTML = ACH_DB.map(a => {
+        let has = state.achievements.includes(a.id); if(has) c++;
+        return `<div class="ach-row ${has?'unlocked':''}"><div class="ach-icon">${a.icon}</div><div><h3 style="margin:0;color:${has?'var(--gold)':'white'}">${a.n}</h3><div style="font-size:12px;color:var(--text-muted)">${a.desc}</div><div style="font-size:11px;color:var(--green);margin-top:4px">Odměna: ${a.reward.toLocaleString()} Kč</div></div></div>`;
+    }).join('');
+    document.getElementById('ach-count').innerText = c; document.getElementById('ach-total').innerText = ACH_DB.length;
+}
+
+// HR & DRIVERS
+function renderHR() {
+    const el = document.getElementById('hr-grid'); if(!el) return;
+    el.innerHTML = state.drivers.map(d => `<div class="card" style="border-left:4px solid ${d.energy<30?'var(--red)':'var(--green)'}"><div class="card-body"><div style="display:flex;justify-content:space-between"><h3>${d.name}</h3><b style="color:var(--green)">Lvl ${d.level}</b></div><div style="font-size:11px;color:var(--text-muted);margin-bottom:10px"><i>"${d.bio}"</i> | Vlastnost: <b>${TRAITS.find(t=>t.id===d.trait).n}</b></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span>Energie: ${Math.floor(d.energy)}%</span><span>Morálka: ${Math.floor(d.morale||100)}%</span></div><div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${d.energy}%;background:var(--blue)"></div></div><div style="margin-top:10px;font-size:11px">Licence: ${d.lic.map(l=>'<span class="lic-badge">'+LICENSES.find(x=>x.id===l).n+'</span>').join('')}</div><div style="margin-top:10px;display:flex;gap:5px"><button class="btn btn-sm btn-dark" onclick="fireDriver(${d.id})">PROPUSTIT</button></div></div></div>`).join('');
+}
+
+function hireNewDriver() {
+    let cost = 50000; if(state.tech.includes('recruit')) cost = 25000;
+    if(state.money >= cost) {
+        addMoney(-cost);
+        let n = NAMES_F[Math.floor(Math.random()*NAMES_F.length)] + " " + NAMES_L[Math.floor(Math.random()*NAMES_L.length)];
+        let b = BIOS[Math.floor(Math.random()*BIOS.length)];
+        let t = TRAITS[Math.floor(Math.random()*TRAITS.length)].id;
+        state.drivers.push({id: Date.now(), name: n, level: 1, xp: 0, req: 100, skills: {spd:0}, energy: 100, morale: 100, tacho: 0, restUntil: 0, lic: [], bio: b, trait: t, deliveries: 0});
+        notify("HR", `Najat nový řidič: ${n}!`, "success"); renderHR(); saveGame();
+    } else notify("FINANCE", "Nemáš peníze na nábor!", "warning");
+}
+
+function fireDriver(id) { 
+    if(confirm("Opravdu chceš propustit tohoto řidiče?")) { 
+        state.drivers = state.drivers.filter(d=>d.id!==id); 
+        state.vehicles.forEach(v=>{if(v.driverId===id)v.driverId=null;}); 
+        renderHR(); renderFleet(); saveGame(); 
+    } 
+}
+
+function openTrainingCenter() {
+    let h = `<h2 style="color:var(--teal)">🎓 TRÉNINKOVÉ CENTRUM</h2><p>Vyber řidiče a zaplať mu odborný kurz.</p><div style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto">`;
+    state.drivers.forEach(d => {
+        h += `<div style="background:rgba(0,0,0,0.4);padding:10px;border-radius:6px;border:1px solid var(--border-light)"><b>${d.name}</b> (Lvl ${d.level})<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">` + TRAINING_DB.map(t => `<button class="btn btn-sm btn-dark" onclick="trainDriver(${d.id}, '${t.id}', ${t.cost}, ${t.xp})">${t.icon} ${t.n} (${t.cost.toLocaleString()} Kč)</button>`).join('') + `</div><div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">` + LICENSES.map(l => `<button class="btn btn-sm ${d.lic.includes(l.id)?'btn-green':'btn-dark'}" ${d.lic.includes(l.id)||d.level<l.minLvl?'disabled':''} onclick="assignLicence(${d.id}, '${l.id}', ${l.cost})">${l.n} (L${l.minLvl} / ${l.cost/1000}k)</button>`).join('') + `</div></div>`;
+    });
+    h += `</div>`; document.getElementById('modal-content').innerHTML = h; document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function trainDriver(did, tid, cost, xp) {
+    if(state.money >= cost) { 
+        addMoney(-cost); 
+        let d = state.drivers.find(x=>x.id===did); 
+        if(d) { 
+            d.xp += xp; state.stats.trainings++; 
+            if(d.xp >= d.req) { 
+                d.level++; d.xp=0; d.req*=1.5; d.skills.spd++; 
+                notify("LEVEL UP", `${d.name} postoupil na Level ${d.level}!`, "gold"); 
+            } else notify("TRÉNINK", "Školení úspěšně proběhlo.", "success"); 
+            openTrainingCenter(); renderHR(); saveGame(); 
+        } 
+    } else notify("FINANCE", "Nemáš peníze!", "warning");
+}
+
+function assignLicence(did, lid, cost) {
+    if(state.money >= cost) { 
+        addMoney(-cost); 
+        let d = state.drivers.find(x=>x.id===did); 
+        if(d && !d.lic.includes(lid)) { 
+            d.lic.push(lid); notify("LICENCE", "Rozšiřující licence získána!", "success"); 
+            openTrainingCenter(); renderHR(); saveGame(); 
+        } 
+    } else notify("FINANCE", "Nemáš peníze na certifikát!", "warning");
+}
+
+function openMoraleCenter() {
+    let h = `<h2 style="color:var(--cyan)">😊 CENTRUM POHODY</h2><p>Doplň morálku a motivaci celému svému týmu řidičů.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-dark" onclick="boostMorale(20000, 20)">Pivo a Gril (20k / +20%)</button><button class="btn btn-cyan" onclick="boostMorale(50000, 50)">Firemní večírek (50k / +50%)</button><button class="btn btn-gold" onclick="boostMorale(150000, 100)">Wellness Víkend (150k / MAX)</button></div>`;
+    document.getElementById('modal-content').innerHTML = h; 
+    document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function boostMorale(cost, amount) {
+    if (state.money >= cost) {
+        addMoney(-cost);
+        state.drivers.forEach(d => {
+            d.morale = Math.min(100, (d.morale || 100) + amount);
+        });
+        notify("CENTRUM POHODY", `Morálka řidičů byla zvýšena o ${amount}%.`, "success");
+        closeModal();
+        renderHR();
+        saveGame();
+    } else {
+        notify("FINANCE", "Nemáš dost peněz na tuto akci!", "warning");
+    }
+}
+
+// ==========================================
+// MARKETING A PR AGENTURA
+// ==========================================
+function buyMarketing(type) {
+    let cost = 0; let repBonus = 0;
+    if (type === 'paper') { cost = 10000; repBonus = 2; }
+    if (type === 'billboard') { cost = 50000; repBonus = 5; }
+    if (type === 'social') { cost = 100000; repBonus = 8; }
+    if (type === 'tv') { cost = 200000; repBonus = 15; }
+    if (type === 'esport') { cost = 500000; repBonus = 30; }
+    if (type === 'viral') { cost = 1500000; repBonus = 60; }
+    
+    if (type === 'crisis') {
+        if (state.money >= 250000) {
+            addMoney(-250000);
+            state.reputation = 100;
+            notify("PR AGENTURA", "Krizový management úspěšně obnovil reputaci firmy na 100%.", "success");
+            updateUI(); saveGame();
+            return;
+        } else return notify("FINANCE", "Na krizový management nemáš prostředky.", "warning");
+    }
+
+    if (state.money >= cost) {
+        addMoney(-cost);
+        state.reputation += repBonus;
+        notify("MARKETING", `Reklamní kampaň spuštěna! Reputace vzrostla o ${repBonus}%.`, "success");
+        updateUI(); saveGame();
+    } else {
+        notify("FINANCE", "Na tuto marketingovou kampaň nemáš dost peněz.", "warning");
+    }
+}
+
+// ==========================================
+// PALIVO A NÁDRŽ
+// ==========================================
+function buyFuelToTank(amt) {
+    let maxCanBuy = (state.hq.fuel_depot * 20000) - state.fuelTank;
+    if (amt > maxCanBuy) amt = maxCanBuy;
+    if (amt <= 0) return notify("NÁDRŽ", "Tvoje firemní nádrž je plná! (Vylepši HQ pro větší kapacitu)", "warning");
+
+    let pCost = state.fuelHedge ? state.fuelHedge : state.fuelPrice;
+    if (state.tech.includes('bulk_buy')) pCost *= 0.9;
+    
+    let cost = amt * pCost;
+    if (state.money >= cost) {
+        addMoney(-cost);
+        state.fuelTank += amt;
+        notify("PALIVO", `Nakoupeno ${amt.toLocaleString()} l nafty do firemní zásoby.`, "success");
+        updateFuelUI(); saveGame();
+    } else {
+        notify("FINANCE", "Na nákup paliva do zásoby nemáš peníze.", "warning");
+    }
+}
+
+function hedgeFuel() {
+    if (state.fuelHedge) return notify("BURZA", "Už máš zafixovanou cenu nafty!", "info");
+    if (state.money >= 50000) {
+        addMoney(-50000);
+        state.fuelHedge = state.fuelPrice;
+        notify("ZAJIŠTĚNÍ", `Cena nafty byla zafixována na ${state.fuelHedge.toFixed(2)} Kč/l.`, "success");
+        updateFuelUI(); saveGame();
+    } else {
+        notify("FINANCE", "Nemáš peníze na fixaci ceny nafty na burze.", "warning");
+    }
+}
+
+function updateFuelUI() {
+    if (!document.getElementById('fuel-tank-lvl')) return;
+    let maxTank = state.hq.fuel_depot * 20000;
+    document.getElementById('fuel-tank-lvl').innerText = Math.floor(state.fuelTank).toLocaleString();
+    document.getElementById('fuel-tank-max').innerText = maxTank.toLocaleString();
+    let pct = maxTank > 0 ? (state.fuelTank / maxTank) * 100 : 0;
+    document.getElementById('fuel-tank-bar').style.width = `${pct}%`;
+
+    let hb = document.getElementById('hedge-btn');
+    if (hb) {
+        if (state.fuelHedge) {
+            hb.innerText = `CENA FIXOVÁNA (${state.fuelHedge.toFixed(2)} Kč/l)`;
+            hb.classList.replace('btn-orange', 'btn-green');
+            hb.onclick = null;
+        } else {
+            hb.innerText = "⚡ ZAJISTIT CENU (50k)";
+            hb.classList.replace('btn-green', 'btn-orange');
+            hb.onclick = hedgeFuel;
+        }
+    }
+}
+
+// ==========================================
+// KONKURENCE A ODKUPY
+// ==========================================
+function renderCompetition() {
+    const el = document.getElementById('competitor-list'); if (!el) return;
+    el.innerHTML = Object.keys(state.competitors).map(id => {
+        let c = state.competitors[id]; let db = COMPETITORS_DB.find(x => x.id === id);
+        let share = Math.max(1, Math.floor((c.reputation / (state.reputation + c.reputation + 1)) * 100));
+        if (c.boughtOut) share = 0;
+        return `<div class="competitor-card ${c.boughtOut ? 'comp-bought' : ''}" style="border-top:4px solid ${db.color}">
+            <h3 style="color:${db.color}; margin-top:0">${db.n}</h3>
+            <p style="font-size:12px; color:var(--text-muted)">${db.desc}</p>
+            <div style="display:flex; justify-content:space-between; margin:10px 0; font-size:13px">
+                <span>Tržní podíl: <b>${share}%</b></span>
+                <span>Síla firmy: <b>${c.power}x</b></span>
+            </div>
+            ${c.boughtOut ? `<div style="color:var(--gold); font-weight:bold; margin-top:10px">✅ ODKOUPENO A INTEGROVÁNO</div>` : `
+            <div style="display:flex; gap:10px; margin-top:15px">
+                <button class="btn btn-sm btn-dark" onclick="sabotageCompetitor('${id}')">SABOTÁŽ (1M Kč)</button>
+                <button class="btn btn-sm btn-gold" onclick="buyOutCompetitor('${id}', ${db.baseVal})">ODKOUPIT (${(db.baseVal * c.power).toLocaleString()})</button>
+            </div>`}
+        </div>`;
+    }).join('');
+}
+
+function sabotageCompetitor(id) {
+    if (state.money >= 1000000) {
+        addMoney(-1000000);
+        if (Math.random() > 0.3) {
+            state.competitors[id].reputation = Math.max(10, state.competitors[id].reputation - 30);
+            state.competitors[id].power = Math.max(0.5, state.competitors[id].power - 0.2);
+            notify("SABOTÁŽ", "Úspěch! Konkurence utrpěla masivní ztráty a jejich tržní hodnota klesla.", "success");
+            pushToTicker(`<b>PR ODDĚLENÍ:</b> Konkurent ${COMPETITORS_DB.find(x=>x.id===id).n} utrpěl mediální skandál.`, "success");
+        } else {
+            state.reputation -= 20;
+            notify("KATASTROFA", "Sabotáž byla odhalena! Ztrácíš obrovské množství reputace a klienti odchází.", "danger");
+            pushToTicker(`<b>POLICIE:</b> Jirstan Logistics vyšetřován za nekalé praktiky!`, "danger");
+        }
+        renderCompetition(); saveGame();
+    } else {
+        notify("FINANCE", "Na takovou špinavou operaci nemáš prostředky.", "warning");
+    }
+}
+
+function buyOutCompetitor(id, baseVal) {
+    let cost = Math.floor(baseVal * state.competitors[id].power);
+    if (state.money >= cost) {
+        addMoney(-cost);
+        state.competitors[id].boughtOut = true;
+        state.machines.push({id: 'comp_'+id, n: 'Podíl z ' + COMPETITORS_DB.find(x=>x.id===id).n, c: cost, inc: Math.floor(cost * 0.005), img: ''});
+        notify("ODKUP DOKONČEN", `Gratulujeme! Koupil jsi konkurenční firmu a integroval ji. Získáváš z ní trvalý pasivní příjem!`, "gold");
+        pushToTicker(`<b>BURZA:</b> Jirstan Logistics provedl gigantickou akvizici a pohltil konkurenci.`, "gold");
+        renderCompetition(); renderMachines(); checkAchievements(); saveGame();
+    } else {
+        notify("FINANCE", `Na odkup ti chybí peníze. Potřebuješ ${cost.toLocaleString()} Kč.`, "warning");
+    }
+}
+
+// ==========================================
+// TÝDENNÍ VÝZVY
+// ==========================================
+function renderChallenges() {
+    const el = document.getElementById('challenge-list'); if (!el) return;
+    el.innerHTML = CHALLENGE_DB.map(c => {
+        let active = state.activeChallenges.includes(c.id);
+        let progress = 0;
+        if (c.type === 'deliveries') progress = state.stats.deliveries;
+        if (c.type === 'earned') progress = state.stats.totalEarned;
+        if (c.type === 'distance') progress = state.stats.distance;
+        if (c.type === 'contracts') progress = state.stats.contractsDone;
+        
+        let pct = Math.min(100, (progress / c.target) * 100);
+        
+        return `<div class="card" style="border-left:4px solid var(--gold); ${active ? 'opacity:0.5' : ''}">
+            <div class="card-body">
+                <div style="display:flex; justify-content:space-between">
+                    <h3 style="color:var(--gold); margin:0">${c.n}</h3>
+                    ${active ? '<span style="color:var(--green); font-weight:bold">HOTOVO</span>' : ''}
+                </div>
+                <p style="font-size:12px; color:var(--text-muted); margin:10px 0">${c.desc}</p>
+                <div class="xp-bar-bg" style="margin-bottom:10px">
+                    <div class="xp-bar-fill" style="width:${pct}%; background:var(--gold)"></div>
+                </div>
+                <div style="font-size:11px; margin-bottom:10px">Pokrok: ${Math.floor(progress).toLocaleString()} / ${c.target.toLocaleString()}</div>
+                ${!active && progress >= c.target ? `<button class="btn btn-gold" onclick="claimChallenge('${c.id}', ${c.reward}, ${c.repReward})">VYZVEDNOUT ODMĚNU (${c.reward.toLocaleString()} Kč)</button>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function claimChallenge(id, reward, repReward) {
+    if (state.activeChallenges.includes(id)) return;
+    state.activeChallenges.push(id);
+    addMoney(reward);
+    state.reputation += repReward;
+    state.stats.challengesWon = (state.stats.challengesWon || 0) + 1;
+    notify("VÝZVA SPLNĚNA", `Gratulujeme! Získáváš ${reward.toLocaleString()} Kč a +${repReward}% reputace!`, "gold");
+    renderChallenges(); updateUI(); saveGame();
+}
+
+// ==========================================
+// SYSTÉM (TABS, UTILS, SAVING)
+// ==========================================
+function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        
+        if (tabId === 'dispatch') { setTimeout(fixMapSize, 50); } else if (tabId === 'auction') { renderAuction(); }
+        if (tabId === 'stats') renderStats();
+        if (tabId === 'hr') renderHR();
+        if (tabId === 'hq') renderHQ();
+        if (tabId === 'gas') renderGasNetwork();
+        if (tabId === 'competition') { renderCompetition(); renderChallenges(); }
+        if (tabId === 'bank') { drawMarketChart(); drawFuelChart(); renderTermDeposits(); renderInsurance(); }
+        if (tabId === 'bazaar') { renderBazaar(); }
+    if (tabId === 'overseas') renderOverseas();
+    
+    document.querySelector('.content').scrollTo(0,0);
+}
+
+function addMoney(amt) { 
+    state.money += amt; 
+    if (amt < 0) state.stats.totalSpent += Math.abs(amt); 
+    updateUI(); 
+}
+
+function pad(num) { 
+    return num.toString().padStart(2, '0'); 
+}
+
+function openSaveManager() {
+    let slotsHtml = '';
+    for(let i=1; i<=3; i++) {
+        let sData = localStorage.getItem(`jirstan_beta_v1_slot${i}`);
+        let info = "Prázdný slot";
+        if (sData) {
+            try {
+                let d = JSON.parse(sData);
+                info = `Den ${d.day} | ${Math.floor(d.money).toLocaleString()} Kč | Auta: ${d.vehicles?.length || 0}`;
+            } catch(e) {}
+        }
+        slotsHtml += `<div style="background:rgba(0,0,0,0.5); padding:15px; border:1px solid var(--border-light); border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center">
+            <div><h3 style="margin:0; color:var(--orange)">💾 SLOT ${i}</h3><div style="font-size:12px; color:var(--text-muted); margin-top:5px">${info}</div></div>
+            <div style="display:flex; gap:10px">
+                <button class="btn btn-sm btn-green" onclick="saveToSlot(${i})">ULOŽIT ZDE</button>
+                ${sData ? `<button class="btn btn-sm btn-blue" onclick="loadFromSlot(${i})">NAČÍST</button> <button class="btn btn-sm btn-red" onclick="deleteSlot(${i})">SMAZAT</button>` : ''}
+            </div>
+        </div>`;
+    }
+    let h = `<h2 style="color:var(--orange)">SPRÁVCE ULOŽENÍ</h2><p>Hra se ukládá automaticky do aktuálního slotu. Zde můžeš spravovat více pozic.</p>${slotsHtml}<button class="btn btn-dark" style="margin-top:20px" onclick="closeModal()">ZAVŘÍT</button>`;
+    document.getElementById('modal-content').innerHTML = h;
+    document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function saveToSlot(slot) { state.currentSaveSlot = slot; saveGame(); notify("ULOŽENO", `Hra byla manuálně uložena do slotu ${slot}.`, "success"); openSaveManager(); }
+function loadFromSlot(slot) { state.currentSaveSlot = slot; loadGame(); notify("NAČTENO", `Hra načtena ze slotu ${slot}.`, "success"); closeModal(); renderAll(); }
+function deleteSlot(slot) { if(confirm(`Smazat slot ${slot}?`)) { localStorage.removeItem(`jirstan_beta_v1_slot${slot}`); openSaveManager(); notify("SMAZÁNO", `Slot ${slot} byl smazán.`, "info"); } }
+
+function resetGame() {
+    if(confirm('OPRAVDU RESETOVAT CELOU HRU? Přijdeš o všechen postup!')) {
+        localStorage.removeItem(`jirstan_beta_v1_slot${state.currentSaveSlot}`);
+        localStorage.removeItem('jirstan_save');
+        state = JSON.parse(JSON.stringify(defaultState));
+        saveGame();
+        window.location.reload();
+    }
+}
+
+function manualRefresh() { 
+    renderAll(); 
+    notify("SYSTÉM", "UI bylo manuálně obnoveno.", "info"); 
+}
+
+function skipTime(hours) {
+    notify("SYSTÉM", `Simulace zrychlena o ${hours} hodin.`, "info");
+    for(let i=0; i<hours*60; i++) tick();
+}
+
+function closeModal() { 
+    document.getElementById('modal-overlay').style.display = 'none'; 
+}
+
+function notify(title, msg, type = 'info') {
+    const box = document.getElementById('toast-box');
+    if(!box) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    let bColor = type === 'success' ? 'var(--green)' : (type === 'warning' ? 'var(--gold)' : (type === 'danger' ? 'var(--red)' : (type === 'pink' ? 'var(--pink)' : 'var(--blue)')));
+    toast.style.borderLeftColor = bColor;
+    toast.innerHTML = `<div style="flex:1"><b style="color:${bColor}; fon--------------------------------------------------------------------------------------------------------------------------------------------------------t-size:11px; letter-spacing:1px; text-transform:uppercase">${title}</b><div style="margin-top:4px">${msg}</div></div>`;
+    box.appendChild(toast);
+    setTimeout(() => { 
+        if(toast.parentElement) { 
+            toast.style.animation = 'slideInRight 0.4s reverse forwards'; 
+            setTimeout(()=>toast.remove(), 400); 
+        } 
+    }, 4000);
+}
+
+// ==========================================
+// INICIALIZACE HRY
+// ==========================================
+window.onload = init;
+
+
