@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JIRSTAN v321 - ECONOMY UPGRADE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505; 
+            --panel: rgba(20, 20, 20, 0.65); 
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --orange: #ff9d00; --orange-glow: rgba(255, 157, 0, 0.4);
+            --green: #00e676; --green-glow: rgba(0, 230, 118, 0.4);
+            --red: #ff1744; --blue: #2979ff; --purple: #d500f9; --gold: #ffd700; --pink: #ff4081;
+            --lic-exp: #f44336; --lic-move: #4caf50; --lic-bulk: #8d6e63; 
+            --lic-frigo: #00bcd4; --lic-med: #e91e63; --lic-adr: #ff6d00; 
+            --lic-heavy: #ffd700; --lic-val: #607d8b;
+            --teal: #00bfa5;
+        }
+
+        * { box-sizing: border-box; outline: none; user-select: none; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
+
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%); 
+            color: #e0e0e0; margin: 0; height: 100vh; display: flex; overflow: hidden; 
+        }
+
+        h1, h2, h3 { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+
+        .sidebar { 
+            width: 300px; 
+            background: rgba(15, 15, 15, 0.85); 
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--panel-border); 
+            display: flex; flex-direction: column; padding: 20px; 
+            z-index: 10; box-shadow: 5px 0 30px rgba(0,0,0,0.6);
+            overflow-y: auto;
+            height: 100vh;
+        }
+        
+        .brand { text-align: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--panel-border); }
+        .brand-logo { width: 100%; max-height: 100px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 0 15px var(--orange-glow)); transition: transform 0.3s;}
+        .brand-logo:hover { transform: scale(1.05); }
+        .brand h1 { margin: 0; color: white; font-size: 28px; text-shadow: 0 0 20px var(--orange-glow); font-style: italic; }
+
+        .nav-btn { 
+            background: transparent; border: none; color: #999; text-align: left; 
+            padding: 10px 15px; cursor: pointer; font-family: 'Rajdhani'; font-weight: 700; font-size: 15px;
+            width: 100%; display: flex; align-items: center; gap: 10px; border-radius: 6px; margin-bottom: 4px; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; padding-left: 20px; }
+        .nav-btn.active { background: linear-gradient(90deg, rgba(255, 157, 0, 0.1), transparent); color: var(--orange); border-left: 3px solid var(--orange); }
+        .nav-btn.active::after { content:''; position: absolute; right: 10px; width: 6px; height: 6px; background: var(--orange); border-radius: 50%; box-shadow: 0 0 10px var(--orange); }
+
+        .main { flex-grow: 1; display: flex; flex-direction: column; background: transparent; position: relative; }
+        
+        .top-bar { 
+            height: 70px; border-bottom: 1px solid var(--panel-border); 
+            display: flex; align-items: center; padding: 0 30px; justify-content: space-between; 
+            background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(15px);
+        }
+        
+        .money-display { font-size: 28px; font-weight: 700; color: var(--orange); text-shadow: 0 0 15px var(--orange-glow); font-family: 'Rajdhani'; letter-spacing: 1px; }
+        
+        .content { padding: 30px; overflow-y: auto; height: calc(100vh - 70px); }
+        .tab-pane { display: none; animation: slideUp 0.3s ease-out; } 
+        .tab-pane.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .banner { width: 100%; height: 200px; position: relative; border-radius: 12px; overflow: hidden; margin-bottom: 25px; border: 1px solid var(--panel-border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .banner img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; transition: transform 5s; filter: brightness(0.7); }
+        .banner:hover img { transform: scale(1.05); filter: brightness(1); }
+        .banner-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(to top, #000 0%, transparent 100%); }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        
+        .card { 
+            background: linear-gradient(145deg, rgba(25,25,25,0.9), rgba(15,15,15,0.95)); 
+            border: 1px solid var(--panel-border); 
+            border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; 
+            transition: all 0.3s ease; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            position: relative;
+        }
+        .card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .card-head { padding: 12px 15px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--panel-border); font-weight: 700; display: flex; justify-content: space-between; align-items: center; font-family: 'Rajdhani'; font-size: 17px; }
+        .card-body { padding: 15px; flex-grow: 1; }
+        .card-img { width: 100%; height: 160px; object-fit: cover; background: #0f0f0f; border-bottom: 1px solid var(--panel-border); }
+
+        .staff-card { display: flex !important; flex-direction: row !important; padding: 0 !important; background: linear-gradient(135deg, #151515 0%, #222 100%); grid-column: span 2; }
+        .staff-img { width: 180px; height: 100%; object-fit: cover; border-right: 2px solid #333; }
+        .staff-content { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
+        .contract-card { border-left: 3px solid var(--gold) !important; background: linear-gradient(145deg, #2a210a, #1a1a1a) !important; }
+
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 5px; font-weight: 700; cursor: pointer; margin-top: 8px; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; font-family: 'Rajdhani'; transition: all 0.2s; position: relative; overflow: hidden; }
+        .btn::after { content:''; position: absolute; top:0; left:-100%; width:100%; height:100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: 0.5s; }
+        .btn:hover::after { left: 100%; }
+        .btn:active { transform: scale(0.98); }
+        
+        .btn-green { background: var(--green); color: black; box-shadow: 0 0 10px var(--green-glow); }
+        .btn-orange { background: var(--orange); color: black; box-shadow: 0 0 10px var(--orange-glow); }
+        .btn-red { background: var(--red); color: white; }
+        .btn-blue { background: var(--blue); color: white; }
+        .btn-purple { background: var(--purple); color: white; }
+        .btn-pink { background: var(--pink); color: white; }
+        .btn-gold { background: var(--gold); color: black; }
+        .btn-teal { background: var(--teal); color: black; }
+        .btn-disabled { background: #222; color: #555; cursor: not-allowed; border: 1px solid #333; box-shadow: none; }
+        
+        .filter-group { display: flex; gap: 5px; margin-bottom: 15px; background: #111; padding: 4px; border-radius: 6px; }
+        .filter-btn { flex: 1; background: transparent; border: none; color: #666; padding: 8px; cursor: pointer; font-family: 'Rajdhani'; font-weight: bold; border-radius: 4px; transition: 0.2s; }
+        .filter-btn:hover { color: white; }
+        .filter-btn.active { background: #222; color: var(--orange); box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+
+        .lic-badge { display: inline-block; padding: 3px 6px; border-radius: 3px; font-size: 9px; font-weight: 800; margin: 0 3px 3px 0; background: rgba(0,0,0,0.3); border: 1px solid; }
+        .queue-badge { background: var(--blue); color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 5px; font-weight: bold; }
+
+        #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-box { background: #111; border: 1px solid var(--orange); width: 850px; padding: 30px; border-radius: 16px; max-height: 90vh; overflow-y: auto; box-shadow: 0 0 50px rgba(255, 157, 0, 0.15); animation: zoomIn 0.2s; }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .select-row { background: #1a1a1a; padding: 12px; margin-bottom: 8px; border: 1px solid #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: 0.2s; }
+        .select-row:hover { background: #222; transform: translateX(5px); border-color: var(--orange); }
+
+        #map-box { width: 100%; height: 550px; background: #080808; border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 80px rgba(0,0,0,0.9); position: relative; }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        #toast-box { position: fixed; top: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 10000; pointer-events: none; }
+        .toast { pointer-events: auto; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); border-left: 3px solid var(--orange); padding: 15px; width: 300px; color: white; border-radius: 4px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); animation: slideInRight 0.3s; font-size: 13px; display: flex; align-items: center; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; color: #666; border-bottom: 1px solid #333; font-family: 'Rajdhani'; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+        td { padding: 12px; border-bottom: 1px solid #222; font-size: 14px; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        
+        .founders-row { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
+        .founder-card { background: #111; border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+        .founder-img { width: 100%; height: 220px; object-fit: cover; border-bottom: 2px solid var(--orange); }
+        .founder-body { padding: 20px; }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30,30,30,0.5), rgba(10,10,10,0.8));
+            border: 1px solid var(--panel-border);
+            border-radius: 10px; padding: 20px; text-align: center; position: relative; overflow: hidden;
+        }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, var(--orange), transparent); }
+        .stat-value { font-size: 32px; font-weight: 700; font-family: 'Rajdhani'; color: var(--orange); text-shadow: 0 0 15px var(--orange-glow); margin: 5px 0; }
+        .stat-label { font-size: 10px; text-transform: uppercase; color: #888; letter-spacing: 1px; font-family: 'Rajdhani'; }
+        
+        .save-slot { background: linear-gradient(135deg, #151515, #0a0a0a); border: 2px solid #333; border-radius: 12px; padding: 20px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s; }
+        .save-slot:hover { border-color: var(--orange); transform: translateX(5px); }
+        .save-slot.active { border-color: var(--green); box-shadow: 0 0 20px rgba(0, 230, 118, 0.1); }
+        .save-slot.empty { border-style: dashed; opacity: 0.5; }
+
+        .toast-icon { font-size: 24px; margin-right: 15px; }
+        
+        .tech-node { border: 1px solid #444; background: #111; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
+        .tech-node:hover { border-color: var(--blue); background: #1a1a1a; }
+        .tech-node.owned { border-color: var(--green); background: rgba(0, 230, 118, 0.05); }
+        .tech-node.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        .tech-node.researching { border-color: var(--gold); background: rgba(255, 215, 0, 0.1); }
+        
+        .ach-row { display: flex; align-items: center; background: #111; border: 1px solid #333; padding: 15px; border-radius: 8px; margin-bottom: 10px; opacity: 0.7; transition: 0.3s; }
+        .ach-row.unlocked { border-color: var(--gold); opacity: 1; background: linear-gradient(90deg, rgba(255, 215, 0, 0.05), transparent); }
+        .ach-icon { font-size: 24px; margin-right: 15px; width: 40px; text-align: center; }
+
+        .res-bar-bg { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-top: 10px; overflow: hidden; }
+        .res-bar-fill { height: 100%; background: var(--gold); width: 0%; transition: width 1s linear; }
+
+        /* NEW: Staff XP bar */
+        .staff-xp-bar { background: #0a0a0a; border-radius: 4px; padding: 8px 10px; margin-top: 8px; border: 1px solid #222; }
+        .staff-xp-label { font-size: 10px; color: #666; font-family: 'Rajdhani'; letter-spacing: 1px; display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .xp-bar-bg { height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
+        .xp-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+        /* NEW: Skill badge grid */
+        .skill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+        .skill-badge { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 8px; font-size: 10px; cursor: pointer; transition: 0.2s; text-align: center; }
+        .skill-badge:hover { border-color: var(--orange); }
+        .skill-badge.owned { border-color: var(--purple); background: rgba(213, 0, 249, 0.08); }
+        .skill-badge.locked { opacity: 0.4; cursor: not-allowed; }
+
+        /* NEW: Training modal */
+        .training-option { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .training-option:hover { border-color: var(--teal); transform: translateX(4px); }
+
+        /* NEW: Event log */
+        #event-log-bar { background: rgba(0,0,0,0.5); border-top: 1px solid var(--panel-border); padding: 4px 30px; font-size: 11px; color: #555; font-family: 'Rajdhani'; letter-spacing: 1px; overflow: hidden; white-space: nowrap; }
+        .event-ticker { animation: scroll-left 30s linear infinite; display: inline-block; }
+        @keyframes scroll-left { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+
+        .invest-card { background: #161616; border: 1px solid #333; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        .invest-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="modal-overlay"><div class="modal-box" id="modal-content"></div></div>
+<div id="toast-box"></div>
+
+<div class="sidebar">
+    <div class="brand">
+        <img src="logo_jirstan.png" class="brand-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+        <div style="font-size: 40px; color: var(--orange); margin-bottom: 10px; display:none;">🚚</div>
+        <h1>JIRSTAN LOGISTICS</h1>
+        <small style="color:var(--orange); font-family:'Rajdhani'; letter-spacing:2px; font-weight:bold;">v321 PREMIUM</small>
+    </div>
+    <nav>
+        <button class="nav-btn active" onclick="switchTab('overview', this)">📊 PŘEHLED FIRMY</button>
+        <button class="nav-btn" onclick="switchTab('dispatch', this)">🛰️ ŽIVÝ DISPEČINK</button>
+        <button class="nav-btn" onclick="switchTab('fleet', this)">🚛 VOZOVÝ PARK</button>
+        <button class="nav-btn" onclick="switchTab('trailers', this)" style="color:var(--gold)">🔗 LOGISTIKA</button>
+        <button class="nav-btn" onclick="switchTab('auction', this)">📦 BURZA & SMLOUVY</button>
+        <button class="nav-btn" onclick="switchTab('machines', this)" style="color:var(--orange)">🏗️ STROJE & TĚŽBA</button>
+        <button class="nav-btn" onclick="switchTab('workshop', this)" style="color:var(--purple)">🔧 DÍLNA & TUNING</button>
+        <button class="nav-btn" onclick="switchTab('dealer', this)">💰 AUTOSALON</button>
+        <button class="nav-btn" onclick="switchTab('tech', this)" style="color:var(--blue)">🔬 VÝZKUM & PERKY</button>
+        <button class="nav-btn" onclick="switchTab('achievements', this)" style="color:var(--gold)">🏆 ÚSPĚCHY</button>
+        <button class="nav-btn" onclick="switchTab('stats', this)" style="color:var(--green)">📈 STATISTIKY</button>
+        <button class="nav-btn" onclick="switchTab('hr', this)">👥 HR & PERSONÁL</button>
+        <button class="nav-btn" onclick="switchTab('bank', this)">🏦 BANKA & PALIVO</button>
+    </nav>
+    <div style="margin-top:auto; padding-top:20px; border-top:1px solid #333;">
+        <div style="font-size:11px; color:#666; margin-bottom:10px; font-family:'Rajdhani'; font-weight:bold; letter-spacing:1px;">STATUS KANCELÁŘE:</div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;"><span>Dispečer:</span> <span id="st-disp" style="color:#444">NE</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;"><span>Mechanik:</span> <span id="st-mech" style="color:#444">NE</span></div>
+        <div style="display:flex; justify-content:space-between; font-size:13px;"><span>Kateřina:</span> <span id="st-kat" style="color:#444">NE</span></div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="top-bar">
+        <div style="display:flex; gap:30px; align-items:center;">
+            <div><div style="font-size:10px; color:#666; font-family:'Rajdhani'; letter-spacing:1px;">ZŮSTATEK ÚČTU</div><div class="money-display"><span id="ui-money">0</span> Kč</div></div>
+            <div style="padding-left:20px; border-left:1px solid #333;">
+                <div style="font-size:10px; color:#666; font-family:'Rajdhani'">POČASÍ</div>
+                <div style="font-size:15px; font-weight:bold; font-family:'Rajdhani'; color:white" id="ui-weather">☀️ Slunečno</div>
+            </div>
+            <div style="padding-left:20px;">
+                <div style="font-size:10px; color:#666; font-family:'Rajdhani'">NAFTA</div>
+                <div style="font-size:15px; font-weight:bold; font-family:'Rajdhani'; color:var(--red)"><span id="ui-fuel-price">0</span> Kč/l</div>
+            </div>
+            <div style="padding-left:20px; border-left:1px solid #333;"><div style="font-size:10px; color:#666; font-family:'Rajdhani'">HERNÍ ČAS</div><div style="font-size:18px; color:white; font-family:'Rajdhani'"><span id="ui-day">Den 1</span> <span id="ui-time" style="margin-left:10px; color:var(--orange);">08:00</span></div></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button id="btn-refresh" class="btn btn-green" style="width:auto; margin:0; padding:8px 15px;" onclick="manualRefresh()">🔄 REFRESH</button>
+            <button class="btn btn-blue" style="width:auto; margin:0; padding:8px 15px;" onclick="skipTime(1)">⏩ +1h</button>
+            <button class="btn btn-orange" style="width:auto; margin:0; padding:8px 15px;" onclick="openSaveManager()">💾 ULOŽIT</button>
+            <button class="btn btn-red" style="width:auto; margin:0; padding:8px 15px;" onclick="resetGame()">RESET</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <!-- OVERVIEW -->
+        <div id="tab-overview" class="tab-pane active">
+            <h3 style="color:var(--orange);">📋 DISPEČERSKÝ PŘEHLED</h3>
+            <div class="card" style="padding:0; border:none; background:transparent; box-shadow:none;">
+                <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead style="background:rgba(255,255,255,0.05); color:#aaa; text-align:left;">
+                        <tr><th style="padding:15px; border-radius:8px 0 0 8px;">Vozidlo</th><th>Řidič</th><th>Status</th><th>Palivo</th><th>Energie Řidiče</th><th style="border-radius:0 8px 8px 0;">Akce</th></tr>
+                    </thead>
+                    <tbody id="overview-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- DISPATCH -->
+        <div id="tab-dispatch" class="tab-pane">
+            <div id="map-box"><canvas id="gameMap"></canvas></div>
+            <h3 style="margin-top:30px; color:var(--blue);">DETAILNÍ PŘEHLED JÍZD</h3>
+            <div class="grid" id="dispatch-grid"></div>
+        </div>
+
+        <!-- FLEET -->
+        <div id="tab-fleet" class="tab-pane">
+            <div class="banner"><img src="fleet_base.jpg" onerror="this.src='https://via.placeholder.com/1000x300/111/444?text=HLAVNI+GARAZ+JIRSTAN'"><div class="banner-overlay"><h2>HLAVNÍ ZÁKLADNA</h2></div></div>
+            <div class="grid" id="fleet-grid"></div>
+        </div>
+
+        <!-- TRAILERS -->
+        <div id="tab-trailers" class="tab-pane">
+            <div class="banner"><img src="trailers_hub.jpg" onerror="this.src='https://via.placeholder.com/1000x300/111/gold?text=LOGISTICKY+HUB'"><div class="banner-overlay"><h2>CENTRUM NÁVĚSŮ</h2></div></div>
+            <h3>🔗 TVOJE NÁVĚSY</h3><div class="grid" id="trailers-my"></div>
+            <h3 style="margin-top:40px; border-top:1px solid #333; padding-top:20px;">PRODEJNA</h3><div class="grid" id="trailers-shop"></div>
+        </div>
+
+        <!-- AUCTION -->
+        <div id="tab-auction" class="tab-pane">
+            <div style="display:flex; gap:30px;">
+                <div style="flex: 2;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+                        <h3>📦 JEDNORÁZOVÉ ZAKÁZKY</h3>
+                        <button class="btn btn-orange" style="width:auto; display:inline-block;" onclick="genOffers()">🔄 NOVÉ (-500 Kč)</button>
+                    </div>
+                    <div class="filter-group">
+                        <button class="filter-btn active" onclick="filterAuction('all', this)">VŠE</button>
+                        <button class="filter-btn" onclick="filterAuction('van', this)">DODÁVKY</button>
+                        <button class="filter-btn" onclick="filterAuction('solo', this)">SOLO</button>
+                        <button class="filter-btn" onclick="filterAuction('semi', this)">KAMIONY</button>
+                    </div>
+                    <div class="grid" style="grid-template-columns: 1fr 1fr; gap:15px;" id="auction-list"></div>
+                </div>
+                <div style="flex: 1; border-left: 1px solid #333; padding-left: 20px;">
+                    <h3>📜 RÁMCOVÉ SMLOUVY</h3>
+                    <p style="font-size:12px; color:#888;">Dlouhodobé závazky.</p>
+                    <div id="active-contracts" style="margin-bottom:20px;"></div>
+                    <h4 style="color:#666">DOSTUPNÉ KONTRAKTY</h4>
+                    <div id="available-contracts"></div>
+                    <button class="btn btn-gold" onclick="genContracts()">HLEDAT KONTRAKTY (Zdarma)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HR -->
+        <div id="tab-hr" class="tab-pane">
+            <h3>⭐ ZAKLADATELÉ SPOLEČNOSTI</h3>
+            <div class="founders-row">
+                <div class="founder-card"><img src="JA.JPG" class="founder-img" onerror="this.src='https://via.placeholder.com/500x300/111/orange?text=STANISLAV'"><div class="founder-body"><h2 style="margin:0; color:var(--orange)">STANISLAV STAROSTA</h2><b style="color:#888;">CEO & MAJITEL</b><p style="font-style:italic; font-size:13px; color:#aaa; margin-top:10px;" id="bio-stanislav">...</p></div></div>
+                <div class="founder-card"><img src="BRACHA.JPG" class="founder-img" onerror="this.src='https://via.placeholder.com/500x300/111/blue?text=JIRI+MECHANIK'"><div class="founder-body"><h2 style="margin:0; color:var(--blue)">JIŘÍ ČEČÁK</h2><b style="color:#888;">CTO & HLAVNÍ TECHNIK</b><p style="font-style:italic; font-size:13px; color:#aaa; margin-top:10px;" id="bio-jiri">...</p></div></div>
+            </div>
+            <h3 style="margin-top:40px;">🏢 VEDENÍ KANCELÁŘE</h3><div class="grid" id="staff-hire-grid" style="margin-bottom:40px; grid-template-columns: 1fr 1fr;"></div>
+            <h3>👥 ZAMĚSTNANÍ ŘIDIČI</h3>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button class="btn btn-green" style="width:auto;" onclick="hireNewDriver()">NAJMOUT ŘIDIČE (5 000 Kč)</button>
+                <button class="btn btn-teal" style="width:auto;" onclick="openTrainingCenter()">🎓 TRÉNINKOVÉ CENTRUM</button>
+            </div>
+            <div class="grid" id="hr-grid"></div>
+        </div>
+
+        <!-- BANK -->
+        <div id="tab-bank" class="tab-pane">
+            <div class="banner"><img src="billboard.jpg" onerror="this.src='https://via.placeholder.com/1000x300/111/purple?text=REKLAMA+JIRSTAN'"><div class="banner-overlay"><h2>FINANCE & MARKETING</h2></div></div>
+            <div class="grid" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:20px;">
+                <div class="card" style="padding:20px;">
+                    <h3 style="color:var(--red); margin-top:0;">DLUHY</h3>
+                    <div style="font-size:32px; font-weight:bold; margin-bottom:15px; font-family:'Rajdhani'"><span id="bank-debt">0</span> Kč</div>
+                    <div style="display:grid; gap:8px;"><button class="btn btn-red" onclick="takeLoan('micro')">RYCHLÁ (+50k) 5%</button><button class="btn btn-orange" onclick="takeLoan('biz')">BIZNES (+500k) 3%</button><button class="btn btn-blue" onclick="takeLoan('vip')">VIP (+2M) 1%</button></div>
+                    <button class="btn btn-green" style="margin-top:15px;" onclick="payLoan()">SPLATIT 100k</button>
+                </div>
+                <div class="card" style="padding:20px; border-top: 4px solid var(--red);">
+                    <h3 style="color:var(--red); margin-top:0;">⛽ PALIVOVÉ HOSPODÁŘSTVÍ</h3>
+                    <div style="margin-bottom:15px;">Aktuální cena:<br><b style="font-size:24px; color:var(--red); font-family:'Rajdhani'"><span id="bank-fuel-price">0</span> Kč/l</b></div>
+                    <div style="margin-bottom:15px; padding:10px; background:#222; border-radius:8px;">Nádrž:<br><b><span id="fuel-tank-lvl">0</span> / 50 000 l</b><div style="background:#333; height:10px; margin-top:5px; border-radius:5px; overflow:hidden;"><div id="fuel-tank-bar" style="background:var(--red); height:100%; width:0%"></div></div></div>
+                    <div style="display:grid; gap:8px;">
+                        <button class="btn btn-red" onclick="buyFuelToTank(1000)">KOUPIT 1000 l</button>
+                        <button class="btn btn-red" onclick="buyFuelToTank(10000)">KOUPIT 10 000 l</button>
+                        <button class="btn btn-orange" id="hedge-btn" onclick="hedgeFuel()">⚡ ZAJISTIT CENU (30 dní)</button>
+                    </div>
+                </div>
+                <div class="card" style="padding:20px; grid-column: span 2;">
+                    <h3 style="color:var(--gold); margin-top:0;">JIRSTAN CAPITAL</h3>
+                    <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Obchodování na burze a fondy. <span id="invest-bonus-label"></span></p>
+                    <div id="invest-list"></div>
+                </div>
+            </div>
+            <div class="card" style="padding:20px; border-top:4px solid var(--purple); margin-top:20px;">
+                <h3 style="color:var(--purple); margin-top:0;">REKLAMNÍ AGENTURA</h3>
+                <div style="font-size:24px; font-weight:bold; margin-bottom:20px; font-family:'Rajdhani'">Reputace: <span id="ui-rep">100</span>% <small style="font-size:14px; color:#666;" id="rep-decay-warn"></small></div>
+                <div style="display:flex; gap:20px;">
+                    <button class="btn btn-purple" onclick="buyMarketing('billboard')">BILLBOARD (+5% / 50k)</button>
+                    <button class="btn btn-blue" onclick="buyMarketing('tv')">TV KAMPAŇ (+15% / 200k)</button>
+                    <button class="btn btn-orange" onclick="buyMarketing('paper')">NOVINY (+2% / 10k)</button>
+                    <button class="btn btn-pink" onclick="buyMarketing('social')">SOCIÁLNÍ SÍTĚ (+8% / 100k)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- WORKSHOP -->
+        <div id="tab-workshop" class="tab-pane">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>🔧 DÍLNA & TUNING</h3>
+                <button class="btn btn-green" style="width:auto; margin-bottom:20px;" onclick="repairAll()">🛠️ OPRAVIT VŠE (Rychle)</button>
+            </div>
+            <div class="grid" id="workshop-grid"></div>
+        </div>
+
+        <!-- MACHINES -->
+        <div id="tab-machines" class="tab-pane"><h3>🏗️ STROJE & TĚŽBA</h3><div class="grid" id="mach-grid"></div><div class="grid" id="mach-shop" style="margin-top:20px;"></div></div>
+
+        <!-- DEALER -->
+        <div id="tab-dealer" class="tab-pane"><h3>💰 AUTOSALON</h3><div class="grid" id="dealer-grid"></div></div>
+
+        <!-- TECH TREE -->
+        <div id="tab-tech" class="tab-pane">
+            <h2 style="color:var(--blue); margin-bottom:20px;">🔬 VÝZKUMNÉ CENTRUM</h2>
+            <div id="tech-status" style="margin-bottom:20px;"></div>
+            <div class="grid" id="tech-grid"></div>
+        </div>
+
+        <!-- ACHIEVEMENTS -->
+        <div id="tab-achievements" class="tab-pane">
+            <h2 style="color:var(--gold); margin-bottom:5px;">🏆 ÚSPĚCHY A ODMĚNY</h2>
+            <p style="color:#888; margin-bottom:20px;">Odemčeno: <span id="ach-count">0</span> / <span id="ach-total">0</span></p>
+            <div id="achievements-list"></div>
+        </div>
+
+        <!-- STATISTICS -->
+        <div id="tab-stats" class="tab-pane">
+            <h2 style="color:var(--green); margin-bottom:30px;">📈 STATISTIKY & VÝKON FIRMY</h2>
+            <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap:20px; margin-bottom:30px;">
+                <div class="stat-card"><div class="stat-value" id="stat-total-earned">0 Kč</div><div class="stat-label">Celkový příjem</div></div>
+                <div class="stat-card"><div class="stat-value" id="stat-deliveries">0</div><div class="stat-label">Dokončených zakázek</div></div>
+                <div class="stat-card"><div class="stat-value" id="stat-distance">0 km</div><div class="stat-label">Ujetých KM</div></div>
+                <div class="stat-card"><div class="stat-value" id="stat-fuel-used">0 l</div><div class="stat-label">Spotřebováno paliva</div></div>
+            </div>
+            <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap:20px; margin-bottom:30px;">
+                <div class="stat-card"><div class="stat-value" id="stat-events">0</div><div class="stat-label">Náhodné události</div></div>
+                <div class="stat-card"><div class="stat-value" id="stat-trainings">0</div><div class="stat-label">Absolvovaných školení</div></div>
+                <div class="stat-card"><div class="stat-value" id="stat-contracts-done">0</div><div class="stat-label">Splněných smluv</div></div>
+                <div class="stat-card"><div class="stat-value" id="stat-max-money">0 Kč</div><div class="stat-label">Nejvyšší zůstatek</div></div>
+            </div>
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap:25px; margin-bottom:30px;">
+                <div class="card" style="padding:25px;">
+                    <h3 style="color:var(--orange); margin-top:0;">🏆 NEJLEPŠÍ ŘIDIČ</h3>
+                    <div id="stat-best-driver" style="font-size:18px; color:var(--green); font-weight:bold; margin:15px 0;">-</div>
+                    <small style="color:#888;">Nejvíce dokončených zakázek</small>
+                </div>
+                <div class="card" style="padding:25px;">
+                    <h3 style="color:var(--gold); margin-top:0;">💎 NEJVÝNOSNĚJŠÍ TRASA</h3>
+                    <div id="stat-best-route" style="font-size:18px; color:var(--green); font-weight:bold; margin:15px 0;">-</div>
+                    <small style="color:#888;">Nejvíce vydělaných peněz</small>
+                </div>
+            </div>
+            <div class="card" style="padding:25px;">
+                <h3 style="color:var(--blue); margin-top:0;">📊 FINANČNÍ PŘEHLED</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; margin-top:20px;">
+                    <div><div style="color:#888; font-size:12px;">PRŮMĚRNÝ PŘÍJEM / DEN</div><div style="font-size:24px; color:var(--green); font-weight:bold; font-family:'Rajdhani'"><span id="stat-avg-daily">0</span> Kč</div></div>
+                    <div><div style="color:#888; font-size:12px;">CELKOVÉ VÝDAJE</div><div style="font-size:24px; color:var(--red); font-weight:bold; font-family:'Rajdhani'"><span id="stat-total-spent">0</span> Kč</div></div>
+                    <div><div style="color:#888; font-size:12px;">ČISTÝ ZISK</div><div style="font-size:24px; color:var(--orange); font-weight:bold; font-family:'Rajdhani'"><span id="stat-net-profit">0</span> Kč</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Scrolling event log at bottom -->
+    <div id="event-log-bar"><span class="event-ticker" id="ticker-text">📡 JIRSTAN LOGISTICS v321 — Vítejte v systému!</span></div>
+</div>
+
+<script>
+/* =========================================
+   KONFIGURACE A DATA
+   ========================================= */
+const CITIES = { "Praha":{x:0.55,y:0.55}, "Brno":{x:0.75,y:0.75}, "Plzeň":{x:0.4,y:0.6}, "Ostrava":{x:0.85,y:0.55}, "Mnichov":{x:0.25,y:0.8}, "Vídeň":{x:0.65,y:0.85}, "Berlín":{x:0.35,y:0.25}, "Varšava":{x:0.8,y:0.3}, "Hamburk":{x:0.3,y:0.15}, "Drážďany":{x:0.45,y:0.3}, "Bratislava":{x:0.70,y:0.80}, "Budapešť":{x:0.80,y:0.90} };
+const LICENSES = [{id:'express',n:'EXPRES (Dodávky)',color:'var(--lic-exp)',minLvl:1},{id:'stehovani',n:'STĚHOVÁNÍ',color:'var(--lic-move)',minLvl:3},{id:'sypky',n:'SYPKÉ HMOTY',color:'var(--lic-bulk)',minLvl:5},{id:'frigo',n:'FRIGO (Potraviny)',color:'var(--lic-frigo)',minLvl:8},{id:'leky',n:'LÉKY & FARMACIE',color:'var(--lic-med)',minLvl:10},{id:'adr',n:'ADR (Nebezpečné)',color:'var(--lic-adr)',minLvl:15},{id:'heavy',n:'NADROZMĚR',color:'var(--lic-heavy)',minLvl:15},{id:'ceniny',n:'CENINY (Pancíř)',color:'var(--lic-val)',minLvl:20}];
+
+const UPGRADES_DB = [
+    {id:'chip',n:'PERFORMANCE CHIP ST.1',cost:50000,desc:'Rychlost +25%'},
+    {id:'chip2',n:'PERFORMANCE CHIP ST.2',cost:120000,desc:'Rychlost +40% (Vyžaduje ST.1)'},
+    {id:'ecotires',n:'PRÉMIOVÉ PNEU',cost:40000,desc:'Spotřeba -10%'},
+    {id:'aero',n:'AERODYNAMICKÝ KIT',cost:60000,desc:'Spotřeba -15%'},
+    {id:'seats',n:'MASÁŽNÍ SEDAČKA',cost:30000,desc:'Únava -10%'},
+    {id:'bed',n:'ZDRAVOTNÍ MATRACE',cost:25000,desc:'Únava -10%'},
+    {id:'ac',n:'NEZÁVISLÁ KLIMA',cost:40000,desc:'Únava -15%'},
+    {id:'coffee',n:'PROFI KÁVOVAR',cost:15000,desc:'Únava -5%'}
+];
+
+// UPGRADED TECH TREE
+const TECH_DB = [
+    {id:'bulk_buy',n:'Hromadný nákup paliva',cost:100000,desc:'Cena nafty na firmě -10%',req:null,time:120,minRep:0},
+    {id:'recruit',n:'HR Oddělení',cost:150000,desc:'Nábor řidičů je o 50% levnější',req:null,time:180,minRep:105},
+    {id:'logistics',n:'Pokročilá Logistika',cost:250000,desc:'Rychlost všech aut +5%',req:'bulk_buy',time:300,minRep:110},
+    {id:'branding',n:'Firemní Branding',cost:500000,desc:'Platby za zakázky +5%',req:'logistics',time:480,minRep:120},
+    {id:'sim',n:'Simulátor jízdy',cost:300000,desc:'Řidiči získávají XP 2x rychleji',req:'recruit',time:360,minRep:115},
+    {id:'global_lic',n:'Globální Licence',cost:1000000,desc:'Odemkne mezinárodní zakázky (+20% platby)',req:'branding',time:720,minRep:150},
+    {id:'ai_disp',n:'AI Dispečink',cost:2000000,desc:'Dispečer najde nejlepší trasu (+20% zisk)',req:'sim',time:1000,minRep:200},
+    {id:'own_fuel',n:'Vlastní Čerpací Stanice',cost:800000,desc:'Nafta pro vozy zdarma z firmy (úspora 20%)',req:'bulk_buy',time:600,minRep:130},
+    {id:'telematics',n:'Telematika Fleet',cost:350000,desc:'Opotřebení vozidel -30%, vidíš přesnou polohu',req:'logistics',time:240,minRep:115},
+    {id:'green_fleet',n:'Green Fleet Initiative',cost:600000,desc:'Ekologické auto -15% nafta, +10% reputace',req:'telematics',time:400,minRep:140}
+];
+
+// UPGRADED ACHIEVEMENTS
+const ACH_DB = [
+    {id:'first_mil',n:'První milionář',desc:'Měj na účtu 1 000 000 Kč',reward:100000,icon:'💰',check:(s)=>s.money>=1000000},
+    {id:'fleet_10',n:'Velká flotila',desc:'Vlastni 10 vozidel',reward:250000,icon:'🚛',check:(s)=>s.vehicles.length>=10},
+    {id:'dist_100k',n:'Cestovatel',desc:'Ujeď celkem 100 000 km',reward:50000,icon:'🗺️',check:(s)=>s.stats.distance>=100000},
+    {id:'debt_free',n:'Čistý štít',desc:'Splať všechny dluhy (po alespoň 1 úvěru)',reward:20000,icon:'🏦',check:(s)=>s.debt==0&&s.stats.loansTaken>0},
+    {id:'miner',n:'Těžař',desc:'Měj aktivní 3 stroje',reward:150000,icon:'⛏️',check:(s)=>s.machines.filter(m=>m.active).length>=3},
+    // NEW ACHIEVEMENTS
+    {id:'deliveries_50',n:'Spolehlivý partner',desc:'Dokonči 50 zakázek',reward:25000,icon:'📦',check:(s)=>s.stats.deliveries>=50},
+    {id:'deliveries_500',n:'Logistický král',desc:'Dokonči 500 zakázek',reward:200000,icon:'👑',check:(s)=>s.stats.deliveries>=500},
+    {id:'fuel_tycoon',n:'Palivový magnát',desc:'Naplň firemní nádrž na 40 000+ litrů',reward:100000,icon:'⛽',check:(s)=>s.fuelTank>=40000},
+    {id:'tech_master',n:'Vědec firmy',desc:'Vyzkum 5 technologií',reward:300000,icon:'🔬',check:(s)=>s.tech.length>=5},
+    {id:'max_rep',n:'Legenda branže',desc:'Dosáhni 200% reputace',reward:500000,icon:'⭐',check:(s)=>(s.reputation||0)>=200},
+    {id:'all_staff',n:'Plná kancelář',desc:'Měj aktivní všechny 3 zaměstnance kanceláře',reward:200000,icon:'🏢',check:(s)=>s.staff.dispatcher.active&&s.staff.mechanic.active&&s.staff.accountant.active},
+    {id:'veteran',n:'Veterán silnic',desc:'Přežij 100 herních dní',reward:150000,icon:'🎖️',check:(s)=>s.day>=100},
+    {id:'big_spender',n:'Velký hráč',desc:'Utraťe celkem přes 10 000 000 Kč',reward:500000,icon:'💸',check:(s)=>s.stats.totalSpent>=10000000},
+    {id:'trainer',n:'Trenér generace',desc:'Pošli 10 řidičů na školení',reward:80000,icon:'🎓',check:(s)=>(s.stats.trainings||0)>=10},
+    {id:'contract_king',n:'Král smluv',desc:'Splň 10 rámcových smluv',reward:300000,icon:'📜',check:(s)=>(s.stats.contractsDone||0)>=10}
+];
+
+// KATARINA - UPGRADED WITH NEW SKILLS AND FIXED LEVELING
+const STAFF_DEFS = { 
+    dispatcher: { 
+        id:'dispatcher', name:'DISPEČER (Smlouva)', cost:20000, icon:'📡', img:'staff_dispatcher.jpg', 
+        desc:'Doplňuje burzu a dává práci.', 
+        xpPerLevel: 200,
+        skills: [
+            {id:'negotiator',n:'Vyjednávač',desc:'Ceny zakázek +10%'},
+            {id:'routing',n:'Efektivní trasy',desc:'Rychlost dojezdu +10%'}
+        ] 
+    }, 
+    mechanic: { 
+        id:'mechanic', name:'HLAVNÍ MECHANIK', cost:75000, icon:'🔧', img:'staff_mechanic.jpg', 
+        desc:'Opravuje auta zdarma a zpomaluje opotřebení.', 
+        xpPerLevel: 200,
+        skills: [
+            {id:'preventive',n:'Preventivní údržba',desc:'Opotřebení aut -25%'},
+            {id:'quickfix',n:'Rychloservis',desc:'Opravy strojů o 20% levnější'}
+        ] 
+    }, 
+    accountant: { 
+        id:'accountant', name:'KATEŘINA FUTEROVÁ', cost:150000, icon:'👩‍💼', img:'katerina.jpg', 
+        desc:'Finanční ředitelka. Miluje čokoládu a kreativní účetnictví.',
+        xpPerLevel: 150,
+        // FIXED + EXPANDED SKILLS
+        skills: [
+            {id:'tax',n:'Daňové ráje',desc:'Denní náklady -20%', cost:80000},
+            {id:'audit',n:'Hloubkový audit',desc:'Audit vrací 3%→6% s každým levelem', cost:100000},
+            {id:'investment',n:'Investiční guru',desc:'Výnosy z fondů +30%', cost:120000},
+            {id:'costcutter',n:'Šetřitel nákladů',desc:'Nákup vozidel -10%', cost:150000},
+            {id:'payroll',n:'Mzdová specialistka',desc:'Nábor řidičů a licence -25%', cost:100000},
+            {id:'hedging',n:'Palivové zajištění',desc:'Odemkne hedging ceny nafty', cost:80000}
+        ],
+        bio:"Bývalá auditorka velké korporace, která utekla před vyhořením. Navenek tvrdá, ale za tabulku čokolády udělá zázraky v daňovém přiznání. Její heslo: 'Co finančák nevidí, to firmu nebolí'." 
+    } 
+};
+
+const FUNDS_DB = [
+    {id:'conservative',n:'Konzervativní Fond',risk:0.015,ret:0.002,desc:'Nízké riziko, malý výnos.'},
+    {id:'stock',n:'Akciový Index',risk:0.12,ret:0.008,desc:'Vyvážené riziko a zisk.'},
+    {id:'crypto',n:'JirstanCoin (Krypto)',risk:0.50,ret:0.03,desc:'Vysoké riziko, šance na zbohatnutí.',img:'coin_jirstan.png'}
+];
+
+const CAR_DB = [
+    {cat:'van',model:"MB Sprinter 319",price:350000,spd:1.5,rel:1.0,eco:1.0,img:'van_mb.jpg'},
+    {cat:'van',model:"Ford Transit Custom",price:280000,spd:1.3,rel:0.9,eco:1.1,img:'van_ford.jpg'},
+    {cat:'van',model:"VW Crafter",price:320000,spd:1.4,rel:1.1,eco:1.0,img:'van_vw.jpg'},
+    {cat:'van',model:"Renault Master",price:250000,spd:1.3,rel:0.8,eco:1.2,img:'van_renault.jpg'},
+    {cat:'solo',model:"Iveco Eurocargo",price:850000,spd:1.0,rel:0.8,eco:1.2,img:'solo_iveco.jpg'},
+    {cat:'solo',model:"MAN TGL 12.250",price:950000,spd:1.1,rel:1.3,eco:1.0,img:'solo_man.jpg'},
+    {cat:'solo',model:"Mercedes Atego",price:1100000,spd:1.1,rel:1.5,eco:1.1,img:'solo_mb.jpg'},
+    {cat:'solo',model:"Volvo FL",price:1200000,spd:1.2,rel:1.4,eco:1.0,img:'solo_volvo.jpg'},
+    {cat:'semi',model:"Scania S770 V8",price:3500000,spd:1.6,rel:1.5,eco:0.8,img:'semi_scania.jpg'},
+    {cat:'semi',model:"Volvo FH16 750",price:3400000,spd:1.6,rel:1.5,eco:0.9,img:'semi_volvo.jpg'},
+    {cat:'semi',model:"Mercedes Actros MP5",price:2900000,spd:1.3,rel:1.2,eco:1.3,img:'semi_mb.jpg'},
+    {cat:'semi',model:"DAF XG+ 530",price:3100000,spd:1.3,rel:1.1,eco:1.2,img:'semi_daf.jpg'},
+    {cat:'semi',model:"Renault T-High",price:2600000,spd:1.3,rel:0.9,eco:1.4,img:'semi_renault.jpg'},
+    {cat:'semi',model:"MAN TGX Individual",price:3000000,spd:1.4,rel:1.2,eco:1.1,img:'semi_man.jpg'},
+    {cat:'semi',model:"Tatra Phoenix",price:2800000,spd:1.2,rel:1.5,eco:0.6,img:'semi_tatra.jpg'},
+    {cat:'semi',model:"Iveco S-Way",price:2400000,spd:1.2,rel:0.8,eco:1.3,img:'semi_iveco.jpg'},
+    {cat:'semi',model:"Ford F-Max",price:2700000,spd:1.35,rel:1.0,eco:1.15,img:'semi_ford.jpg'}
+];
+const TRAILERS_DB = [{id:'plachta',n:'PLACHTA JIRSTAN',price:300000,bonus:1.2,img:'trailer_curtain.jpg',desc:'Univerzální návěs.'},{id:'frigo',n:'FRIGO JIRSTAN',price:800000,bonus:1.5,img:'trailer_reefer.jpg',desc:'Chladírenský návěs (Léky, Jídlo).'},{id:'sklopka',n:'SKLOPKA JIRSTAN',price:600000,bonus:1.35,img:'trailer_tipper.jpg',desc:'Sypké hmoty a písek.'},{id:'podval',n:'PODVALNÍK',price:1200000,bonus:2.0,img:'trailer_lowbed.jpg',desc:'Pro stroje a nadrozměr.'}];
+const MACHINES_DB = [{id:'bagr',n:'Pásový Bagr CAT',c:350000,permCost:50000,inc:2500,img:'mach_excavator.jpg'},{id:'jerab',n:'Autojeřáb Liebherr',c:550000,permCost:80000,inc:4500,img:'mach_crane.jpg'},{id:'valec',n:'Válec Hamm',c:250000,permCost:30000,inc:1800,img:'mach_roller.jpg'},{id:'buldozer',n:'Buldozer Komatsu',c:450000,permCost:60000,inc:3200,img:'mach_dozer.jpg'}];
+
+const NAMES_F = ["Martin","Jakub","David","Lukáš","Marek","Petr","Jan","Tomáš","Filip","Michal"]; 
+const NAMES_L = ["Zeman","Krejčí","Pospíšil","Horák","Veselý","Svoboda","Novák","Dvořák","Černý","Kučera"]; 
+const BIOS = ["Nadšenec do veteránů.","Jezdí zásadně v noci.","Miluje kávu z benzínky.","Bývalý závodník rallye.","Kliďas, co se nerozčílí.","Poslouchá jen dechovku.","Mladý dravý talent.","Zkušený vlk silnic."];
+const CONTACT_NAMES = ["p. Novák","skladník Karel","dispečink","vrátnice C","pí. Svobodová","mistr výroby"]; 
+const GATE_CODES = ["#1234","A7","B2-G","bez kódu","na zazvonění","PIN 5580"]; 
+const INSTRUCTIONS = ["Vlastní kurty nutné!","Pozor na nízký profil.","Hlásit se na vrátnici.","Nutná přilba a vesta.","Zadní nakládka.","Boční nakládka."];
+
+// ENHANCED TRAITS
+const TRAITS = [
+    {id:'normal',n:'Běžný',desc:'Standardní výkon.',speed:1.0,cons:1.0,fatigue:1.0},
+    {id:'racer',n:'Závodník',desc:'Rychlý, ale žere naftu a auto.',speed:1.15,cons:1.2,fatigue:1.1},
+    {id:'eco',n:'Ekolog',desc:'Šetří naftu, ale loudá se.',speed:0.85,cons:0.8,fatigue:0.9},
+    {id:'lazy',n:'Lempl',desc:'Často stojí, fláká se.',speed:0.9,cons:1.0,fatigue:1.2},
+    {id:'iron',n:'Držák',desc:'Vydrží dlouho za volantem.',speed:1.0,cons:1.0,fatigue:0.8},
+    {id:'veteran',n:'Veterán',desc:'Zkušený profík. Vše zvládne.',speed:1.05,cons:0.95,fatigue:0.85}
+];
+
+const WEATHER_TYPES = [
+    {id:'sun',n:'☀️ Slunečno',speed:1.0,risk:0.0},
+    {id:'rain',n:'🌧️ Déšť',speed:0.8,risk:0.02},
+    {id:'storm',n:'⛈️ Bouřka',speed:0.6,risk:0.05},
+    {id:'fog',n:'🌫️ Mlha',speed:0.7,risk:0.03},
+    {id:'snow',n:'❄️ Sněžení',speed:0.65,risk:0.04}
+];
+
+// NEW: Training programs
+const TRAINING_DB = [
+    {id:'basic',n:'Základní kurz',cost:10000,xp:300,duration:2,desc:'Základní školení. Rychle a levně.',icon:'📚'},
+    {id:'advanced',n:'Pokročilé jízdy',cost:25000,xp:800,duration:4,desc:'Defenzivní jízda, úspora nafty.',icon:'🏎️'},
+    {id:'specialist',n:'Specializace ADR',cost:40000,xp:1500,duration:8,desc:'Nebezpečné zboží a ceniny.',icon:'☢️'},
+    {id:'premium',n:'Premium Academia',cost:80000,xp:3000,duration:12,desc:'Elitní program. Velký XP bonus + náhodný skill.',icon:'🎓'}
+];
+
+let state = {
+    money: 2500000, 
+    debt: 0, 
+    investments: { conservative: 0, stock: 0, crypto: 0 },
+    day: 1, hour: 8, minute: 0, 
+    reputation: 100, 
+    marketing: { billboard: false, tv: false, paper: false, social: false },
+    fuelPrice: 35.50, 
+    fuelTank: 0, 
+    fuelTankMax: 50000,
+    fuelHedge: null, // {price: X, untilDay: Y}
+    weather: 'sun', 
+    auctionFilter: 'all',
+    contracts: [], availableContracts: [],
+    staff: { 
+        dispatcher: { active:false, days:0, level:1, xp:0, skills:{} }, 
+        mechanic: { active:false, level:1, xp:0, skills:{} }, 
+        // KATERINA FIXED: Full xp tracking and new skills
+        accountant: { active:false, level:1, xp:0, skills:{}, lastAudit:0 } 
+    },
+    vehicles: [ 
+        { id:1, type:'semi', model:'Scania S770 V8', driverId:1, loc:'Praha', job:null, queue:[], progress:0, cond:100, fuel:100, spd:1.6, upgrades:[], trailer:null }, 
+        { id:2, type:'solo', model:'Iveco Eurocargo', driverId:2, loc:'Brno', job:null, queue:[], progress:0, cond:100, fuel:100, spd:1.0, upgrades:[], trailer:null } 
+    ],
+    drivers: [ 
+        { id:1, name:"Stanislav Starosta", level:50, xp:0, req:9999, skills:{spd:5}, energy:100, tacho:0, restUntil:0, lic:['adr','frigo','heavy','express','leky','ceniny','stehovani','sypky'], bio:"Zakladatel a vizionář. Firmu vybudoval od nuly z jedné staré dodávky. Nesnáší pozdní příchody a miluje zvuk V8.", trait:'iron', deliveries:0 }, 
+        { id:2, name:"Jiří Čečák", level:50, xp:0, req:9999, skills:{spd:5}, energy:100, tacho:0, restUntil:0, lic:['adr','frigo','heavy','sypky'], bio:"Technický génius. Dokáže opravit převodovku kancelářskou sponkou.", trait:'veteran', deliveries:0 }, 
+        { id:3, name:"Karel 'Čenda' Deštník", level:12, xp:0, req:8000, skills:{spd:3}, energy:100, tacho:0, restUntil:0, lic:['adr','express'], bio:"Legenda silnic.", trait:'eco', deliveries:0 }, 
+        { id:4, name:"Franta Vochomůrka", level:18, xp:0, req:12000, skills:{spd:2}, energy:100, tacho:0, restUntil:0, lic:['heavy','sypky'], bio:"Specialista na nadrozměr.", trait:'racer', deliveries:0 } 
+    ],
+    trailers: [], machines: [], offers: [], tempOfferIdx: null,
+    stats: {
+        totalEarned:0, totalSpent:0, deliveries:0, distance:0, fuelUsed:0,
+        loansTaken:0, routes:{}, events:0, trainings:0, contractsDone:0, maxMoney:0
+    },
+    tech: [], researching: null, achievements: [], currentSaveSlot: 1 
+};
+
+/* =========================================
+   HLAVNÍ LOGIKA
+   ========================================= */
+function init() {
+    loadGame();
+    if(!state.weather) state.weather='sun';
+    if(!state.auctionFilter) state.auctionFilter='all';
+    if(!state.stats) state.stats={totalEarned:0,totalSpent:0,deliveries:0,distance:0,fuelUsed:0,loansTaken:0,routes:{},events:0,trainings:0,contractsDone:0,maxMoney:0};
+    if(!state.stats.events) state.stats.events=0;
+    if(!state.stats.trainings) state.stats.trainings=0;
+    if(!state.stats.contractsDone) state.stats.contractsDone=0;
+    if(!state.stats.maxMoney) state.stats.maxMoney=0;
+    if(!state.currentSaveSlot) state.currentSaveSlot=1;
+    if(!state.tech) state.tech=[];
+    if(!state.achievements) state.achievements=[];
+    if(state.researching===undefined) state.researching=null;
+    if(!state.fuelHedge) state.fuelHedge=null;
+    // KATERINA FIX: Ensure skill objects exist
+    if(!state.staff.accountant.skills) state.staff.accountant.skills={};
+    
+    // Fix Kateřina's new skill defs on old saves
+    ['dispatcher','mechanic','accountant'].forEach(r => {
+        if(!state.staff[r].xp) state.staff[r].xp=0;
+        if(!state.staff[r].level) state.staff[r].level=1;
+    });
+    
+    state.drivers.forEach(d => { if(!d.deliveries) d.deliveries=0; });
+    state.machines.forEach(m => { if(!m.durability) m.durability=100; });
+    
+    const bioStanislav=document.getElementById('bio-stanislav');
+    const bioJiri=document.getElementById('bio-jiri');
+    if(bioStanislav) bioStanislav.innerText=state.drivers[0].bio;
+    if(bioJiri) bioJiri.innerText=state.drivers[1].bio;
+    
+    if(state.offers.length<5) genOffers(true);
+    if(state.availableContracts.length===0) genContracts();
+    if(window.gameInterval) clearInterval(window.gameInterval);
+    window.gameInterval=setInterval(tick,1000);
+    renderAll(); 
+    setTimeout(fixMapSize,500);
+}
+
+function tick() {
+    state.minute++; 
+    if(state.minute>=60){state.minute=0;state.hour++;hourly();} 
+    if(state.hour>=24){state.hour=0;state.day++;daily();}
+    
+    let absTime=state.day*1440+state.hour*60+state.minute;
+    let mapUpdateNeeded=false;
+    const w=WEATHER_TYPES.find(x=>x.id===state.weather)||WEATHER_TYPES[0];
+
+    // Track max money
+    if(state.money>state.stats.maxMoney) state.stats.maxMoney=state.money;
+
+    checkAchievements();
+
+    // Research Progress
+    if(state.researching) {
+        state.researching.progress++;
+        if(state.researching.progress>=state.researching.duration) {
+            state.tech.push(state.researching.id);
+            const t=TECH_DB.find(x=>x.id===state.researching.id);
+            // Green fleet gives rep bonus
+            if(state.researching.id==='green_fleet') state.reputation=Math.min(300,(state.reputation||100)+10);
+            notify("VÝZKUM DOKONČEN",`${t.n} je připraveno!`,"success");
+            state.researching=null;
+            renderTech(); saveGame();
+        } else if(state.minute%10===0&&document.getElementById('tab-tech').classList.contains('active')) {
+            renderTech();
+        }
+    }
+
+    // Auto Dispatch
+    if(state.staff.dispatcher.active) {
+        if(state.minute%30===0&&state.offers.length<10){genOffers(true);notify("DISPEČER","Doplnil jsem nabídky.","info");}
+        if(state.minute%15===0) autoDispatch(absTime);
+    }
+
+    state.vehicles.forEach(v => {
+        if(v.job&&v.driverId) {
+            const d=state.drivers.find(x=>x.id==v.driverId);
+            if(d.restUntil>absTime) return;
+            if(d.restUntil>0&&d.restUntil<=absTime){d.restUntil=0;d.tacho=0;d.energy=100;notify("AETR",`Řidič ${d.name} odpočatý.`,"success");}
+            
+            const trait=TRAITS.find(t=>t.id===(d.trait||'normal'));
+            if(trait.id==='lazy'&&Math.random()<0.005) return;
+
+            let speedBonus=1+(d.skills.spd||0)*0.05;
+            if(v.upgrades.includes('chip')) speedBonus+=0.25;
+            if(v.upgrades.includes('chip2')) speedBonus+=0.15;
+            if(state.staff.dispatcher.active&&state.staff.dispatcher.skills.routing) speedBonus+=0.10;
+            if(state.tech.includes('logistics')) speedBonus+=0.05;
+            
+            let speed=(v.spd||1.0)*speedBonus*w.speed*trait.speed;
+            if(v.trailer) speed*=0.92;
+
+            let fr=0.04*trait.fatigue;
+            if(state.weather==='storm') fr*=1.2;
+            if(state.weather==='snow') fr*=1.15;
+            if(v.upgrades.includes('seats')) fr-=0.005;
+            if(v.upgrades.includes('ac')) fr-=0.008;
+            if(v.upgrades.includes('bed')) fr-=0.005;
+            if(v.upgrades.includes('coffee')) fr-=0.002;
+            
+            let fuelRate=0.03*trait.cons;
+            let condRate=0.01;
+            if(trait.id==='racer') condRate*=1.5;
+            if(v.upgrades.includes('ecotires')) fuelRate-=0.005;
+            if(v.upgrades.includes('aero')) fuelRate-=0.008;
+            if(state.staff.mechanic.active&&state.staff.mechanic.skills.preventive) condRate*=0.75;
+            if(state.tech.includes('telematics')) condRate*=0.70;
+            if(state.tech.includes('green_fleet')) fuelRate*=0.85;
+
+            v.progress+=speed; mapUpdateNeeded=true;
+            d.tacho+=1; d.energy-=fr; v.fuel-=fuelRate; v.cond-=condRate;
+            state.stats.fuelUsed+=fuelRate;
+            
+            // Fuel handling
+            if(v.fuel<=0) {
+                v.fuel=0;
+                let needed=100;
+                let fuelCost=state.fuelPrice;
+                // Apply hedge
+                if(state.fuelHedge&&state.fuelHedge.untilDay>=state.day) fuelCost=state.fuelHedge.price;
+                // Own fuel station discount
+                if(state.tech.includes('own_fuel')) fuelCost*=0.8;
+                if(state.tech.includes('bulk_buy')) fuelCost*=0.9;
+                
+                if(state.fuelTank>=needed){state.fuelTank-=needed;v.fuel=100;notify("PALIVO",`${v.model} natankoval z firmy.`,"success");}
+                else {
+                    let cost=needed*fuelCost;
+                    if(state.money>=cost){addMoney(-cost);state.stats.totalSpent+=cost;v.fuel=100;notify("PALIVO",`${v.model} tankoval (-${Math.floor(cost).toLocaleString()} Kč).`,"danger");}
+                    else{notify("PALIVO",`${v.model} nemá na naftu! Stojí!`,"red");v.progress-=speed;}
+                }
+            }
+            if(d.energy<=0){d.restUntil=absTime+480;notify("ÚNAVA",`${d.name} musí spát (8h)!`,"blue");}
+
+            if(v.progress>=100) {
+                let pay=v.job.pay;
+                if(v.trailer) pay=Math.floor(pay*v.trailer.bonus);
+                // KATERINA: scales with level
+                if(state.staff.accountant.active) pay+=Math.floor(pay*(0.10+state.staff.accountant.level*0.03));
+                if(state.tech.includes('branding')) pay+=Math.floor(pay*0.05);
+                if(state.tech.includes('ai_disp')) pay+=Math.floor(pay*0.20);
+                if(state.tech.includes('global_lic')) pay+=Math.floor(pay*0.10);
+                
+                addMoney(pay);
+                v.loc=v.job.dest;
+                notify("DORUČENO",`${v.model} v cíli. +${pay.toLocaleString()} Kč`,"success");
+                addTicker(`✅ ${v.model} doručil do ${v.job.dest} za ${pay.toLocaleString()} Kč`);
+                
+                state.stats.totalEarned+=pay;
+                state.stats.deliveries++;
+                state.stats.distance+=v.job.dist;
+                d.deliveries++;
+                
+                const routeKey=v.job.dest;
+                if(!state.stats.routes[routeKey]) state.stats.routes[routeKey]=0;
+                state.stats.routes[routeKey]+=pay;
+                
+                checkContractsProgress(v.job);
+                if(d.energy<30){d.restUntil=absTime+480;notify("AETR",`${d.name} jde spát (8h).`,"blue");}
+                
+                if(v.queue&&v.queue.length>0){v.job=v.queue.shift();v.progress=0;notify("DISPEČINK",`Další: ${v.job.dest}`,"info");}
+                else{v.job=null;v.progress=0;notify("DISPEČINK",`${v.model} čeká.`,"info");}
+                
+                let xpBase=100;
+                if(state.tech.includes('sim')) xpBase=200;
+                d.xp+=xpBase; checkLvl(d);
+                
+                if(state.staff.dispatcher.active) giveStaffXp('dispatcher',10);
+                if(state.staff.mechanic.active) giveStaffXp('mechanic',5);
+                if(state.staff.accountant.active) giveStaffXp('accountant',8);
+                
+                saveGame(); renderAll();
+            }
+        }
+    });
+    
+    document.getElementById('ui-time').innerText=`${pad(state.hour)}:${pad(state.minute)}`;
+    document.getElementById('ui-day').innerText=state.day;
+    updateUI();
+    if(mapUpdateNeeded&&document.getElementById('tab-dispatch').classList.contains('active')) renderMap();
+    if(state.minute%5===0&&document.getElementById('tab-dispatch').classList.contains('active')) renderDispatch();
+}
+
+function hourly() {
+    // Fuel price fluctuation (hedge overrides UI display, not actual price)
+    let fluctuation=(Math.random()-0.5)*1.5;
+    state.fuelPrice=Math.max(29.50,Math.min(45.00,state.fuelPrice+fluctuation));
+    
+    // Weather
+    if(Math.random()>0.7){
+        state.weather=WEATHER_TYPES[Math.floor(Math.random()*WEATHER_TYPES.length)].id;
+        const wInfo=WEATHER_TYPES.find(x=>x.id===state.weather);
+        notify("POČASÍ",`Změna na: ${wInfo.n}`,"info");
+        addTicker(`🌦️ Počasí: ${wInfo.n}`);
+    }
+    if(Math.random()>0.85) generateRandomEvent();
+
+    // Investments with KATERINA bonus
+    FUNDS_DB.forEach(f=>{
+        if(state.investments[f.id]>0){
+            let v=f.id==='crypto'?4:2;
+            let c=(Math.random()*(f.risk*v))-f.risk+f.ret;
+            // KATERINA investment skill bonus
+            if(state.staff.accountant.active&&state.staff.accountant.skills.investment) c+=f.ret*0.30;
+            let p=Math.floor(state.investments[f.id]*c);
+            state.investments[f.id]+=p;
+            if(state.investments[f.id]<0) state.investments[f.id]=0;
+        }
+    });
+
+    // Machines
+    let inc=0;
+    state.machines.forEach(m=>{
+        if(m.active){
+            if(m.durability>10){
+                let gain=m.inc;
+                if(m.boostUntil&&m.boostUntil>(state.day*24+state.hour)) gain*=2;
+                inc+=gain; m.durability-=2;
+            } else {
+                if(Math.random()>0.9) notify("STROJ",`${m.n} se porouchal!`,"danger");
+            }
+        }
+    });
+    if(inc>0){addMoney(inc);state.stats.totalEarned+=inc;}
+    
+    // Auto-repair if mechanic active
+    if(state.staff.mechanic.active){
+        state.vehicles.forEach(v=>{if(!v.job&&v.cond<100) v.cond=Math.min(100,v.cond+5);});
+    }
+}
+
+function daily() {
+    let cost=2000+(state.vehicles.length*500);
+    if(state.staff.accountant.active&&state.staff.accountant.skills.tax) cost=Math.floor(cost*0.8);
+    
+    // KATERINA LEVEL BENEFIT: Each level reduces daily costs by 2%
+    if(state.staff.accountant.active&&state.staff.accountant.level>1) {
+        cost=Math.floor(cost*(1-((state.staff.accountant.level-1)*0.02)));
+    }
+    
+    // Dispatcher contract check
+    if(state.staff.dispatcher.active){
+        state.staff.dispatcher.days--;
+        if(state.staff.dispatcher.days<=0){state.staff.dispatcher.active=false;notify("HR","Smlouva dispečera skončila!","danger");}
+    }
+    
+    if(state.debt>0) state.debt+=Math.floor(state.debt*0.01);
+    
+    // REPUTATION DECAY: If no marketing active, lose 1 rep every 5 days (min 100)
+    const hasAnyMarketing=Object.values(state.marketing).some(v=>v);
+    if(!hasAnyMarketing&&state.day%5===0&&(state.reputation||100)>100){
+        state.reputation=Math.max(100,(state.reputation||100)-1);
+    }
+    
+    // Expire hedge
+    if(state.fuelHedge&&state.fuelHedge.untilDay<state.day){
+        state.fuelHedge=null;
+        notify("PALIVO","Palivový hedge vypršel. Tržní cena opět platí.","warning");
+    }
+    
+    checkContractsDaily();
+    addMoney(-cost);
+    state.stats.totalSpent+=cost;
+    notify("DENNÍ VÝPIS",`Náklady: -${cost.toLocaleString()} Kč`,"info");
+    addTicker(`📅 Den ${state.day}: Náklady -${cost.toLocaleString()} Kč`);
+    saveGame();
+}
+
+// ENHANCED RANDOM EVENTS
+function generateRandomEvent() {
+    const events = [
+        {t:"POKUTA",m:"Jeden z řidičů dostal pokutu za rychlost.",cost:5000,rep:-1},
+        {t:"DEFEKT",m:"Prasklá pneumatika na dálnici. Oprava nutná.",cost:8000},
+        {t:"ZÁCPA",m:"Velká kolona u Mnichova. Zpoždění.",cost:0},
+        {t:"PRÉMIE",m:"Zákazník byl nadšený rychlostí. Spropitné!",gain:10000,rep:1},
+        {t:"CELNÍCI",m:"Hloubková kontrola nákladu. Zdržení.",cost:0},
+        {t:"VÍTR",m:"Silný vítr poškodil plachtu. Oprava.",cost:12000},
+        {t:"VÝPADEK",m:"GPS systém selhal. Zpoždění 2h.",cost:0},
+        {t:"VIP ZÁKAZNÍK",m:"Nový velký zákazník! Dlouhodobá spolupráce.",gain:25000,rep:3},
+        {t:"KRÁDEŽ",m:"Z kabiny zmizely věci. Pojišťovna kryje 50%.",cost:3000,rep:-1},
+        {t:"BEZPEČNOST",m:"Inspektor práce prošel dílnu. Vše v pořádku.",gain:5000,rep:2},
+        {t:"POHONNÉ HMOTY",m:"Lokální sleva na naftu! Firma ušetřila.",gain:8000},
+        {t:"NEMOC",m:"Řidič onemocněl. Náhrada je drahá.",cost:7000},
+        {t:"OCENĚNÍ",m:"JIRSTAN dostal ocenění Spolehlivý dopravce roku!",gain:30000,rep:5}
+    ];
+    const ev=events[Math.floor(Math.random()*events.length)];
+    if(ev.cost){addMoney(-ev.cost);state.stats.totalSpent+=ev.cost;}
+    if(ev.gain){addMoney(ev.gain);state.stats.totalEarned+=ev.gain;}
+    if(ev.rep){state.reputation=Math.max(50,Math.min(300,(state.reputation||100)+ev.rep));}
+    state.stats.events++;
+    notify(ev.t,ev.m+(ev.cost?` (-${ev.cost.toLocaleString()})`:'')+(ev.gain?` (+${ev.gain.toLocaleString()})`:''),ev.gain?'gold':'danger');
+    addTicker(`⚡ UDÁLOST: ${ev.t} — ${ev.m}`);
+}
+
+/* =========================================
+   KATERINA LEVELING SYSTEM - FIXED
+   ========================================= */
+
+// FIXED: giveStaffXp now properly shows level milestones
+function giveStaffXp(role, amount) {
+    const sDef=STAFF_DEFS[role];
+    const xpNeeded=sDef.xpPerLevel*(state.staff[role].level);
+    state.staff[role].xp+=amount;
+    if(state.staff[role].xp>=xpNeeded){
+        state.staff[role].level++;
+        state.staff[role].xp=0;
+        const names={dispatcher:'Dispečer',mechanic:'Mechanik',accountant:'Kateřina'};
+        notify("🌟 LEVEL UP!",`${names[role]} → Level ${state.staff[role].level}! Nové bonusy odemčeny.`,"gold");
+        addTicker(`🌟 ${names[role]} povýšil na Level ${state.staff[role].level}!`);
+        // Katerina level perks description
+        if(role==='accountant') {
+            const lvl=state.staff.accountant.level;
+            if(lvl===3) notify("KATEŘINA","Level 3: Denní náklady sníženy o dalších 2%","pink");
+            if(lvl===5) notify("KATEŘINA","Level 5: Audit bonus zdvojen!","pink");
+            if(lvl===8) notify("KATEŘINA","Level 8: Investiční výnosy jsou teď skvělé.","pink");
+            if(lvl===10) notify("KATEŘINA","Level 10: Legendární účetní! Max bonusy aktivní.","gold");
+        }
+    }
+}
+
+// KATERINA: Fixed audit - scales with level + skill
+function runAudit() {
+    if(!state.staff.accountant.active) return;
+    const now=state.day*1440+state.hour*60+state.minute;
+    const diff=now-(state.staff.accountant.lastAudit||0);
+    if(diff<1440){notify("AUDIT",`Audit možný za ${Math.floor((1440-diff)/60)}h.`,"warning");return;}
+    
+    // Base: 3%, +0.5% per level, doubled if has audit skill
+    let pct=0.03+(state.staff.accountant.level*0.005);
+    if(state.staff.accountant.skills.audit) pct*=2;
+    let bonus=Math.floor(state.money*pct);
+    addMoney(bonus);
+    state.stats.totalEarned+=bonus;
+    state.staff.accountant.lastAudit=now;
+    notify("AUDIT",`✅ Kateřina našla ${bonus.toLocaleString()} Kč úspor! (${(pct*100).toFixed(1)}%)`,"gold");
+    giveStaffXp('accountant',50);
+    renderAll();
+}
+
+/* =========================================
+   GAME FEATURES
+   ========================================= */
+
+function hedgeFuel() {
+    if(!state.staff.accountant.active||!state.staff.accountant.skills.hedging){
+        notify("PALIVO","Kateřina potřebuje dovednost Palivové zajištění.","danger");
+        return;
+    }
+    const cost=Math.floor(state.fuelPrice*state.fuelTankMax*0.1);
+    if(state.money<cost){notify("PALIVO",`Hedging stojí ${cost.toLocaleString()} Kč.`,"danger");return;}
+    addMoney(-cost);
+    state.fuelHedge={price:state.fuelPrice,untilDay:state.day+30};
+    notify("HEDGING",`Cena nafty zajištěna na ${state.fuelPrice.toFixed(2)} Kč/l po 30 dní.`,"teal");
+    renderAll();
+}
+
+function filterAuction(type,btn) {
+    state.auctionFilter=type;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderAuction();
+}
+
+function genOffers(free=false) {
+    if(!free&&state.money<500) return;
+    if(!free){addMoney(-500);state.stats.totalSpent+=500;}
+    state.offers=[];
+    let rep=(state.reputation||100)/100;
+    if(state.staff.dispatcher.active&&state.staff.dispatcher.skills.negotiator) rep*=1.1;
+    if(state.tech.includes('global_lic')) rep*=1.2;
+    
+    for(let i=0;i<30;i++){
+        const t=['van','solo','semi'][Math.floor(Math.random()*3)];
+        let req=null;
+        if(Math.random()>0.6){const l=LICENSES.map(x=>x.id);req=l[Math.floor(Math.random()*l.length)];if(t==='van'&&(req==='heavy'||req==='sypky')) req='express';}
+        const dist=Math.floor(Math.random()*900)+100;
+        let pay=dist*(t==='van'?15:t==='solo'?25:45);
+        if(req) pay*=1.5;
+        pay=Math.floor(pay*rep);
+        const flavor={contact:CONTACT_NAMES[Math.floor(Math.random()*CONTACT_NAMES.length)],phone:"+420 "+Math.floor(Math.random()*900000000+100000000),gate:"Gate "+GATE_CODES[Math.floor(Math.random()*GATE_CODES.length)],code:Math.floor(Math.random()*9999),info:INSTRUCTIONS[Math.floor(Math.random()*INSTRUCTIONS.length)]};
+        state.offers.push({type:t,dest:Object.keys(CITIES)[Math.floor(Math.random()*12)],dist:dist,pay:pay,req:req,flavor:flavor});
+    }
+    renderAuction();
+    if(!free) notify("BURZA","Načteno 30 nových nabídek.","success");
+}
+
+function genContracts() {
+    state.availableContracts=[];
+    for(let i=0;i<3;i++){
+        const type=['van','solo','semi'][Math.floor(Math.random()*3)];
+        const dest=Object.keys(CITIES)[Math.floor(Math.random()*12)];
+        const count=Math.floor(Math.random()*6)+5;
+        const days=Math.floor(Math.random()*3)+3;
+        const reward=count*90000*(type==='semi'?2:1);
+        const penalty=reward*1.5;
+        state.availableContracts.push({id:Date.now()+i,type:type,dest:dest,count:count,progress:0,days:days,deadlineDay:0,reward:reward,penalty:penalty});
+    }
+    renderContracts();
+}
+
+function acceptContract(id) {
+    const cIdx=state.availableContracts.findIndex(x=>x.id==id);
+    if(cIdx===-1) return;
+    const c=state.availableContracts[cIdx];
+    c.deadlineDay=state.day+c.days;
+    state.contracts.push(c);
+    state.availableContracts.splice(cIdx,1);
+    notify("SMLOUVA","Smlouva podepsána.","gold");
+    renderContracts(); saveGame();
+}
+
+function checkContractsProgress(job) {
+    state.contracts.forEach(c=>{
+        if(c.progress<c.count&&job.type===c.type&&job.dest===c.dest){
+            c.progress++;
+            notify("SMLOUVA",`Postup: ${c.progress}/${c.count} (${c.dest})`,"info");
+            if(c.progress>=c.count){
+                addMoney(c.reward);
+                state.stats.totalEarned+=c.reward;
+                state.stats.contractsDone++;
+                notify("SMLOUVA SPLNĚNA!",`Odměna: +${c.reward.toLocaleString()} Kč`,"gold");
+            }
+        }
+    });
+    state.contracts=state.contracts.filter(c=>c.progress<c.count);
+}
+
+function checkContractsDaily() {
+    state.contracts.forEach(c=>{
+        if(state.day>=c.deadlineDay&&c.progress<c.count){
+            addMoney(-c.penalty);
+            state.stats.totalSpent+=c.penalty;
+            state.reputation=Math.max(50,(state.reputation||100)-5);
+            notify("SMLOUVA PORUŠENA!",`Penále: -${c.penalty.toLocaleString()} Kč (-5 rep)!`,"red");
+        }
+    });
+    state.contracts=state.contracts.filter(c=>state.day<c.deadlineDay);
+}
+
+function buyFuelToTank(amount) {
+    let price=state.fuelPrice;
+    if(state.fuelHedge&&state.fuelHedge.untilDay>=state.day) price=state.fuelHedge.price;
+    if(state.tech.includes('bulk_buy')) price*=0.9;
+    if(state.tech.includes('own_fuel')) price*=0.8;
+    let cost=amount*price;
+    if(state.money<cost){notify("PALIVO","Nemáš dost peněz.","danger");return;}
+    if(state.fuelTank+amount>state.fuelTankMax){notify("PALIVO","Nádrž by přetekla.","danger");return;}
+    addMoney(-cost);
+    state.stats.totalSpent+=cost;
+    state.fuelTank+=amount;
+    notify("PALIVO",`Nakoupeno ${amount} litrů za ${price.toFixed(2)} Kč/l.`,"success");
+    renderAll();
+}
+
+// NEW: Driver Training Center
+function openTrainingCenter() {
+    if(state.drivers.length===0){notify("HR","Nejsou žádní řidiči.","danger");return;}
+    
+    let driversHtml=state.drivers.map(d=>`<option value="${d.id}">${d.name} (Lvl ${d.level})</option>`).join('');
+    
+    let trainingHtml=TRAINING_DB.map(t=>`
+        <div class="training-option" onclick="trainDriver('${t.id}')">
+            <div>
+                <div style="font-size:20px; display:inline; margin-right:10px;">${t.icon}</div>
+                <b style="color:var(--teal)">${t.n}</b>
+                <p style="font-size:12px; color:#aaa; margin:4px 0;">${t.desc}</p>
+                <small>⏱️ Trvá: ${t.duration}h | XP: +${t.xp}</small>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:18px; font-weight:bold; color:var(--orange)">${t.cost.toLocaleString()} Kč</div>
+                ${state.staff.accountant.active&&state.staff.accountant.skills.payroll?`<small style="color:var(--green)">-25%: ${Math.floor(t.cost*0.75).toLocaleString()} Kč</small>`:''}
+            </div>
+        </div>
+    `).join('');
+    
+    const html=`
+        <h2 style="color:var(--teal)">🎓 TRÉNINKOVÉ CENTRUM</h2>
+        <p style="color:#aaa; margin-bottom:15px;">Vyber řidiče pro školení, pak zvol program.</p>
+        <div style="margin-bottom:20px;">
+            <label style="color:#888; font-size:12px;">ŘIDIČ:</label><br>
+            <select id="training-driver-select" style="width:100%; padding:10px; background:#222; color:white; border:1px solid #444; border-radius:6px; margin-top:5px; font-family:'Rajdhani';">
+                ${driversHtml}
+            </select>
+        </div>
+        <h3 style="color:#888;">PROGRAMY:</h3>
+        ${trainingHtml}
+        <button class="btn btn-red" style="margin-top:20px;" onclick="document.getElementById('modal-overlay').style.display='none'">ZAVŘÍT</button>
+    `;
+    document.getElementById('modal-content').innerHTML=html;
+    document.getElementById('modal-overlay').style.display='flex';
+}
+
+function trainDriver(trainingId) {
+    const t=TRAINING_DB.find(x=>x.id===trainingId);
+    const sel=document.getElementById('training-driver-select');
+    if(!sel) return;
+    const did=parseInt(sel.value);
+    const d=state.drivers.find(x=>x.id===did);
+    if(!d){notify("HR","Vyber řidiče.","danger");return;}
+    
+    let cost=t.cost;
+    if(state.staff.accountant.active&&state.staff.accountant.skills.payroll) cost=Math.floor(cost*0.75);
+    
+    if(state.money<cost){notify("HR",`Školení stojí ${cost.toLocaleString()} Kč.`,"danger");return;}
+    
+    addMoney(-cost);
+    state.stats.totalSpent+=cost;
+    d.xp+=t.xp;
+    if(state.tech.includes('sim')) d.xp+=t.xp*0.5;
+    state.stats.trainings++;
+    
+    // Premium: bonus skill
+    if(t.id==='premium') {
+        const avail=['express','stehovani','sypky','frigo','leky','adr','heavy','ceniny'];
+        const missing=avail.filter(l=>!d.lic.includes(l));
+        if(missing.length>0){
+            const newLic=missing[Math.floor(Math.random()*missing.length)];
+            d.lic.push(newLic);
+            const ld=LICENSES.find(x=>x.id===newLic);
+            notify("PREMIUM TRAINING",`${d.name} získal licenci: ${ld.n}!`,"gold");
+        }
+    }
+    
+    checkLvl(d);
+    if(state.staff.accountant.active) giveStaffXp('accountant',15);
+    
+    notify("TRÉNINK",`${d.name} absolvoval ${t.n}. +${t.xp} XP`,"teal");
+    document.getElementById('modal-overlay').style.display='none';
+    saveGame(); renderAll();
+}
+
+function checkAchievements() {
+    let unlocked=false;
+    ACH_DB.forEach(ach=>{
+        if(!state.achievements.includes(ach.id)&&ach.check(state)){
+            state.achievements.push(ach.id);
+            addMoney(ach.reward);
+            state.stats.totalEarned+=ach.reward;
+            notify(`🏆 NOVÝ ÚSPĚCH! ${ach.icon}`,`${ach.n} (+${ach.reward.toLocaleString()})`, "gold");
+            addTicker(`🏆 ÚSPĚCH: ${ach.n} — +${ach.reward.toLocaleString()} Kč`);
+            unlocked=true;
+        }
+    });
+    if(unlocked) renderAchievements();
+}
+
+function unlockTech(id) {
+    if(state.researching){notify("VÝZKUM","Již něco zkoumáš!","warning");return;}
+    const t=TECH_DB.find(x=>x.id===id);
+    if(!t) return;
+    if((state.reputation||0)<t.minRep){notify("VÝZKUM",`Nízká reputace! Potřeba: ${t.minRep}%`,"danger");return;}
+    if(state.money>=t.cost){
+        addMoney(-t.cost);
+        state.researching={id:id,progress:0,duration:t.time};
+        notify("VÝZKUM",`Zahájen výzkum: ${t.n}`,"blue");
+        saveGame(); renderTech();
+    } else {notify("CHYBA","Nedostatek peněz.","danger");}
+}
+
+function repairAll() {
+    let totalCost=0;
+    state.vehicles.forEach(v=>{if(v.cond<100){let needed=100-v.cond;let cost=needed*20;if(state.staff.mechanic.active) cost=0;totalCost+=cost;}});
+    if(totalCost===0){notify("DÍLNA","Vše je v pořádku.","info");return;}
+    if(state.money>=totalCost){addMoney(-totalCost);state.vehicles.forEach(v=>v.cond=100);notify("DÍLNA",`Vše opraveno (-${totalCost.toLocaleString()} Kč)`,"success");renderAll();}
+    else notify("CHYBA","Nedostatek peněz na kompletní opravu.","danger");
+}
+
+// NEWS TICKER
+let tickerQueue=[];
+function addTicker(msg){tickerQueue.push(msg);if(tickerQueue.length>10) tickerQueue.shift();}
+function updateTicker(){const el=document.getElementById('ticker-text');if(el&&tickerQueue.length>0){el.innerText=tickerQueue.join('   •   ');}}
+
+/* =========================================
+   RENDERING (UI)
+   ========================================= */
+
+function updateUI() {
+    document.getElementById('ui-money').innerText=Math.floor(state.money).toLocaleString();
+    document.getElementById('bank-debt').innerText=state.debt.toLocaleString();
+    document.getElementById('ui-rep').innerText=state.reputation||100;
+    document.getElementById('ui-fuel-price').innerText=state.fuelPrice.toFixed(2);
+    
+    // KATERINA: Show hedge price if active
+    let fuelDisplay=state.fuelPrice.toFixed(2);
+    if(state.fuelHedge&&state.fuelHedge.untilDay>=state.day) fuelDisplay=`<span style="color:var(--teal)">${state.fuelHedge.price.toFixed(2)} ZAJIŠTĚNO</span>`;
+    if(state.tech.includes('bulk_buy')) fuelDisplay+=' <small>(-10%)</small>';
+    document.getElementById('bank-fuel-price').innerHTML=fuelDisplay;
+    document.getElementById('fuel-tank-lvl').innerText=Math.floor(state.fuelTank).toLocaleString();
+    document.getElementById('fuel-tank-bar').style.width=(state.fuelTank/state.fuelTankMax*100)+"%";
+    
+    const wInfo=WEATHER_TYPES.find(x=>x.id===state.weather)||WEATHER_TYPES[0];
+    document.getElementById('ui-weather').innerText=wInfo.n;
+    
+    // Rep decay warning
+    const repWarn=document.getElementById('rep-decay-warn');
+    const hasMarketing=Object.values(state.marketing).some(v=>v);
+    if(repWarn) repWarn.innerText=hasMarketing?'✅':((state.reputation||100)>100?'⚠️ Bez marketingu klesá!':'');
+
+    const s=state.staff;
+    document.getElementById('st-disp').innerHTML=s.dispatcher.active?`<span style="color:var(--green)">AKTIVNÍ (${s.dispatcher.days}d, Lvl ${s.dispatcher.level})</span>`:"NE";
+    document.getElementById('st-mech').innerHTML=s.mechanic.active?`<span style="color:var(--green)">AKTIVNÍ (Lvl ${s.mechanic.level})</span>`:"NE";
+    document.getElementById('st-kat').innerHTML=s.accountant.active?`<span style="color:var(--pink)">AKTIVNÍ (Lvl ${s.accountant.level})</span>`:"NE";
+    
+    // Katerina investment label
+    const investLabel=document.getElementById('invest-bonus-label');
+    if(investLabel&&s.accountant.active){
+        let extras=[];
+        if(s.accountant.skills.investment) extras.push('+30% výnosy');
+        if(s.accountant.level>=5) extras.push(`+${(s.accountant.level*0.5).toFixed(1)}% bonus`);
+        if(extras.length) investLabel.innerHTML=`<span style="color:var(--green)">[Kateřina: ${extras.join(', ')}]</span>`;
+    }
+    
+    renderStats();
+    updateTicker();
+}
+
+function renderAuction() {
+    const list=document.getElementById('auction-list');
+    if(!list) return;
+    const filtered=state.offers.map((o,index)=>({...o,originalIndex:index})).filter(o=>state.auctionFilter==='all'||o.type===state.auctionFilter);
+    if(filtered.length===0){list.innerHTML='<div style="color:#666; padding:20px;">Žádné nabídky pro tento filtr.</div>';return;}
+    list.innerHTML=filtered.map(o=>{
+        const lic=o.req?LICENSES.find(x=>x.id==o.req):null;
+        return `<div class="card" style="border-left:3px solid ${lic?lic.color:'#444'}"><div class="card-body"><div style="display:flex; justify-content:space-between;"><b>${o.type.toUpperCase()} → ${o.dest}</b> <small>${o.dist}km</small></div><span style="color:var(--green); font-size:16px; font-weight:bold;">${o.pay.toLocaleString()} Kč</span><br>${lic?`<span class="lic-badge" style="border-color:${lic.color}; color:${lic.color}">${lic.n.split(' ')[0]}</span>`:''}<button class="btn btn-orange" onclick="openJobSelectModal(${o.originalIndex})">PŘIJMOUT</button></div></div>`;
+    }).join('');
+}
+
+function renderContracts() {
+    const activeEl=document.getElementById('active-contracts');
+    const availEl=document.getElementById('available-contracts');
+    if(!activeEl||!availEl) return;
+    activeEl.innerHTML=state.contracts.map(c=>{const daysLeft=c.deadlineDay-state.day;return `<div class="card contract-card"><div class="card-body"><b>SMLOUVA: ${c.dest}</b> (${c.type})<br>Postup: ${c.progress}/${c.count}<br>Zbývá dní: <b style="color:${daysLeft<=1?'var(--red)':'var(--orange)'}">${daysLeft}</b><br><small>Odměna: ${c.reward.toLocaleString()}</small></div><div style="background:#333;height:5px;"><div style="background:var(--gold);height:100%;width:${c.progress/c.count*100}%"></div></div></div>`;}).join('')||'<div style="color:#666">Žádné aktivní smlouvy.</div>';
+    availEl.innerHTML=state.availableContracts.map(c=>`<div class="card"><div class="card-body"><b>${c.count}x ${c.type} → ${c.dest}</b><br>Termín: ${c.days} dny<br>Odměna: <span style="color:var(--gold)">${c.reward.toLocaleString()}</span><br>Penále: <span style="color:var(--red)">${c.penalty.toLocaleString()}</span><button class="btn btn-gold" onclick="acceptContract(${c.id})">PODEPSAT</button></div></div>`).join('');
+}
+
+function renderHR() {
+    const el=document.getElementById('hr-grid');
+    if(!el) return;
+    el.innerHTML=state.drivers.map(d=>{
+        const badges=d.lic.map(l=>{const ld=LICENSES.find(x=>x.id==l);return `<span class="lic-badge" style="border-color:${ld.color}; color:${ld.color}">${ld.n.split(' ')[0]}</span>`;}).join('');
+        const trait=TRAITS.find(t=>t.id===(d.trait||'normal'));
+        const xpPct=Math.min(100,(d.xp/d.req)*100);
+        return `<div class="card" onclick="openDriverDetail(${d.id})" style="cursor:pointer; border-left:3px solid var(--blue);"><div class="card-head">${d.name} <small>Lvl ${d.level}</small></div><div class="card-body"><div style="font-size:11px; color:#aaa; font-style:italic; margin-bottom:8px;">"${d.bio}"</div><div style="margin-bottom:8px; color:var(--orange); font-weight:bold; font-size:11px;">Povaha: ${trait.n} | ${d.deliveries||0} zakázek</div><div style="margin-bottom:8px;">${badges||'<small>Bez licencí</small>'}</div><div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${xpPct}%; background:var(--blue);"></div></div><small style="color:#666">${d.xp} / ${d.req} XP</small></div></div>`;
+    }).join('');
+}
+
+// KATERINA RENDERING - FULLY REDESIGNED WITH XP BAR
+function renderStaffHire() {
+    const el=document.getElementById('staff-hire-grid');
+    if(!el) return;
+    
+    el.innerHTML=Object.keys(STAFF_DEFS).map(k=>{
+        const sDef=STAFF_DEFS[k];
+        const sState=state.staff[k];
+        const xpNeeded=sDef.xpPerLevel*(sState.level);
+        const xpPct=Math.min(100,(sState.xp/xpNeeded)*100);
+        
+        // Skills grid - new style
+        let skillsHtml='';
+        if(sDef.skills){
+            skillsHtml='<div class="skill-grid">';
+            sDef.skills.forEach(sk=>{
+                const has=sState.skills[sk.id];
+                const skCost=sk.cost||100000;
+                const canLearn=sState.active&&!has;
+                skillsHtml+=`<div class="skill-badge ${has?'owned':''} ${!sState.active?'locked':''}" onclick="${canLearn?`learnStaffSkill('${k}','${sk.id}',${skCost})`:''}" title="${sk.desc}">
+                    <b style="font-size:10px; color:${has?'var(--purple)':'#aaa'}">${sk.n}</b><br>
+                    <span style="color:${has?'var(--green)':'#666'}; font-size:9px;">${has?'✅ AKTIVNÍ':(sState.active?`${(skCost/1000).toFixed(0)}k Kč`:'Najmout první')}</span>
+                </div>`;
+            });
+            skillsHtml+='</div>';
+        }
+        
+        // XP bar display (only when active)
+        let xpHtml='';
+        if(sState.active){
+            xpHtml=`<div class="staff-xp-bar">
+                <div class="staff-xp-label"><span>LEVEL ${sState.level}</span><span>${sState.xp}/${xpNeeded} XP</span></div>
+                <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${xpPct}%; background:${k==='accountant'?'var(--pink)':k==='mechanic'?'var(--orange)':'var(--blue)'};"></div></div>
+            </div>`;
+        }
+        
+        // Level perks tooltip for Katerina
+        let perksHtml='';
+        if(k==='accountant'&&sState.active){
+            const lvl=sState.level;
+            const auditPct=((0.03+lvl*0.005)*(sState.skills.audit?2:1)*100).toFixed(1);
+            const costReduc=((lvl-1)*2);
+            const payBonus=(10+lvl*3);
+            perksHtml=`<div style="background:#0a0a0a; border-radius:6px; padding:8px; margin-top:8px; font-size:10px; color:#888; border:1px solid #222;">
+                <b style="color:var(--pink);">KATEŘININY AKTUÁLNÍ BONUSY:</b><br>
+                💰 Zakázky +${payBonus}% | 📋 Audit ${auditPct}% | 🏠 Náklady -${costReduc}%
+            </div>`;
+        }
+        
+        let actionBtn='';
+        if(k==='dispatcher'){
+            actionBtn=`<button class="btn btn-blue" onclick="hireStaff('${k}')">${sState.active?`PRODLOUŽIT (+14 dní / ${sDef.cost/1000}k)`:`NAJMOUT (14 dní / ${sDef.cost/1000}k)`}</button>`;
+        } else if(k==='accountant'){
+            const now=state.day*1440+state.hour*60+state.minute;
+            const diff=now-(sState.lastAudit||0);
+            const ready=diff>=1440;
+            const auditPct=((0.03+sState.level*0.005)*(sState.skills.audit?2:1)*100).toFixed(1);
+            actionBtn=sState.active?`<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px;">
+                <button class="btn btn-pink" onclick="buyChocolate()">🍫 ČOKOLÁDA (+10%)</button>
+                <button class="btn ${ready?'btn-purple':'btn-disabled'}" onclick="runAudit()">${ready?`🔍 AUDIT (${auditPct}%)`:`⏳ ${Math.floor((1440-diff)/60)}h`}</button>
+            </div>`:`<button class="btn btn-pink" onclick="hireStaff('${k}')">NAJMOUT (${sDef.cost.toLocaleString()})</button>`;
+        } else {
+            actionBtn=sState.active?'<div style="color:var(--green); font-weight:bold; padding:8px; text-align:center;">✅ NAJATO</div>':`<button class="btn btn-blue" onclick="hireStaff('${k}')">NAJMOUT (${sDef.cost.toLocaleString()})</button>`;
+        }
+        
+        return `<div class="card staff-card"><img src="${sDef.img}" class="staff-img" onerror="this.src='https://via.placeholder.com/200x300?text=${k}'"><div class="staff-content"><div><div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0;">${sDef.name}</h2><div style="font-size:22px;">${sDef.icon}</div></div><div style="color:${sState.active?(k==='accountant'?'var(--pink)':'var(--green)'):'#888'}; font-weight:bold; font-size:12px; margin:5px 0;">${sState.active?`LEVEL ${sState.level} ZAMĚSTNÁNA`:'NENAJATO'}</div><p style="color:#aaa; font-style:italic; font-size:11px; margin:5px 0;">"${sDef.bio||sDef.desc}"</p></div>${xpHtml}${perksHtml}${skillsHtml}${actionBtn}</div></div>`;
+    }).join('');
+}
+
+function renderOverview() {
+    const el=document.getElementById('overview-body');
+    if(!el) return;
+    el.innerHTML=state.vehicles.map(v=>{
+        const d=state.drivers.find(x=>x.id==v.driverId);
+        let status="Parkuje";
+        if(v.job) status=`<span style="color:var(--orange)">Jede: ${v.job.dest}</span>`;
+        if(d&&d.restUntil>state.day*1440+state.hour*60+state.minute) status=`<span style="color:var(--blue)">PAUZA (AETR)</span>`;
+        let enBar=`<span style="color:#666">-</span>`;
+        let action="-";
+        if(d){
+            let col=d.energy>50?'var(--green)':d.energy>20?'var(--orange)':'var(--red)';
+            enBar=`<div style="display:flex; align-items:center; gap:5px;"><div style="width:50px; height:6px; background:#333; border-radius:3px;"><div style="width:${d.energy}%; height:100%; background:${col}"></div></div> <small>${Math.floor(d.energy)}%</small></div>`;
+            if(d.energy<70&&!v.job) action=`<button class="btn btn-blue" style="padding:4px; font-size:10px; margin:0;" onclick="forceRest(${d.id})">NAŘÍDIT PAUZU</button>`;
+            else if(!v.job) action="Připraven"; else action="Na cestě";
+        }
+        return `<tr><td style="padding:10px;"><b>${v.model}</b><br><small style="color:${v.cond<50?'var(--red)':'#666'}">${Math.floor(v.cond)}% stav</small></td><td>${d?d.name:'-'}</td><td>${status}</td><td>${Math.floor(v.fuel)}%</td><td>${enBar}</td><td>${action}</td></tr>`;
+    }).join('');
+}
+
+function renderTech() {
+    const grid=document.getElementById('tech-grid');
+    const statusDiv=document.getElementById('tech-status');
+    if(!grid) return;
+    if(state.researching){
+        const t=TECH_DB.find(x=>x.id===state.researching.id);
+        const pct=(state.researching.progress/state.researching.duration)*100;
+        statusDiv.innerHTML=`<div class="card" style="padding:15px; border-color:var(--blue);"><h3 style="color:var(--blue); margin:0;">🧪 PROBÍHÁ VÝZKUM: ${t.n}</h3><div class="res-bar-bg"><div class="res-bar-fill" style="width:${pct.toFixed(1)}%"></div></div><small style="color:#aaa;">Zbývá cca ${state.researching.duration-state.researching.progress} min.</small></div>`;
+    } else {
+        statusDiv.innerHTML=`<div style="color:#666; font-style:italic;">Laboratoře jsou volné. Vyber projekt.</div>`;
+    }
+    grid.innerHTML=TECH_DB.map(t=>{
+        const owned=state.tech.includes(t.id);
+        const locked=t.req&&!state.tech.includes(t.req);
+        const researching=state.researching&&state.researching.id===t.id;
+        const repOk=(state.reputation||0)>=t.minRep;
+        let statusClass=owned?'owned':researching?'researching':locked?'locked':'';
+        let statusText=owned?'VYZKOUMÁNO':researching?'VÝZKUM...':locked?'ZAMČENO':`${t.cost.toLocaleString()} Kč`;
+        let repText=repOk?'':`<div style="color:var(--red); font-size:10px;">VYŽADUJE REP ${t.minRep}%</div>`;
+        let clickAction=(!owned&&!locked&&!researching)?`unlockTech('${t.id}')`:'';
+        return `<div class="tech-node ${statusClass}" onclick="${clickAction}"><h3 style="margin:0 0 5px 0; color:${owned?'var(--green)':'white'}">${t.n}</h3><p style="font-size:11px; color:#aaa; margin-bottom:10px;">${t.desc}</p>${t.req?`<small style="color:#666">Req: ${TECH_DB.find(x=>x.id===t.req).n}</small><br>`:''}<div style="margin-top:auto;">${repText}<div style="display:flex; justify-content:space-between; margin-top:5px; align-items:center;"><b style="color:${owned?'var(--green)':'var(--blue)'}">${statusText}</b><small>⏱️ ${t.time}m</small></div></div></div>`;
+    }).join('');
+}
+
+function renderAchievements() {
+    const list=document.getElementById('achievements-list');
+    if(!list) return;
+    document.getElementById('ach-count').innerText=state.achievements.length;
+    document.getElementById('ach-total').innerText=ACH_DB.length;
+    list.innerHTML=ACH_DB.map(a=>{
+        const unlocked=state.achievements.includes(a.id);
+        return `<div class="ach-row ${unlocked?'unlocked':''}"><div class="ach-icon">${unlocked?a.icon:'🔒'}</div><div style="flex:1;"><h4 style="margin:0; color:${unlocked?'var(--gold)':'#666'}">${a.n}</h4><small style="color:${unlocked?'#aaa':'#555'}">${a.desc}</small></div><div style="font-weight:bold; color:${unlocked?'var(--green)':'#444'}">+${a.reward.toLocaleString()} Kč</div></div>`;
+    }).join('');
+}
+
+function renderAll() {
+    updateUI(); renderContracts(); renderStaffHire(); renderInvestments(); renderOverview();
+    renderDispatch(); renderFleet(); renderTrailers(); renderAuction(); renderWorkshop();
+    renderMachines(); renderDealer(); renderHR(); renderTech(); renderAchievements();
+}
+
+// REDESIGNED: Investments with Katerina bonus display
+function renderInvestments() {
+    const el=document.getElementById('invest-list');
+    if(!el) return;
+    if(!state.staff.accountant.active){el.innerHTML='<div style="text-align:center; padding:20px; color:#666;">Pro přístup k fondům najmi Kateřinu.</div>';return;}
+    el.innerHTML=FUNDS_DB.map(f=>{
+        const current=state.investments[f.id]||0;
+        let riskColor=f.risk<0.1?'var(--green)':f.risk<0.3?'var(--orange)':'var(--red)';
+        let imgHtml=f.img?`<img src="${f.img}" style="width:30px; height:30px; margin-right:10px; border-radius:50%;" onerror="this.style.display='none'">`:'' ;
+        let ret=f.ret;
+        if(state.staff.accountant.skills.investment) ret*=1.30;
+        return `<div class="invest-card"><div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px;"><div style="display:flex; align-items:center;">${imgHtml}<div><b style="color:${riskColor}">${f.n}</b><div style="font-size:10px; color:#888;">${f.desc} | Est. výnos: ~${(ret*100).toFixed(2)}%/h</div></div></div><div style="text-align:right;"><div style="font-size:18px; font-weight:bold; font-family:'Rajdhani'">${current.toLocaleString()} Kč</div></div></div><div class="invest-actions"><button class="btn btn-green" style="margin:0; font-size:10px; padding:6px;" onclick="invest('${f.id}',10000)">+10k</button><button class="btn btn-green" style="margin:0; font-size:10px; padding:6px;" onclick="invest('${f.id}',100000)">+100k</button><button class="btn btn-red" style="margin:0; font-size:10px; padding:6px;" onclick="withdraw('${f.id}',0)">VYBRAT VŠE</button></div></div>`;
+    }).join('');
+}
+
+function renderDispatch() {const c=document.getElementById('dispatch-grid');if(!c) return;const ac=state.vehicles.filter(v=>v.driverId);if(ac.length===0){c.innerHTML='<div style="color:#666">Žádná vozidla nemají řidiče.</div>';return;}c.innerHTML=ac.map(v=>{const d=state.drivers.find(x=>x.id==v.driverId);const qc=v.queue?v.queue.length:0;return `<div class="card" style="cursor:pointer;" onclick="showJobDetail(${v.id})"><div class="card-body"><div style="display:flex; justify-content:space-between;"><b>${d?d.name:'-'}</b> ${qc>0?`<span class="queue-badge">+${qc} v řadě</span>`:''}</div><small>(${v.model})</small><br>${v.job?`<span style="color:var(--orange)">➡️ ${v.job.dest} (${v.job.dist}km)</span>`:'<span style="color:#666">🛑 Čeká na práci</span>'} <div style="background:#333; height:5px; margin-top:5px; border-radius:3px; overflow:hidden;"><div style="background:var(--orange); height:100%; width:${v.progress}%"></div></div></div></div>`;}).join('');}
+function renderFleet() {document.getElementById('fleet-grid').innerHTML=state.vehicles.map(v=>{const d=state.drivers.find(x=>x.id==v.driverId);return `<div class="card"><div class="card-head">${v.model} <small style="color:${v.cond<50?'red':'green'}">${Math.floor(v.cond)}%</small></div><div class="card-body">Řidič: <b>${d?d.name:'NIKDO'}</b><br>${v.trailer?`<small style="color:var(--gold)">🔗 ${v.trailer.n}</small>`:''}<div style="margin-top:10px;"><select onchange="const d=state.drivers.find(x=>x.id==this.value); state.vehicles.find(x=>x.id==${v.id}).driverId=d?d.id:null; saveGame(); renderAll();" style="width:100%; padding:5px; background:#222; color:white; border:1px solid #444; border-radius:4px;"><option value="">-- Změnit řidiče --</option>${state.drivers.map(dr=>`<option value="${dr.id}" ${v.driverId==dr.id?'selected':''}>${dr.name} (Lvl ${dr.level})</option>`).join('')}</select></div></div></div>`;}).join('');}
+function renderMachines() {document.getElementById('mach-grid').innerHTML=state.machines.map((m,idx)=>{if(!m.durability) m.durability=100;const durColor=m.durability>50?'var(--green)':m.durability>20?'var(--orange)':'var(--red)';return `<div class="card" style="border-left:4px solid ${m.active?'var(--green)':'var(--red)'}"><div class="card-head">${m.n}</div><div class="card-body">${m.active?`<div>Těží: <b>+${m.inc}/h</b></div><div style="margin:5px 0;">Stav: <span style="color:${durColor}">${m.durability}%</span></div><div style="display:flex; gap:5px;"><button class="btn btn-green" onclick="repairMachine(${idx})">SERVIS</button><button class="btn btn-gold" onclick="boostMachine(${idx})">GEOLOG</button></div>`:`<button class="btn btn-orange" onclick="activateMachine(${idx})">POVOLENÍ (${m.permCost})</button>`}</div></div>`;}).join('');document.getElementById('mach-shop').innerHTML=MACHINES_DB.map(m=>`<div class="card"><img src="${m.img}" class="card-img"><div class="card-body"><b>${m.n}</b><br>${m.c.toLocaleString()} Kč<br><small>+${m.inc}/h</small><button class="btn btn-green" onclick="buyMachine('${m.id}')">KOUPIT</button></div></div>`).join('');}
+function renderTrailers() {document.getElementById('trailers-my').innerHTML=state.trailers.map(t=>{const v=state.vehicles.find(x=>x.id==t.attachedTo);return `<div class="card"><div class="card-body"><b>${t.n}</b><br><small>${v?`Na voze: ${v.model}`:'Volný'}</small><br>${!v?state.vehicles.filter(ve=>ve.type=='semi').map(ve=>`<button class="btn btn-blue" style="width:auto; display:inline-block; margin:2px; font-size:9px;" onclick="attachTrailer('${t.uid}',${ve.id})">${ve.model}</button>`).join(''):''}</div></div>`;}).join('');document.getElementById('trailers-shop').innerHTML=TRAILERS_DB.map(t=>`<div class="card"><img src="${t.img}" class="card-img"><div class="card-body"><b>${t.n}</b><br>${t.desc}<br><b>${t.price.toLocaleString()} Kč</b><button class="btn btn-gold" onclick="buyTrailer('${t.id}')">KOUPIT</button></div></div>`).join('');}
+function renderWorkshop() {document.getElementById('workshop-grid').innerHTML=state.vehicles.map(v=>{let upgradesHtml=UPGRADES_DB.map(u=>{const has=v.upgrades.includes(u.id);let req=u.id==='chip2'&&!v.upgrades.includes('chip');return `<button class="btn ${has?'btn-green':req?'btn-disabled':'btn-purple'}" style="font-size:9px; width:auto; display:inline-block; margin:2px;" onclick="${req?'':'buyUpgrade('+v.id+',\''+u.id+'\')'}">${u.n} (${has?'OK':(u.cost/1000)+'k'})</button>`;}).join('');return `<div class="card"><div class="card-body"><b>${v.model}</b> <small>${Math.floor(v.cond)}%</small><br><div style="margin-top:5px;">${upgradesHtml}</div><button class="btn btn-green" style="margin-top:10px;" onclick="addMoney(-2000);state.vehicles.find(x=>x.id==${v.id}).cond=100;renderAll();notify('SERVIS','Opraveno','success')">SERVIS (2k)</button></div></div>`;}).join('');}
+function renderDealer() {
+    document.getElementById('dealer-grid').innerHTML=CAR_DB.map(c=>{
+        let price=c.price;
+        if(state.staff.accountant.active&&state.staff.accountant.skills.costcutter) price=Math.floor(price*0.9);
+        const discLabel=state.staff.accountant.active&&state.staff.accountant.skills.costcutter?`<small style="color:var(--green)">-10% Kateřina!</small>`:'';
+        return `<div class="card"><img src="${c.img}" class="card-img" onerror="this.src='https://via.placeholder.com/300?text=AUTO'"><div class="card-body"><b>${c.model}</b><br>${price.toLocaleString()} Kč ${discLabel}<br><small>Rychlost: ${c.spd}</small><button class="btn btn-green" onclick="buyCar('${c.cat}','${c.model}',${c.price},'${c.spd}','${c.img}')">KOUPIT</button></div></div>`;
+    }).join('');
+}
+
+function renderStats() {
+    if(!document.getElementById('stat-total-earned')) return;
+    document.getElementById('stat-total-earned').innerText=state.stats.totalEarned.toLocaleString()+' Kč';
+    document.getElementById('stat-deliveries').innerText=state.stats.deliveries.toLocaleString();
+    document.getElementById('stat-distance').innerText=state.stats.distance.toLocaleString()+' km';
+    document.getElementById('stat-fuel-used').innerText=Math.floor(state.stats.fuelUsed).toLocaleString()+' l';
+    document.getElementById('stat-events').innerText=(state.stats.events||0).toLocaleString();
+    document.getElementById('stat-trainings').innerText=(state.stats.trainings||0).toLocaleString();
+    document.getElementById('stat-contracts-done').innerText=(state.stats.contractsDone||0).toLocaleString();
+    document.getElementById('stat-max-money').innerText=(state.stats.maxMoney||0).toLocaleString()+' Kč';
+    let bestDriver=state.drivers[0];
+    state.drivers.forEach(d=>{if((d.deliveries||0)>(bestDriver.deliveries||0)) bestDriver=d;});
+    document.getElementById('stat-best-driver').innerText=`${bestDriver.name} (${bestDriver.deliveries||0} zakázek)`;
+    let bestRoute='-';let maxE=0;
+    for(let route in state.stats.routes){if(state.stats.routes[route]>maxE){maxE=state.stats.routes[route];bestRoute=`${route} (${maxE.toLocaleString()} Kč)`;}}
+    document.getElementById('stat-best-route').innerText=bestRoute;
+    const avgDaily=state.day>0?Math.floor(state.stats.totalEarned/state.day):0;
+    document.getElementById('stat-avg-daily').innerText=avgDaily.toLocaleString();
+    document.getElementById('stat-total-spent').innerText=state.stats.totalSpent.toLocaleString();
+    document.getElementById('stat-net-profit').innerText=(state.stats.totalEarned-state.stats.totalSpent).toLocaleString();
+}
+
+// DRIVER DETAIL MODAL
+function openDriverDetail(did) {
+    const d=state.drivers.find(x=>x.id==did);
+    if(!d) return;
+    const trait=TRAITS.find(t=>t.id===(d.trait||'normal'));
+    let licHtml='<div style="margin-top:15px;"><h3 style="color:var(--orange)">DOSTUPNÉ LICENCE</h3><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">';
+    LICENSES.forEach(lic=>{
+        const hasLic=d.lic.includes(lic.id);
+        const canBuy=d.level>=lic.minLvl;
+        let baseCost=15000;
+        if(state.staff.accountant.active&&state.staff.accountant.skills.payroll) baseCost=Math.floor(baseCost*0.75);
+        let btnClass=hasLic?'btn-green':(canBuy?'btn-orange':'btn-disabled');
+        let btnText=hasLic?'✓ MÁTE':(canBuy?`KOUPIT (${(baseCost/1000).toFixed(0)}k)`:`LVL ${lic.minLvl}`);
+        licHtml+=`<div style="background:#1a1a1a; border:1px solid ${lic.color}; border-radius:8px; padding:12px;"><div style="color:${lic.color}; font-weight:bold; font-size:12px; margin-bottom:8px;">${lic.n}</div><button class="btn ${btnClass}" style="font-size:10px; padding:6px;" ${(hasLic||!canBuy)?'':'onclick="buyLicense('+did+',\''+lic.id+'\')\"'}>${btnText}</button></div>`;
+    });
+    licHtml+='</div></div>';
+    const xpPct=Math.min(100,(d.xp/d.req)*100);
+    const html=`<h2 style="color:var(--orange)">${d.name}</h2><div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;"><div><div style="margin-bottom:10px;"><b>Level:</b> ${d.level}</div><div style="margin-bottom:10px;"><b>XP:</b> <div class="xp-bar-bg" style="display:inline-block; width:100px; vertical-align:middle;"><div class="xp-bar-fill" style="width:${xpPct}%; background:var(--blue);"></div></div> ${d.xp}/${d.req}</div><div style="margin-bottom:10px;"><b>Energie:</b> ${Math.floor(d.energy)}%</div><div style="margin-bottom:10px;"><b>Povaha:</b> <span style="color:var(--purple)">${trait.n} — ${trait.desc}</span></div><div><b>Zakázky dokončeny:</b> ${d.deliveries||0}</div></div><div><div style="margin-bottom:10px;"><b>Rychlost bonus:</b> +${((d.skills.spd||0)*5)}%</div><div style="font-style:italic; color:#aaa; font-size:12px; margin-top:10px;">"${d.bio}"</div></div></div>${licHtml}<button class="btn btn-red" style="margin-top:20px;" onclick="document.getElementById('modal-overlay').style.display='none'">ZAVŘÍT</button>`;
+    document.getElementById('modal-content').innerHTML=html;
+    document.getElementById('modal-overlay').style.display='flex';
+}
+
+function buyLicense(did,lid) {
+    const d=state.drivers.find(x=>x.id==did);
+    const licInfo=LICENSES.find(x=>x.id==lid);
+    if(d.level<licInfo.minLvl){notify("AUTOŠKOLA",`Potřeba level ${licInfo.minLvl}`,"danger");return;}
+    let cost=15000;
+    if(state.tech.includes('recruit')) cost=Math.floor(cost*0.5);
+    if(state.staff.accountant.active&&state.staff.accountant.skills.payroll) cost=Math.floor(cost*0.75);
+    if(state.money>=cost&&!d.lic.includes(lid)){addMoney(-cost);d.lic.push(lid);notify("ŠKOLENÍ",`Licence ${licInfo.n} získána.`,"success");saveGame();openDriverDetail(did);renderAll();}
+    else if(state.money<cost) notify("ŠKOLENÍ",`Nemáš dost peněz (${cost.toLocaleString()} Kč).`,"danger");
+}
+
+/* =========================================
+   SAVE MANAGEMENT
+   ========================================= */
+function openSaveManager() {
+    let html='<h2 style="color:var(--orange)">💾 SPRÁVA ULOŽENÍ</h2><p style="color:#aaa; margin-bottom:25px;">3 sloty pro uložení her.</p>';
+    for(let slot=1;slot<=3;slot++){
+        const saveKey=`jirstan_v321_slot${slot}`;
+        const savedData=localStorage.getItem(saveKey);
+        const isActive=state.currentSaveSlot===slot;
+        if(savedData){
+            try{const data=JSON.parse(savedData);html+=`<div class="save-slot ${isActive?'active':''}" onclick="loadSaveSlot(${slot})"><div style="display:flex; justify-content:space-between; align-items:center;"><div><h3 style="margin:0; color:${isActive?'var(--green)':'var(--orange)'}">${isActive?'● ':''}SLOT ${slot}</h3><div style="font-size:12px; color:#888; margin-top:5px;">Den ${data.day} | ${data.money.toLocaleString()} Kč | ${data.vehicles.length} vozidel</div></div><button class="btn btn-red" style="width:auto; padding:8px 15px; margin:0;" onclick="event.stopPropagation(); deleteSaveSlot(${slot})">SMAZAT</button></div></div>`;}
+            catch(e){html+=`<div class="save-slot empty">SLOT ${slot} (Chyba dat)</div>`;}
+        } else {html+=`<div class="save-slot empty" onclick="saveToSlot(${slot})"><h3 style="margin:0; color:#666;">SLOT ${slot} (Prázdný)</h3><small style="color:#555;">Kliknutím uložíte</small></div>`;}
+    }
+    html+='<div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-green" onclick="saveToSlot(state.currentSaveSlot)">ULOŽIT DO AKTUÁLNÍHO SLOTU</button><button class="btn btn-blue" onclick="document.getElementById(\'modal-overlay\').style.display=\'none\'">ZAVŘÍT</button></div>';
+    document.getElementById('modal-content').innerHTML=html;
+    document.getElementById('modal-overlay').style.display='flex';
+}
+function saveToSlot(slot){state.currentSaveSlot=slot;const saveKey=`jirstan_v321_slot${slot}`;localStorage.setItem(saveKey,JSON.stringify(state));notify('ULOŽENO',`Hra uložena do slotu ${slot}`,'success');openSaveManager();}
+function loadSaveSlot(slot){const saveKey=`jirstan_v321_slot${slot}`;try{const saved=localStorage.getItem(saveKey);if(saved){state=JSON.parse(saved);state.currentSaveSlot=slot;notify('NAČTENO',`Hra načtena ze slotu ${slot}`,'success');document.getElementById('modal-overlay').style.display='none';renderAll();}}catch(e){notify('CHYBA','Nelze načíst uložení','danger');}}
+function deleteSaveSlot(slot){if(confirm(`Opravdu smazat slot ${slot}?`)){const saveKey=`jirstan_v321_slot${slot}`;localStorage.removeItem(saveKey);notify('SMAZÁNO',`Slot ${slot} byl smazán`,'info');openSaveManager();}}
+
+/* =========================================
+   MISC ACTIONS
+   ========================================= */
+const NOTIFY_ICONS={success:'✅',danger:'❌',info:'ℹ️',warning:'⚠️',gold:'💰',purple:'🎯',blue:'📘',red:'🚨',pink:'💝',teal:'🌊'};
+function addMoney(n){state.money+=n;if(state.money<0) state.money=0;updateUI();}
+function saveGame(){const saveKey=`jirstan_v321_slot${state.currentSaveSlot}`;localStorage.setItem(saveKey,JSON.stringify(state));}
+function loadGame(){try{const s=localStorage.getItem('jirstan_v321_slot1')||localStorage.getItem('jirstan_v319_slot1');if(s){state=JSON.parse(s);state.currentSaveSlot=1;}}catch(e){}}
+function resetGame(){if(confirm("Restart celé hry?")){for(let i=1;i<=3;i++){localStorage.removeItem(`jirstan_v321_slot${i}`);}location.reload();}}
+function pad(n){return n<10?'0'+n:n;}
+function checkLvl(d){while(d.xp>=d.req){d.xp-=d.req;d.level++;d.req=Math.floor(d.req*1.5);d.skills.spd+=0.5;notify("LEVEL UP",`${d.name} → Lvl ${d.level}!`,"success");addTicker(`⬆️ ${d.name} dosáhl Level ${d.level}!`);}}
+function hireNewDriver(){let cost=5000;if(state.tech.includes('recruit')) cost=2500;if(state.staff.accountant.active&&state.staff.accountant.skills.payroll) cost=Math.floor(cost*0.75);if(state.money>=cost){addMoney(-cost);state.stats.totalSpent+=cost;const name=NAMES_F[Math.floor(Math.random()*NAMES_F.length)]+" "+NAMES_L[Math.floor(Math.random()*NAMES_L.length)];const bio=BIOS[Math.floor(Math.random()*BIOS.length)];const trait=TRAITS[Math.floor(Math.random()*TRAITS.length)].id;state.drivers.push({id:Date.now(),name:name,level:1,xp:0,req:1000,skills:{spd:1},energy:100,tacho:0,restUntil:0,lic:[],bio:bio,trait:trait,deliveries:0});notify("HR",`Řidič ${name} přijat (${TRAITS.find(t=>t.id===trait).n}).`,"success");saveGame();renderAll();}}
+function buyCar(cat,model,price,spd,img){let finalPrice=price;if(state.staff.accountant.active&&state.staff.accountant.skills.costcutter) finalPrice=Math.floor(finalPrice*0.9);if(state.money>=finalPrice){addMoney(-finalPrice);state.stats.totalSpent+=finalPrice;state.vehicles.push({id:Date.now(),type:cat,model:model,driverId:null,loc:'Praha',job:null,queue:[],progress:0,cond:100,fuel:100,spd:parseFloat(spd),upgrades:[],trailer:null,img:img});notify("AUTO",`${model} zakoupeno! (-${finalPrice.toLocaleString()} Kč)`,"success");saveGame();renderAll();}}
+function buyTrailer(id){const t=TRAILERS_DB.find(x=>x.id==id);if(state.money>=t.price){addMoney(-t.price);state.trailers.push({...t,uid:Date.now(),attachedTo:null});notify("LOGISTIKA","Návěs OK","success");saveGame();renderAll();}}
+function attachTrailer(uid,vid){const t=state.trailers.find(x=>x.uid==uid),v=state.vehicles.find(x=>x.id==vid);if(v.trailer) state.trailers.find(x=>x.uid==v.trailer.uid).attachedTo=null;if(t.attachedTo) state.vehicles.find(x=>x.id==t.attachedTo).trailer=null;v.trailer=t;t.attachedTo=vid;notify("DÍLNA","Připojeno","info");saveGame();renderAll();}
+function takeLoan(t){let a=t==='micro'?50000:t==='biz'?500000:2000000;state.money+=a;state.debt+=Math.floor(a*(t==='micro'?1.2:t==='biz'?1.1:1.05));state.stats.loansTaken++;notify("BANKA","Půjčeno.","success");saveGame();renderAll();}
+function payLoan(){if(state.money>=100000&&state.debt>0){addMoney(-100000);state.debt-=100000;if(state.debt<0) state.debt=0;saveGame();renderAll();}}
+function buyMarketing(t){let cost=0,rep=0,name="";if(t==='billboard'){cost=50000;rep=5;name="Billboard";}else if(t==='tv'){cost=200000;rep=15;name="TV Kampaň";}else if(t==='paper'){cost=10000;rep=2;name="Noviny";}else if(t==='social'){cost=100000;rep=8;name="Sociální sítě";}if(state.money>=cost&&!state.marketing[t]){addMoney(-cost);state.stats.totalSpent+=cost;state.marketing[t]=true;state.reputation=(state.reputation||100)+rep;notify("MARKETING",`${name} OK (+${rep}%)`,"purple");renderAll();}}
+function buyChocolate(){if(state.money>=1500){addMoney(-1500);state.stats.totalSpent+=1500;state.vehicles.forEach(v=>{if(v.job) v.progress+=10;});notify("KATEŘINA","Mňam! Zrychlila jsem průběh jízd o 10%.","pink");giveStaffXp('accountant',20);}}
+function buyMachine(id){const m=MACHINES_DB.find(x=>x.id==id);if(state.money>=m.c){if(state.drivers.some(d=>d.lic.includes('heavy'))){addMoney(-m.c);state.stats.totalSpent+=m.c;state.machines.push({...m,active:false,durability:100});notify("STROJE","Koupeno.","success");saveGame();renderAll();}else notify("CHYBA","Chybí NADROZMĚR licence","danger");}}
+function activateMachine(i){const m=state.machines[i];if(state.money>=m.permCost){addMoney(-m.permCost);m.active=true;notify("ÚŘAD","Povolení OK","success");saveGame();renderAll();}}
+function skipTime(h){for(let i=0;i<h;i++){state.hour++;if(state.hour>=24){state.hour=0;state.day++;daily();}hourly();}renderAll();}
+function notify(title,message,type='info'){const toastBox=document.getElementById('toast-box');const toast=document.createElement('div');toast.className='toast';const icon=NOTIFY_ICONS[type]||'📢';let color={success:'var(--green)',danger:'var(--red)',gold:'var(--gold)',blue:'var(--blue)',purple:'var(--purple)',pink:'var(--pink)',teal:'var(--teal)',red:'var(--red)'}[type]||'var(--orange)';toast.style.borderLeftColor=color;toast.innerHTML=`<span class="toast-icon">${icon}</span><div><strong>${title}</strong><br><span style="font-size:12px">${message}</span></div>`;toastBox.appendChild(toast);setTimeout(()=>toast.remove(),5000);}
+function buyUpgrade(vid,uid){const v=state.vehicles.find(x=>x.id==vid);const u=UPGRADES_DB.find(x=>x.id==uid);if(state.money>=u.cost){if(v.upgrades.includes(uid)) return;addMoney(-u.cost);state.stats.totalSpent+=u.cost;v.upgrades.push(uid);notify("DÍLNA",`${u.n} OK.`,"success");saveGame();renderAll();}}
+function openJobSelectModal(oidx){state.tempOfferIdx=oidx;const offer=state.offers[oidx];const cands=state.vehicles.filter(v=>v.type===offer.type);let h=`<h2>Výběr vozu: ${offer.dest}</h2><div style="margin-bottom:15px; padding:10px; background:#222; border-left:3px solid var(--orange)"><b>Detaily:</b> ${offer.flavor.contact}, Tel: ${offer.flavor.phone}<br><b>Brána:</b> ${offer.flavor.gate} (Kód: ${offer.flavor.code})<br><b>Info:</b> ${offer.flavor.info}</div><div class="grid" style="grid-template-columns:1fr;">`;if(cands.length===0) h+='<div>Nemáš vozy typu '+offer.type+'</div>';else{h+=cands.map(v=>{const d=state.drivers.find(x=>x.id==v.driverId);let valid=true,r="";if(!d){valid=false;r="Bez řidiče";}else{if(offer.req&&!d.lic.includes(offer.req)){valid=false;r="Licence";}if(v.type==='semi'){if(offer.req==='frigo'&&(!v.trailer||v.trailer.id!=='frigo')){valid=false;r="Návěs FRIGO";}else if(offer.req==='heavy'&&(!v.trailer||v.trailer.id!=='podval')){valid=false;r="Návěs PODVAL";}else if(offer.req==='sypky'&&(!v.trailer||v.trailer.id!=='sklopka')){valid=false;r="Návěs SKLOPKA";}else if(!offer.req&&!v.trailer){valid=false;r="Chybí návěs";}}}let rowStyle='opacity:'+(valid?1:0.5)+'; border-color:'+(valid?'var(--green)':'var(--red)');let clickAttr=valid?'onclick="assignJobToVehicle('+v.id+')"':'';return '<div class="select-row" style="'+rowStyle+'" '+clickAttr+'><div><b>'+v.model+'</b> <small>('+(d?d.name:'-')+')</small></div><div>'+(valid?'<b>VYBRAT</b>':r)+'</div></div>';}).join('');}h+='</div><button class="btn btn-red" onclick="document.getElementById(\'modal-overlay\').style.display=\'none\'">ZRUŠIT</button>';document.getElementById('modal-content').innerHTML=h;document.getElementById('modal-overlay').style.display='flex';}
+function assignJobToVehicle(vid){if(state.tempOfferIdx===null)return;const o=state.offers[state.tempOfferIdx];const v=state.vehicles.find(x=>x.id==vid);if(!v.job){v.job=o;notify("DISPEČINK",`Přiřazeno ${v.model}`,"success");}else{if(!v.queue) v.queue=[];if(v.queue.length>=5){notify("PLNO","Fronta plná","danger");return;}v.queue.push(o);notify("FRONT","Přidáno do fronty","purple");}state.offers.splice(state.tempOfferIdx,1);state.tempOfferIdx=null;document.getElementById('modal-overlay').style.display='none';saveGame();renderAll();}
+function autoDispatch(absTime){state.vehicles.forEach(v=>{if(!v.job&&!(v.queue&&v.queue.length)&&v.driverId){const d=state.drivers.find(x=>x.id==v.driverId);if(d.restUntil<=absTime){const jIdx=state.offers.findIndex(o=>{if(o.type!==v.type) return false;if(o.req&&(!d.lic||!d.lic.includes(o.req))) return false;if(v.type==='semi'){if(o.req==='frigo'&&(!v.trailer||v.trailer.id!=='frigo')) return false;if(o.req==='heavy'&&(!v.trailer||v.trailer.id!=='podval')) return false;if(o.req==='sypky'&&(!v.trailer||v.trailer.id!=='sklopka')) return false;if(!v.trailer) return false;}return true;});if(jIdx!==-1){v.job=state.offers[jIdx];state.offers.splice(jIdx,1);notify("DISPEČER AI",`Auto-dispatch: ${v.model}`,"info");renderAll();}}}});}
+function manualRefresh(){genOffers(true);const b=document.getElementById('btn-refresh');b.innerHTML="✅";setTimeout(()=>b.innerHTML="🔄 REFRESH",1000);}
+function hireStaff(role){if(role==='dispatcher'){if(state.money>=STAFF_DEFS.dispatcher.cost){addMoney(-STAFF_DEFS.dispatcher.cost);state.staff.dispatcher.active=true;state.staff.dispatcher.days+=14;notify("HR","Dispečer najat/prodloužen.","success");renderAll();}}else{if(state.money>=STAFF_DEFS[role].cost){addMoney(-STAFF_DEFS[role].cost);state.staff[role].active=true;notify("HR",`${STAFF_DEFS[role].name} najat.`,"success");renderAll();}}}
+// FIXED: learnStaffSkill now takes custom cost per skill
+function learnStaffSkill(role,skillId,cost){if(!state.staff[role].active) return;if(state.staff[role].skills[skillId]) return;cost=cost||100000;if(state.money>=cost){addMoney(-cost);state.stats.totalSpent+=cost;state.staff[role].skills[skillId]=true;notify("HR","Nová dovednost naučena!","pink");addTicker(`🎓 ${STAFF_DEFS[role].name} naučila dovednost!`);renderAll();}else notify("HR",`Školení stojí ${cost.toLocaleString()} Kč.`,"danger");}
+function repairMachine(idx){let cost=5000;if(state.staff.mechanic.active&&state.staff.mechanic.skills.quickfix) cost=4000;if(state.money>=cost){addMoney(-cost);state.machines[idx].durability=100;notify("SERVIS","Stroj opraven.","success");renderAll();}}
+function boostMachine(idx){if(state.money>=15000){addMoney(-15000);state.machines[idx].boostUntil=(state.day*24+state.hour)+4;notify("GEOLOG","Těžba zrychlena na 4h!","gold");renderAll();}}
+function showJobDetail(vid){const v=state.vehicles.find(x=>x.id==vid);if(v.job){notify("DETAIL ZAKÁZKY",`Cíl: ${v.job.dest} | Kontakt: ${v.job.flavor.contact} | Brána: ${v.job.flavor.gate}`,"blue");}else{notify("LOGISTIKA",`${v.model} nemá aktivní práci.`,"info");}}
+function switchTab(id,btn){document.querySelectorAll('.tab-pane').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));btn.classList.add('active');if(id==='dispatch') setTimeout(fixMapSize,100);}
+function forceRest(did){const absTime=state.day*1440+state.hour*60+state.minute;const d=state.drivers.find(x=>x.id==did);d.restUntil=absTime+480;d.energy=100;notify("AETR",`${d.name} poslán na pauzu (8h).`,"blue");renderAll();}
+function invest(id,amt){if(state.money>=amt){addMoney(-amt);state.stats.totalSpent+=amt;state.investments[id]+=amt;renderAll();}}
+function withdraw(id,amt){if(amt===0) amt=state.investments[id];if(state.investments[id]>=amt){state.investments[id]-=amt;addMoney(amt);state.stats.totalEarned+=amt;renderAll();}}
+
+// MAP
+const c=document.getElementById('gameMap');const ctx=c.getContext('2d');
+function fixMapSize(){const b=document.getElementById('map-box');if(b&&c){c.width=b.clientWidth;c.height=b.clientHeight;renderMap();}}
+window.onresize=fixMapSize;
+let mapTick=0;
+function renderMap(){if(!ctx||!c.width) return;mapTick++;ctx.fillStyle='#050505';ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle='rgba(255,255,255,0.02)';ctx.lineWidth=1;for(let i=0;i<c.width;i+=40){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,c.height);ctx.stroke();}for(let i=0;i<c.height;i+=40){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(c.width,i);ctx.stroke();}ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.beginPath();const keys=Object.keys(CITIES);keys.forEach((k1,i)=>{keys.forEach((k2,j)=>{if(i<j){const c1=CITIES[k1],c2=CITIES[k2];ctx.moveTo(c1.x*c.width,c1.y*c.height);ctx.lineTo(c2.x*c.width,c2.y*c.height);}});});ctx.stroke();ctx.save();ctx.translate(c.width/2,c.height/2);ctx.rotate(mapTick*0.015);ctx.fillStyle='rgba(0,230,118,0.03)';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,Math.max(c.width,c.height),0,0.5);ctx.fill();ctx.strokeStyle='rgba(0,230,118,0.1)';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.max(c.width,c.height),0);ctx.stroke();ctx.restore();for(let k in CITIES){const p=CITIES[k];ctx.fillStyle='#111';ctx.beginPath();ctx.arc(p.x*c.width,p.y*c.height,6,0,6.28);ctx.fill();ctx.strokeStyle='#444';ctx.stroke();ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='11px Rajdhani';ctx.fillText(k,p.x*c.width+12,p.y*c.height+4);}state.vehicles.forEach(v=>{if(v.job&&v.progress>0){const c1=CITIES[v.loc];const c2=CITIES[v.job.dest];if(c1&&c2){const x=(c1.x+(c2.x-c1.x)*(v.progress/100))*c.width;const y=(c1.y+(c2.y-c1.y)*(v.progress/100))*c.height;ctx.strokeStyle='rgba(255,157,0,0.2)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(c1.x*c.width,c1.y*c.height);ctx.lineTo(c2.x*c.width,c2.y*c.height);ctx.stroke();ctx.fillStyle='var(--orange)';ctx.shadowBlur=10;ctx.shadowColor='var(--orange)';ctx.beginPath();ctx.arc(x,y,4,0,6.28);ctx.fill();ctx.shadowBlur=0;}}});requestAnimationFrame(renderMap);}
+init();
+</script>
+</body>
+</html>
