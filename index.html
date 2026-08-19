@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JIRSTAN LOGISTICS — V4.0 (GLOBAL EXPANSION)</title>
+<title>JIRSTAN LOGISTICS</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <link rel="stylesheet" href="styles.css">
@@ -35,22 +35,22 @@
   <div class="brand">
     <img src="logo_jirstan.png" class="brand-logo" onerror="this.style.display='none'">
     <h1>JIRSTAN</h1>
-    <div class="brand-ver">OS V4.0 // GLOBAL EXPANSION</div>
+    <div class="brand-ver">OS V64.5 // DISPEČINK</div>
   </div>
   <nav>
     <button class="nav-btn active" onclick="switchTab('overview', this)">📊 PŘEHLED</button>
     <button class="nav-btn" onclick="switchTab('dispatch', this)">📟 DISPEČINK</button>
     <button class="nav-btn" style="color:var(--cyan)" onclick="switchTab('tower', this)">🏢 JIRSTAN TOWER & HQ</button>
     <button class="nav-btn" onclick="switchTab('fleet', this)">🚛 FLOTILA</button>
-    <button class="nav-btn" onclick="switchTab('overseas', this)" style="color:var(--cyan)">🌍 ZÁMOŘSKÁ DIVIZE <span style="font-size:9px; background:var(--blue); color:white; padding:2px 4px; border-radius:4px; margin-left:4px">NEW</span></button>
-    <button class="nav-btn" onclick="switchTab('buses', this)" style="color:var(--green)">🚌 OSOBNÍ DOPRAVA <span style="font-size:9px; background:var(--green); color:black; padding:2px 4px; border-radius:4px; margin-left:4px">ENDGAME</span></button>
-    <button class="nav-btn" onclick="switchTab('carwash', this)" style="color:var(--teal)">🧽 AUTOMYČKA <span style="font-size:9px; background:var(--teal); color:black; padding:2px 4px; border-radius:4px; margin-left:4px">NEW</span></button>
+    <button class="nav-btn" onclick="switchTab('overseas', this)" style="color:var(--cyan)">🌍 ZÁMOŘSKÁ DIVIZE</button>
+    <button class="nav-btn" onclick="switchTab('buses', this)" style="color:var(--green)">🚌 OSOBNÍ DOPRAVA</button>
+    <button class="nav-btn" onclick="switchTab('carwash', this)" style="color:var(--teal)">🧽 AUTOMYČKA</button>
     <button class="nav-btn" onclick="switchTab('trailers', this)" style="color:var(--gold)">🔗 LOGISTIKA</button>
     <button class="nav-btn" onclick="switchTab('auction', this)">📦 BURZA & SMLOUVY</button>
     <button class="nav-btn" onclick="switchTab('factions', this)" style="color:var(--pink); display:none">🏙️ KORPORACE</button>
     <button class="nav-btn" onclick="switchTab('machines', this)" style="color:var(--orange)">🏗️ TĚŽBA & SERVERY</button>
     <button class="nav-btn" onclick="switchTab('workshop', this)" style="color:var(--purple)">🔧 DÍLNA</button>
-    <button class="nav-btn" onclick="switchTab('dealer', this)">💰 AUTOSALON <span style="font-size:9px; background:var(--orange); color:black; padding:2px 4px; border-radius:4px; margin-left:4px">BAZAR</span></button>
+    <button class="nav-btn" onclick="switchTab('dealer', this)">💰 AUTOSALON</button>
     <button class="nav-btn" onclick="switchTab('bazaar', this)">🚗 AUTOBAZAR</button>
     <button class="nav-btn" onclick="switchTab('warehouse', this)">📦 VELKOSKLAD</button>
     <button class="nav-btn" onclick="switchTab('gas', this)">⛽ BENZÍNKY</button>
@@ -491,7 +491,7 @@
       
       <!-- Capital History Chart -->
       <div style="background:var(--surface-1); border:1px solid var(--border-light); border-radius:12px; padding:20px; margin-top:20px;">
-          <h3 style="color:var(--green); margin-top:0; font-family:'Rajdhani'">📈 HISTORICKÝ VÝVOJ KAPITÁLU A JIRMANCOINŮ</h3>
+          <h3 style="color:var(--green); margin-top:0; font-family:'Rajdhani'">📈 HISTORICKÝ VÝVOJ FIREMNÍ HOTOVOSTI (Kč)</h3>
           <div style="height:250px; position:relative;">
               <canvas id="finance-chart"></canvas>
           </div>

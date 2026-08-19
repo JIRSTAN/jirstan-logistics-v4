@@ -4,29 +4,34 @@
 
 // 1. LOKACE A TYPY (GLOBAL EXPANSION)
 const CITIES = {
-    // EVROPA
-    "Praha":      { x: .75, y: .55, isAirport: true,  isPort: false, lat: 50.0755, lng: 14.4378 }, 
-    "Zájezd":     { x: .74, y: .54, isAirport: false, isPort: false, lat: 50.1550, lng: 14.1620 },
-    "Brno":       { x: .85, y: .65, isAirport: false, isPort: false, lat: 49.1951, lng: 16.6068 }, 
-    "Plzeň":      { x: .68, y: .58, isAirport: false, isPort: false, lat: 49.7384, lng: 13.3736 }, 
-    "Ostrava":    { x: .90, y: .55, isAirport: false, isPort: false, lat: 49.8209, lng: 18.2625 }, 
-    "Mnichov":    { x: .60, y: .70, isAirport: true,  isPort: false, lat: 48.1351, lng: 11.5820 }, 
-    "Vídeň":      { x: .80, y: .75, isAirport: true,  isPort: false, lat: 48.2082, lng: 16.3738 }, 
-    "Berlín":     { x: .65, y: .35, isAirport: true,  isPort: false, lat: 52.5200, lng: 13.4050 }, 
-    "Varšava":    { x: .88, y: .35, isAirport: true,  isPort: false, lat: 52.2297, lng: 21.0122 }, 
-    "Hamburk":    { x: .62, y: .25, isAirport: false, isPort: true,  lat: 53.5511, lng:  9.9937 }, 
-    "Drážďany":   { x: .70, y: .45, isAirport: false, isPort: false, lat: 51.0504, lng: 13.7373 }, 
-    "Bratislava": { x: .82, y: .70, isAirport: false, isPort: false, lat: 48.1486, lng: 17.1077 }, 
-    "Budapešť":   { x: .88, y: .80, isAirport: false, isPort: false, lat: 47.4979, lng: 19.0402 },
-    "Paříž":      { x: .55, y: .50, isAirport: true,  isPort: false, lat: 48.8566, lng:  2.3522 }, 
-    "Řím":        { x: .70, y: .90, isAirport: true,  isPort: true,  lat: 41.9028, lng: 12.4964 }, 
-    "Londýn":     { x: .52, y: .35, isAirport: true,  isPort: true,  lat: 51.5074, lng: -0.1278 },
-    // SEVERNÍ AMERIKA
-    "New York":   { x: .25, y: .40, isAirport: true,  isPort: true,  lat: 40.7128, lng: -74.0060 },
-    "Los Angeles":{ x: .08, y: .55, isAirport: true,  isPort: true,  lat: 34.0522, lng: -118.2437 },
-    "Miami":      { x: .22, y: .75, isAirport: true,  isPort: true,  lat: 25.7617, lng: -80.1918 },
-    "Toronto":    { x: .20, y: .30, isAirport: true,  isPort: false, lat: 43.6532, lng: -79.3832 },
-    "Chicago":    { x: .18, y: .42, isAirport: true,  isPort: false, lat: 41.8781, lng: -87.6298 }
+    // EVROPA (isOverseas: false, region: 'Europe', continent: 'Europe')
+    "Praha":      { x: .75, y: .55, isAirport: true,  isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 50.0755, lng: 14.4378 }, 
+    "Zájezd":     { x: .74, y: .54, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 50.1550, lng: 14.1620 },
+    "Brno":       { x: .85, y: .65, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 49.1951, lng: 16.6068 }, 
+    "Plzeň":      { x: .68, y: .58, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 49.7384, lng: 13.3736 }, 
+    "Ostrava":    { x: .90, y: .55, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 49.8209, lng: 18.2625 }, 
+    "Mnichov":    { x: .60, y: .70, isAirport: true,  isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 48.1351, lng: 11.5820 }, 
+    "Vídeň":      { x: .80, y: .75, isAirport: true,  isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 48.2082, lng: 16.3738 }, 
+    "Berlín":     { x: .65, y: .35, isAirport: true,  isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 52.5200, lng: 13.4050 }, 
+    "Varšava":    { x: .88, y: .35, isAirport: true,  isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 52.2297, lng: 21.0122 }, 
+    "Hamburk":    { x: .62, y: .25, isAirport: false, isPort: true,  isOverseas: false, region: 'Europe', continent: 'Europe', lat: 53.5511, lng:  9.9937 }, 
+    "Drážďany":   { x: .70, y: .45, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 51.0504, lng: 13.7373 }, 
+    "Bratislava": { x: .82, y: .70, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 48.1486, lng: 17.1077 }, 
+    "Budapešť":   { x: .88, y: .80, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 47.4979, lng: 19.0402 },
+    "Paříž":      { x: .55, y: .50, isAirport: true,  isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 48.8566, lng:  2.3522 }, 
+    "Řím":        { x: .70, y: .90, isAirport: true,  isPort: true,  isOverseas: false, region: 'Europe', continent: 'Europe', lat: 41.9028, lng: 12.4964 }, 
+    "Londýn":     { x: .52, y: .35, isAirport: true,  isPort: true,  isOverseas: false, region: 'Europe', continent: 'Europe', lat: 51.5074, lng: -0.1278 },
+    "Mladá Boleslav": { x: .77, y: .50, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 50.4114, lng: 14.9032 },
+    "Kolín":          { x: .78, y: .56, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 50.0281, lng: 15.2006 },
+    "České Budějovice": { x: .75, y: .68, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 48.9745, lng: 14.4743 },
+    "Hradec Králové": { x: .81, y: .51, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 50.2092, lng: 15.8328 },
+    "Ústí nad Labem": { x: .73, y: .48, isAirport: false, isPort: false, isOverseas: false, region: 'Europe', continent: 'Europe', lat: 50.6607, lng: 14.0323 },
+    // SEVERNÍ AMERIKA (isOverseas: true, region: 'North America', continent: 'North America')
+    "New York":   { x: .25, y: .40, isAirport: true,  isPort: true,  isOverseas: true,  region: 'North America', continent: 'North America', lat: 40.7128, lng: -74.0060 },
+    "Los Angeles":{ x: .08, y: .55, isAirport: true,  isPort: true,  isOverseas: true,  region: 'North America', continent: 'North America', lat: 34.0522, lng: -118.2437 },
+    "Miami":      { x: .22, y: .75, isAirport: true,  isPort: true,  isOverseas: true,  region: 'North America', continent: 'North America', lat: 25.7617, lng: -80.1918 },
+    "Toronto":    { x: .20, y: .30, isAirport: true,  isPort: false, isOverseas: true,  region: 'North America', continent: 'North America', lat: 43.6532, lng: -79.3832 },
+    "Chicago":    { x: .18, y: .42, isAirport: true,  isPort: false, isOverseas: true,  region: 'North America', continent: 'North America', lat: 41.8781, lng: -87.6298 }
 };
 
 const LICENSES = [

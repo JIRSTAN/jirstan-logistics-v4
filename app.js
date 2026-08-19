@@ -8,6 +8,7 @@ window.onerror = function(message, source, lineno, colno, error) {
 // SYSTEM TELEMETRY & LOGGING (DEV CONSOLE F12)
 // ============================================================
 function SysLog(tag, msg, extra = null) {
+    if (window.__IS_SIMULATION__) return;
     const colors = {
         'DISPEČINK': '#00d4ff',
         'EKONOMIKA': '#00ff88',
@@ -68,8 +69,15 @@ const FACTIONS_DB = {
 
 const NAMES_F = ["Martin", "Jakub", "David", "Lukáš", "Jan", "Tomáš", "Michal", "Pavel", "Ondřej", "Marek", "Zdeněk", "Josef"];
 const NAMES_L = ["Zeman", "Krejčí", "Svoboda", "Novák", "Dvořák", "Černý", "Procházka", "Kučera", "Veselý", "Horák", "Němec"];
-const BIOS = ["Nadšenec do veteránů.", "Jezdí zásadně v noci.", "Miluje kávu z benzínky.", "Bývalý závodník rallye.", "Kliďas a flegmatik.", "Neustále nadává na dispečink.", "Mistr ve couvání.", "Bývalý voják, teď řídí."];
-const TRAITS = [ {id: 'normal', n: 'Běžný', speed: 1.0, cons: 1.0, fatigue: 1.0}, {id: 'racer', n: 'Závodník', speed: 1.15, cons: 1.2, fatigue: 1.1}, {id: 'eco', n: 'Ekolog', speed: 0.85, cons: 0.8, fatigue: 0.9}, {id: 'iron', n: 'Držák', speed: 1.0, cons: 1.0, fatigue: 0.8} ];
+const TRAITS = [
+    {id: 'normal', n: 'Běžný', speed: 1.0, cons: 1.0, fatigue: 1.0},
+    {id: 'racer', n: 'Závodník', speed: 1.15, cons: 1.2, fatigue: 1.1},
+    {id: 'eco', n: 'Ekolog', speed: 0.85, cons: 0.8, fatigue: 0.9},
+    {id: 'iron', n: 'Držák', speed: 1.0, cons: 1.0, fatigue: 0.8},
+    {id: 'safe', n: 'Opatrný', speed: 0.95, cons: 0.9, fatigue: 0.9},
+    {id: 'nightowl', n: 'Noční jezdec', speed: 1.10, cons: 1.0, fatigue: 0.85},
+    {id: 'beast', n: 'Silák', speed: 1.05, cons: 1.1, fatigue: 0.8}
+];
 
 // 2. KOMPLETNÍ DATABÁZE VYLEPŠENÍ, VÝZKUMŮ A BUDOV
 const UPGRADES_DB = [
@@ -216,18 +224,17 @@ const PLANE_DB = [
     {cat: 'plane', model: "Antonov An-225 Mriya II", price: 300000000, spd: 7.0, fuelReq: 100, img: 'plane_antonov.jpg'}
 ];
 
-// 4. KOMPLETNÍ SEZNAM VŠECH NÁVĚSŮ A STROJŮ
 const TRAILERS_DB = [ 
-    {id: 'plachta', n: 'STANDARD PLACHTA', price: 300000, bonus: 1.2, img: 'trailer_curtain.jpg'}, 
-    {id: 'mega', n: 'MEGA NÁVĚS', price: 450000, bonus: 1.3, img: 'trailer_mega.jpg'}, 
-    {id: 'klanicovy', n: 'KLANICOVÝ (Dřevo)', price: 500000, bonus: 1.35, img: 'trailer_wood.jpg'},
-    {id: 'sklopka', n: 'SKLOPKA (Sypké)', price: 600000, bonus: 1.4, img: 'trailer_tipper.jpg'}, 
-    {id: 'frigo', n: 'CHLADÍRNSKÝ (Frigo)', price: 800000, bonus: 1.6, img: 'trailer_reefer.jpg'}, 
-    {id: 'autoprepravnik', n: 'AUTOPŘEPRAVNÍK', price: 900000, bonus: 1.7, img: 'trailer_cars.jpg'},
-    {id: 'cisterna', n: 'CISTERNA (ADR)', price: 1000000, bonus: 1.8, img: 'trailer_tanker.jpg'}, 
-    {id: 'podval', n: 'HLUBINNÝ PODVALNÍK', price: 1500000, bonus: 2.2, img: 'trailer_lowbed.jpg'},
-    {id: 'nadrozmer_pro', n: 'NADROZMĚR PRO', price: 2500000, bonus: 2.8, img: 'trailer_heavypro.jpg'},
-    {id: 'road_train', n: 'SILNIČNÍ VLAK (AU)', price: 4000000, bonus: 3.5, img: 'trailer_roadtrain.jpg'}
+    {id: 'plachta', n: 'STANDARD PLACHTA', price: 300000, bonus: 1.05, img: 'trailer_curtain.jpg'}, 
+    {id: 'mega', n: 'MEGA NÁVĚS', price: 450000, bonus: 1.10, img: 'trailer_mega.jpg'}, 
+    {id: 'klanicovy', n: 'KLANICOVÝ (Dřevo)', price: 500000, bonus: 1.12, img: 'trailer_wood.jpg'},
+    {id: 'sklopka', n: 'SKLOPKA (Sypké)', price: 600000, bonus: 1.15, img: 'trailer_tipper.jpg'}, 
+    {id: 'frigo', n: 'CHLADÍRNSKÝ (Frigo)', price: 800000, bonus: 1.20, img: 'trailer_reefer.jpg'}, 
+    {id: 'autoprepravnik', n: 'AUTOPŘEPRAVNÍK', price: 900000, bonus: 1.25, img: 'trailer_cars.jpg'},
+    {id: 'cisterna', n: 'CISTERNA (ADR)', price: 1000000, bonus: 1.30, img: 'trailer_tanker.jpg'}, 
+    {id: 'podval', n: 'HLUBINNÝ PODVALNÍK', price: 1500000, bonus: 1.35, img: 'trailer_lowbed.jpg'},
+    {id: 'nadrozmer_pro', n: 'NADROZMĚR PRO', price: 2500000, bonus: 1.45, img: 'trailer_heavypro.jpg'},
+    {id: 'road_train', n: 'SILNIČNÍ VLAK (AU)', price: 4000000, bonus: 1.60, img: 'trailer_roadtrain.jpg'}
 ];
 
 const MACHINES_DB = [ 
@@ -375,17 +382,17 @@ function endMinigame(skip) {
 }
 
 const defaultState = {
-    version: "V4.0", money: 250000, debt: 0, day: 1, hour: 8, minute: 0, reputation: 100, bankDeposit: 0,
+    version: "V4.0", money: 300000, debt: 0, day: 1, hour: 8, minute: 0, reputation: 100, bankDeposit: 0,
     fuelPrice: 35.50, fuelTank: 0, fuelHedge: null, weather: 'sun', auctionFilter: 'all',
     contracts: [], availableContracts: [], termDeposits: [],
     factions: { nexus: 0, stavba: 0, fresh: 0 },
     staff: { dispatcher: {active: false, days: 0, level: 1, xp: 0, skills: {}}, mechanic: {active: false, days: 0, level: 1, xp: 0, skills: {}}, accountant: {active: false, days: 0, level: 1, xp: 0, skills: {}, lastAudit: 0} },
-    vehicles: [ {id: 1, type: 'van', model: 'Fiat Ducato', driverId: 1, loc: 'Zájezd', job: null, queue: [], progress: 0, cond: 60, fuel: 100, spd: 1.4, upgrades: [], trailer: null, cleanliness: 80, wear: 50} ],
+    vehicles: [ {id: 1, type: 'van', model: 'Fiat Ducato', driverId: 1, loc: 'Zájezd', job: null, queue: [], progress: 0, cond: 80, fuel: 100, spd: 1.4, upgrades: [], trailer: null, cleanliness: 90, wear: 20} ],
     drivers: [ 
-        {id: 1, name: "Stanislav Starosta", level: 1, xp: 0, req: 100, skills: {spd: 0}, energy: 100, tacho: 0, restUntil: 0, lic: [], bio: "Zakladatel", trait: 'iron', deliveries: 0, morale: 90},
+        {id: 1, name: "Stanislav Starosta", level: 1, xp: 0, req: 100, skills: {spd: 0}, energy: 100, tacho: 0, restUntil: 0, lic: ['express', 'stehovani'], bio: "Zakladatel", trait: 'iron', deliveries: 0, morale: 90},
         {id: 2, name: "Jiří Čečák", level: 50, xp: 0, req: 9999, skills: {spd: 5}, energy: 100, tacho: 0, restUntil: 0, lic: ['adr','frigo','heavy','express','leky','ceniny','stehovani','sypky','wood','cars'], bio: "Spoluzakladatel, CTO", trait: 'racer', deliveries: 0, morale: 90},
         {id: 3, name: "Karel N.", level: 10, xp: 0, req: 1000, skills: {spd: 1}, energy: 100, tacho: 0, restUntil: 0, lic: ['stehovani','sypky','wood'], bio: "Zkušený mazák", trait: 'normal', deliveries: 0, morale: 80},
-        {id: 4, name: "Čenda", level: 5, xp: 0, req: 500, skills: {spd: 0}, energy: 100, tacho: 0, restUntil: 0, lic: [], bio: "Mladé ucho", trait: 'eco', deliveries: 0, morale: 75}
+        {id: 4, name: "Čenda", level: 5, xp: 0, req: 500, skills: {spd: 0}, energy: 100, tacho: 0, restUntil: 0, lic: ['express'], bio: "Mladé ucho", trait: 'eco', deliveries: 0, morale: 75}
     ],
     // NOVÉ POLE PRO V4.0
     ships: [], planes: [],
@@ -531,6 +538,13 @@ function loadGame() {
     }
     state.trailers = state.trailers || []; state.machines = state.machines || [];
     
+    // Zajištění startovní licence pro řidiče #1 (Early game fix)
+    if (state.drivers && state.drivers.length > 0) {
+        if (!state.drivers[0].lic || state.drivers[0].lic.length === 0) {
+            state.drivers[0].lic = ['express', 'stehovani'];
+        }
+    }
+    
     if (state.bankDeposit === undefined) state.bankDeposit = 0;
     if (!state.market.realestate) state.market.realestate = JSON.parse(JSON.stringify(defaultState.market.realestate));
     if (!state.market.techstocks) state.market.techstocks = JSON.parse(JSON.stringify(defaultState.market.techstocks));
@@ -619,21 +633,39 @@ function loadGame() {
         if (state.carwash.waxUntil === undefined) state.carwash.waxUntil = 0;
     }
 
-    // Zajistění, aby všechna vozidla měla cleanliness
+    // Zajistění, aby všechna vozidla měla cleanliness a platná data
     state.vehicles.forEach(v => {
         if (v.cleanliness === undefined) v.cleanliness = 100;
         if (v.wear === undefined) v.wear = 0;
         if (v.isBroken === undefined) v.isBroken = false;
+        if (v.progress === undefined || isNaN(v.progress)) v.progress = 0;
+        if (!v.loc || (typeof CITIES !== 'undefined' && CITIES[v.loc] && CITIES[v.loc].isOverseas)) v.loc = 'Praha';
+        if (v.job && (!v.job.dest || isNaN(v.job.pay))) {
+            if (!v.job.dest) v.job.dest = 'Brno';
+            if (isNaN(v.job.pay)) v.job.pay = 10000;
+        }
     });
     state.ships.forEach(s => {
         if (s.cleanliness === undefined) s.cleanliness = 100;
         if (s.wear === undefined) s.wear = 0;
         if (s.isBroken === undefined) s.isBroken = false;
+        if (s.progress === undefined || isNaN(s.progress)) s.progress = 0;
+        if (!s.loc) s.loc = 'Hamburk';
+        if (s.job && (!s.job.dest || isNaN(s.job.pay))) {
+            if (!s.job.dest) s.job.dest = 'New York';
+            if (isNaN(s.job.pay)) s.job.pay = 500000;
+        }
     });
     state.planes.forEach(p => {
         if (p.cleanliness === undefined) p.cleanliness = 100;
         if (p.wear === undefined) p.wear = 0;
         if (p.isBroken === undefined) p.isBroken = false;
+        if (p.progress === undefined || isNaN(p.progress)) p.progress = 0;
+        if (!p.loc) p.loc = 'Praha';
+        if (p.job && (!p.job.dest || isNaN(p.job.pay))) {
+            if (!p.job.dest) p.job.dest = 'New York';
+            if (isNaN(p.job.pay)) p.job.pay = 300000;
+        }
     });
     
     // Zamezení NaN chyb u investic z historických verzí uložení
@@ -642,6 +674,19 @@ function loadGame() {
             state.investments[k] = 0;
         }
     });
+
+    if (!state.fuelPrice || isNaN(state.fuelPrice) || state.fuelPrice <= 0) {
+        state.fuelPrice = 35.50;
+    }
+    if (state.drivers) {
+        state.drivers.forEach(d => {
+            if (!d.skills) d.skills = { spd: 0 };
+            if (typeof d.skills.spd !== 'number' || isNaN(d.skills.spd)) d.skills.spd = 0;
+            if (d.energy === undefined || isNaN(d.energy)) d.energy = 100;
+            if (d.morale === undefined || isNaN(d.morale)) d.morale = 100;
+            if (!d.trait) d.trait = 'normal';
+        });
+    }
 
     // INTERMODALNÍ SYNERGIE: Inicializace synergického bonusu
     if (!state.synergyBonus) state.synergyBonus = { active: false, endDay: 0, multiplier: 1.0 };
@@ -681,7 +726,10 @@ function loadGame() {
     state.marketingCampaigns = state.marketingCampaigns || { paper: 0, radio: 0, tv: 0 };
 }
 function saveGame() { 
-    localStorage.setItem(`jirstan_beta_v1_slot${state.currentSaveSlot}`, JSON.stringify(state)); 
+    if (window.__IS_SIMULATION__) return;
+    try {
+        localStorage.setItem(`jirstan_beta_v1_slot${state.currentSaveSlot}`, JSON.stringify(state)); 
+    } catch(e) {} 
     
     let sb = window.supabaseClient || window.supabase;
     if (sb && typeof sb.from === 'function') {
@@ -704,6 +752,7 @@ function saveGame() {
 }
 
 function renderAll() {
+    if (window.__IS_SIMULATION__) return;
     updateUI(); renderStats(); renderOverview(); renderDispatch(); renderFleet(); renderTrailers(); 
     renderMachines(); renderAuction(); renderContracts(); renderWorkshop(); renderDealer(); renderHQ();
     renderTech(); renderAchievements(); renderHR(); renderStaffHire(); renderCompetition();
@@ -744,10 +793,13 @@ function updateBankThreatVisuals() {
 }
 
 function updateUI() {
-    document.getElementById('ui-money').innerText = Math.floor(state.money || 0).toLocaleString();
+    if (window.__IS_SIMULATION__) return;
+    const uiMoney = document.getElementById('ui-money');
+    if (uiMoney) uiMoney.innerText = Math.floor(state.money || 0).toLocaleString();
     if(document.getElementById('bank-debt')) document.getElementById('bank-debt').innerText = (state.debt || 0).toLocaleString();
     if(document.getElementById('bank-deposit-val')) document.getElementById('bank-deposit-val').innerText = Math.floor(state.bankDeposit || 0).toLocaleString();
-    document.getElementById('ui-rep').innerText = state.reputation || 100;
+    const uiRep = document.getElementById('ui-rep');
+    if (uiRep) uiRep.innerText = state.reputation || 100;
     
     let repVal = state.reputation || 100;
     if(document.getElementById('ui-rep2')) document.getElementById('ui-rep2').innerText = repVal;
@@ -782,7 +834,9 @@ function updateUI() {
     
     updateBankThreatVisuals();
     
-    document.getElementById('ui-fuel-price').innerText = Number(state.fuelPrice || 35.5).toFixed(2);
+    const fuelPriceStr = Number(state.fuelPrice || 35.5).toFixed(2);
+    if (document.getElementById('ui-fuel-price')) document.getElementById('ui-fuel-price').innerText = fuelPriceStr;
+    if (document.getElementById('bank-fuel-price')) document.getElementById('bank-fuel-price').innerText = fuelPriceStr;
     
     const s = state.staff;
     if(document.getElementById('st-disp')) document.getElementById('st-disp').innerHTML = s.dispatcher.active ? `<span style="color:var(--green)">L${s.dispatcher.level} (${s.dispatcher.days}d)</span>` : '<span style="color:var(--red)">NEAKTIVNÍ</span>';
@@ -988,16 +1042,18 @@ function initMap() {
     leafletMap.addControl(new L.Control.America({ position: 'topleft' }));
     
     // Draw city markers once
-    for (let cityName in CITIES) {
-        const city = CITIES[cityName];
-        if (!city.lat || !city.lng) continue;
-        const badgeClass = city.isPort ? 'port' : (city.isAirport ? 'air' : '');
-        const iconHtml = `<div class="city-node-badge ${badgeClass}">
-                            <span class="city-dot"></span>
-                            <span class="city-label">${cityName}</span>
-                          </div>`;
-        const icon = L.divIcon({ html: iconHtml, className: 'city-marker-icon', iconSize: [120, 30], iconAnchor: [60, 15] });
-        L.marker([city.lat, city.lng], { icon }).addTo(leafletMap);
+    if (typeof CITIES !== 'undefined') {
+        for (let cityName in CITIES) {
+            const city = CITIES[cityName];
+            if (!city || typeof city.lat !== 'number' || typeof city.lng !== 'number' || isNaN(city.lat) || isNaN(city.lng)) continue;
+            const badgeClass = city.isPort ? 'port' : (city.isAirport ? 'air' : '');
+            const iconHtml = `<div class="city-node-badge ${badgeClass}">
+                                <span class="city-dot"></span>
+                                <span class="city-label">${cityName}</span>
+                              </div>`;
+            const icon = L.divIcon({ html: iconHtml, className: 'city-marker-icon', iconSize: [120, 30], iconAnchor: [60, 15] });
+            L.marker([city.lat, city.lng], { icon }).addTo(leafletMap);
+        }
     }
     
     // Draw Autodílna Zájezd checkpoint on the map
@@ -1115,31 +1171,41 @@ function renderMap() {
     let activeIds = new Set();
     let allActive = [];
     
-    state.vehicles.forEach(v => { if(v.job) allActive.push({...v, vCat: 'truck'}) });
-    if (state.ships) state.ships.forEach(s => { if(s.job) allActive.push({...s, vCat: 'ship'}) });
-    if (state.planes) state.planes.forEach(p => { if(p.job) allActive.push({...p, vCat: 'plane'}) });
+    (state.vehicles || []).forEach(v => { if(v && v.job) allActive.push({...v, vCat: 'truck'}); });
+    if (state.ships) state.ships.forEach(s => { if(s && s.job) allActive.push({...s, vCat: 'ship'}); });
+    if (state.planes) state.planes.forEach(p => { if(p && p.job) allActive.push({...p, vCat: 'plane'}); });
 
     allActive.forEach(v => {
+        if (!v || !v.job) return;
         activeIds.add(v.id);
-        let start = CITIES[v.loc] || CITIES['Praha'];
-        let end = CITIES[v.job.dest];
+        let startLoc = v.loc || 'Praha';
+        let endLoc = v.job.dest || 'Praha';
+        let start = (typeof CITIES !== 'undefined' && CITIES[startLoc]) ? CITIES[startLoc] : ((typeof CITIES !== 'undefined' && CITIES['Praha']) ? CITIES['Praha'] : { lat: 50.0755, lng: 14.4378 });
+        let end = (typeof CITIES !== 'undefined' && CITIES[endLoc]) ? CITIES[endLoc] : ((typeof CITIES !== 'undefined' && CITIES['Praha']) ? CITIES['Praha'] : { lat: 50.0755, lng: 14.4378 });
         
-        if (start && end && start.lat && end.lat) {
-            let p = v.progress / 100;
+        if (start && end && typeof start.lat === 'number' && typeof start.lng === 'number' && typeof end.lat === 'number' && typeof end.lng === 'number' && !isNaN(start.lat) && !isNaN(start.lng) && !isNaN(end.lat) && !isNaN(end.lng)) {
+            let rawProgress = (typeof v.progress === 'number' && !isNaN(v.progress)) ? v.progress : 0;
+            let p = Math.max(0, Math.min(1, rawProgress / 100));
             let lat = start.lat + (end.lat - start.lat) * p;
             let lng = start.lng + (end.lng - start.lng) * p;
+
+            if (isNaN(lat) || isNaN(lng)) return;
+
             let emoji = v.vCat === 'plane' ? '✈️' : (v.vCat === 'ship' ? '🚢' : '🚛');
             let color = v.vCat === 'plane' ? '#00e5ff' : (v.vCat === 'ship' ? '#0072ff' : (v.job.isBlackMarket ? '#ff2a55' : (v.job.isVIP ? '#ffc300' : '#ff9d00')));
 
             if (vehicleMarkers.has(v.id)) {
                 let marker = vehicleMarkers.get(v.id);
                 marker.setLatLng([lat, lng]);
-                marker.getPopup().setContent(`<b>${v.model}</b><br>Trasa: ${v.loc} → ${v.job.dest}<br>Pokrok: ${Math.floor(v.progress)}%`);
+                let popup = marker.getPopup();
+                if (popup) {
+                    popup.setContent(`<b>${v.model}</b><br>Trasa: ${startLoc} → ${endLoc}<br>Pokrok: ${Math.floor(rawProgress)}%`);
+                }
             } else {
                 let iconHtml = `<div class="vehicle-marker">${emoji}</div>`;
                 let icon = L.divIcon({ html: iconHtml, className: 'vehicle-icon-wrapper', iconSize: [24, 24], iconAnchor: [12, 12] });
                 let marker = L.marker([lat, lng], { icon }).addTo(leafletMap);
-                marker.bindPopup(`<b>${v.model}</b><br>Trasa: ${v.loc} → ${v.job.dest}<br>Pokrok: ${Math.floor(v.progress)}%`);
+                marker.bindPopup(`<b>${v.model}</b><br>Trasa: ${startLoc} → ${endLoc}<br>Pokrok: ${Math.floor(rawProgress)}%`);
                 vehicleMarkers.set(v.id, marker);
 
                 let polyline = L.polyline([[start.lat, start.lng], [end.lat, end.lng]], {
@@ -1161,17 +1227,19 @@ function renderMap() {
                 let p2_lat = lat + dist * Math.sin(angle + 0.25);
                 let p2_lng = lng + dist * Math.cos(angle + 0.25);
 
-                if (vehicleLightCones.has(v.id)) {
-                    let cone = vehicleLightCones.get(v.id);
-                    cone.setLatLngs([[lat, lng], [p1_lat, p1_lng], [p2_lat, p2_lng]]);
-                } else {
-                    let cone = L.polygon([[lat, lng], [p1_lat, p1_lng], [p2_lat, p2_lng]], {
-                        color: 'rgba(255, 235, 59, 0.3)',
-                        fillColor: 'rgba(255, 235, 59, 0.25)',
-                        fillOpacity: 0.25,
-                        stroke: false
-                    }).addTo(leafletMap);
-                    vehicleLightCones.set(v.id, cone);
+                if (!isNaN(p1_lat) && !isNaN(p1_lng) && !isNaN(p2_lat) && !isNaN(p2_lng)) {
+                    if (vehicleLightCones.has(v.id)) {
+                        let cone = vehicleLightCones.get(v.id);
+                        cone.setLatLngs([[lat, lng], [p1_lat, p1_lng], [p2_lat, p2_lng]]);
+                    } else {
+                        let cone = L.polygon([[lat, lng], [p1_lat, p1_lng], [p2_lat, p2_lng]], {
+                            color: 'rgba(255, 235, 59, 0.3)',
+                            fillColor: 'rgba(255, 235, 59, 0.25)',
+                            fillOpacity: 0.25,
+                            stroke: false
+                        }).addTo(leafletMap);
+                        vehicleLightCones.set(v.id, cone);
+                    }
                 }
             } else {
                 if (vehicleLightCones.has(v.id)) {
@@ -1200,23 +1268,26 @@ function renderMap() {
 
     // DRAW AVAILABLE VIP OFFERS ON MAP (GOLD STAR ICON)
     let activeVipIds = new Set();
-    state.offers.filter(o => o.isVIP).forEach(o => {
-        let city = CITIES[o.dest];
-        if (city && city.lat && city.lng) {
+    (state.offers || []).filter(o => o && o.isVIP).forEach(o => {
+        let city = (o.dest && typeof CITIES !== 'undefined') ? CITIES[o.dest] : null;
+        if (city && typeof city.lat === 'number' && typeof city.lng === 'number' && !isNaN(city.lat) && !isNaN(city.lng)) {
+            let mLat = city.lat + 0.05;
+            let mLng = city.lng - 0.05;
+            if (isNaN(mLat) || isNaN(mLng)) return;
             activeVipIds.add(o.id);
             if (vipOfferMarkers.has(o.id)) {
-                vipOfferMarkers.get(o.id).setLatLng([city.lat + 0.05, city.lng - 0.05]);
+                vipOfferMarkers.get(o.id).setLatLng([mLat, mLng]);
             } else {
                 let iconHtml = `<div class="vip-map-marker" style="font-size:22px; filter:drop-shadow(0 0 5px gold); cursor:pointer; animation: pulse-glow-red 2s infinite;">⭐</div>`;
                 let icon = L.divIcon({ html: iconHtml, className: 'vip-offer-wrapper', iconSize: [24, 24], iconAnchor: [12, 12] });
-                let marker = L.marker([city.lat + 0.05, city.lng - 0.05], { icon }).addTo(leafletMap);
+                let marker = L.marker([mLat, mLng], { icon }).addTo(leafletMap);
                 marker.bindPopup(`
                     <div style="background:#0c0f1d; color:white; border:1px solid var(--gold); padding:8px; border-radius:6px; font-family:'Rajdhani';">
                         <b style="color:var(--gold); font-size:14px;">⭐ VIP NABÍDKA</b><br>
                         Kam: <b>${o.dest}</b><br>
                         Náklad: <b>${o.cargo}</b><br>
-                        Odměna: <b style="color:var(--gold)">${o.pay.toLocaleString()} Kč</b><br>
-                        Typ: ${o.type.toUpperCase()}<br>
+                        Odměna: <b style="color:var(--gold)">${(o.pay||0).toLocaleString()} Kč</b><br>
+                        Typ: ${(o.type||'TRUCK').toUpperCase()}<br>
                         <button class="btn btn-teal btn-sm" style="margin-top:8px; font-size:11px;" onclick="takeJobModal(${o.id})">PŘIJMOUT</button>
                     </div>
                 `);
@@ -2156,34 +2227,23 @@ let chartWarehouse = null;
 let chartMarket = null;
 
 function initCharts() {
-    // 1. Finance Chart (Stats tab)
+    // 1. Finance Chart (Stats tab) - Čistě historie firemní hotovosti (Kč)
     const financeCanvas = document.getElementById('finance-chart');
     if (financeCanvas && !chartFinance) {
-        state.financeHistory = state.financeHistory || { money: [state.money], crypto: [state.investments.crypto || 0], day: [state.day] };
+        state.financeHistory = state.financeHistory || { money: [state.money], day: [state.day] };
         chartFinance = new Chart(financeCanvas, {
             type: 'line',
             data: {
                 labels: state.financeHistory.day.map(d => `Den ${d}`),
                 datasets: [
                     {
-                        label: 'Hotovost (Kč)',
+                        label: 'Firemní hotovost (Kč)',
                         data: state.financeHistory.money,
                         borderColor: '#00f260', // Neon green
-                        backgroundColor: 'rgba(0, 242, 96, 0.05)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Kryptoměna (JirstanCoin)',
-                        data: state.financeHistory.crypto,
-                        borderColor: '#ffc300', // Neon gold
-                        backgroundColor: 'rgba(255, 195, 0, 0.05)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y1'
+                        backgroundColor: 'rgba(0, 242, 96, 0.08)',
+                        borderWidth: 2.5,
+                        tension: 0.35,
+                        fill: true
                     }
                 ]
             },
@@ -2191,19 +2251,25 @@ function initCharts() {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { labels: { color: '#94a3b8', font: { family: 'Rajdhani', size: 12 } } }
+                    legend: { labels: { color: '#94a3b8', font: { family: 'Rajdhani', size: 12, weight: 'bold' } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Hotovost: ${Number(context.raw).toLocaleString()} Kč`;
+                            }
+                        }
+                    }
                 },
                 scales: {
                     x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
                     y: {
-                        position: 'left',
                         grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#00f260' }
-                    },
-                    y1: {
-                        position: 'right',
-                        grid: { drawOnChartArea: false },
-                        ticks: { color: '#ffc300' }
+                        ticks: {
+                            color: '#00f260',
+                            callback: function(value) {
+                                return value.toLocaleString() + ' Kč';
+                            }
+                        }
                     }
                 }
             }
@@ -2360,10 +2426,11 @@ function drawFinanceChart() {
     if (!chartFinance) {
         initCharts();
     } else {
-        state.financeHistory = state.financeHistory || { money: [state.money], crypto: [state.investments.crypto || 0], day: [state.day] };
+        state.financeHistory = state.financeHistory || { money: [state.money], day: [state.day] };
         chartFinance.data.labels = state.financeHistory.day.map(d => `Den ${d}`);
-        chartFinance.data.datasets[0].data = state.financeHistory.money;
-        chartFinance.data.datasets[1].data = state.financeHistory.crypto;
+        if (chartFinance.data.datasets && chartFinance.data.datasets[0]) {
+            chartFinance.data.datasets[0].data = state.financeHistory.money;
+        }
         chartFinance.update();
     }
 }
@@ -2518,8 +2585,8 @@ function openDevLoanModal() {
     let availLimit = Math.max(0, maxLimit - state.debt);
     
     // Get list of eligible vehicles (not already collateralized)
-    let collateralizedIds = state.loans.dev.map(l => l.collateralVehicleId);
-    let eligibleVehicles = state.vehicles.filter(v => !collateralizedIds.includes(v.id) && !v.job);
+    let collateralizedIds = (state.loans.dev || []).map(l => String(l.collateralVehicleId));
+    let eligibleVehicles = (state.vehicles || []).filter(v => !collateralizedIds.includes(String(v.id)) && !v.job);
     
     let activeLoansHtml = '';
     if (state.loans.dev && state.loans.dev.length > 0) {
@@ -2591,8 +2658,8 @@ function createDevLoan() {
     
     if (amt > availLimit) return notify("BONITA ZAMÍTNUTA", "Částka překračuje tvůj volný úvěrový limit.", "danger");
     
-    let v = state.vehicles.find(x => x.id === vid);
-    if (!v) return notify("CHYBA", "Vozidlo nebylo nalezeno.", "danger");
+    let v = (state.vehicles || []).find(x => String(x.id) === String(vid));
+    if (!v) return notify("CHYBA", "Vozidlo k ručení nebylo nalezeno.", "danger");
     
     // Add loan
     state.loans.dev.push({
@@ -2699,55 +2766,69 @@ function getCompanyValue() {
     let assets = 0;
     
     // 1. Vehicles
-    if (state.vehicles) {
+    if (state.vehicles && Array.isArray(state.vehicles)) {
         state.vehicles.forEach(v => {
-            let db = CAR_DB.find(x => x.model === v.model);
-            assets += db ? db.price : 500000;
+            let db = (typeof CAR_DB !== 'undefined') ? CAR_DB.find(x => x.model === v.model) : null;
+            if (!db && typeof VEHICLE_CATALOG !== 'undefined') db = VEHICLE_CATALOG.find(x => x.model === v.model);
+            let val = (db && typeof db.price === 'number') ? db.price : (v.price || 500000);
+            assets += Number(val) || 500000;
         });
     }
-    if (state.ships) {
+    if (state.ships && Array.isArray(state.ships)) {
         state.ships.forEach(s => {
-            let db = SHIP_DB.find(x => x.model === s.model);
-            assets += db ? db.price : 25000000;
+            let db = (typeof SHIP_DB !== 'undefined') ? SHIP_DB.find(x => x.model === s.model) : null;
+            let val = (db && typeof db.price === 'number') ? db.price : (s.price || 25000000);
+            assets += Number(val) || 25000000;
         });
     }
-    if (state.planes) {
+    if (state.planes && Array.isArray(state.planes)) {
         state.planes.forEach(p => {
-            let db = PLANE_DB.find(x => x.model === p.model);
-            assets += db ? db.price : 75000000;
+            let db = (typeof PLANE_DB !== 'undefined') ? PLANE_DB.find(x => x.model === p.model) : null;
+            let val = (db && typeof db.price === 'number') ? db.price : (p.price || 75000000);
+            assets += Number(val) || 75000000;
         });
     }
-    if (state.buses) {
+    if (state.buses && Array.isArray(state.buses)) {
         state.buses.forEach(b => {
-            let db = BUS_DB.find(x => x.model === b.model);
-            assets += db ? db.price : 4000000;
+            let db = (typeof BUS_DB !== 'undefined') ? BUS_DB.find(x => x.model === b.model) : null;
+            if (!db && typeof BUS_CATALOG !== 'undefined') db = BUS_CATALOG.find(x => x.model === b.model);
+            let val = (db && typeof db.price === 'number') ? db.price : (b.price || 4000000);
+            assets += Number(val) || 4000000;
         });
     }
     
     // 2. Trailers
-    if (state.trailers) {
+    if (state.trailers && Array.isArray(state.trailers)) {
         state.trailers.forEach(t => {
-            let db = TRAILERS_DB.find(x => x.id === t.id);
-            assets += db ? db.price : 300000;
+            let db = (typeof TRAILERS_DB !== 'undefined') ? TRAILERS_DB.find(x => x.id === t.id) : null;
+            if (!db && typeof SEMI_TRAILER_CATALOG !== 'undefined') db = SEMI_TRAILER_CATALOG.find(x => x.id === t.id);
+            let val = (db && (typeof db.price === 'number' || typeof db.cost === 'number')) ? (db.price || db.cost) : (t.price || 300000);
+            assets += Number(val) || 300000;
         });
     }
     
     // 3. HQ Buildings
     if (state.hq) {
         Object.keys(state.hq).forEach(k => {
-            assets += (state.hq[k] || 0) * 1500000;
+            let lvl = Number(state.hq[k]) || 0;
+            assets += lvl * 1500000;
         });
     }
     
-    // 4. Tower Floors
-    if (state.tower && state.tower.floors) {
+    // 4. Tower Floors (cost property in DB)
+    if (state.tower && state.tower.floors && Array.isArray(state.tower.floors)) {
         state.tower.floors.forEach(fid => {
-            let db = TOWER_FLOORS_DB.find(x => x.id === fid);
-            assets += db ? db.price : 1000000;
+            let db = (typeof TOWER_FLOORS_DB !== 'undefined') ? TOWER_FLOORS_DB.find(x => x.id === fid) : null;
+            let val = (db && typeof db.cost === 'number') ? db.cost : (db && typeof db.price === 'number' ? db.price : 1000000);
+            assets += Number(val) || 1000000;
         });
     }
+
+    // 5. Cash and deposits
+    assets += (Number(state.money) || 0);
+    assets += (Number(state.bankDeposit) || 0);
     
-    return assets;
+    return (isNaN(assets) || assets <= 0) ? 1000000 : assets;
 }
 
 function autoDispatch(absTime) {
@@ -2822,8 +2903,8 @@ function autoDispatch(absTime) {
         if (offer.isBlackMarket && !filters.allowBlackMarket) continue;
         if (offer.pay < filters.minPay) continue;
         
-        let dist = offer.dist || 100;
-        let payPerKm = offer.pay / dist;
+        let dist = Math.max(1, Number(offer.dist) || 100);
+        let payPerKm = (Number(offer.pay) || 0) / dist;
         if (payPerKm < filters.minPayPerKm) continue;
 
         const vehicle = availableVehicles.find(v => {
@@ -2860,9 +2941,9 @@ function autoDispatch(absTime) {
 
     if (assignedCount > 0) {
         SysLog('DISPEČINK', `✅ Celkem úspěšně přiřazeno ${assignedCount} zakázek.`);
-        if (document.getElementById('tab-overview').classList.contains('active')) renderOverview();
-        if (document.getElementById('tab-dispatch').classList.contains('active')) renderDispatch();
-        if (document.getElementById('tab-auction').classList.contains('active')) renderAuction();
+        if (document.getElementById('tab-overview')?.classList.contains('active')) renderOverview();
+        if (document.getElementById('tab-dispatch')?.classList.contains('active')) renderDispatch();
+        if (document.getElementById('tab-auction')?.classList.contains('active')) renderAuction();
         saveGame();
     }
 }
@@ -2878,95 +2959,152 @@ function processMovement(v, type, w, absTime) {
     let wearRate = 0.05;
 
     if (type === 'truck') {
-        const d = state.drivers.find(x => x.id == v.driverId);
-        if (!d || (d.restUntil && d.restUntil > absTime)) return false;
+        const d = (state.drivers && Array.isArray(state.drivers)) ? state.drivers.find(x => x.id == v.driverId) : null;
+        if (!d) return false;
         
-        speedBonus += (d.skills.spd || 0) * 0.05;
-        if (v.upgrades && v.upgrades.includes('chip')) speedBonus += 0.25;
-        if (v.upgrades && v.upgrades.includes('gps')) speedBonus += 0.10;
-        if (state.tech.includes('logistics')) speedBonus += 0.05;
-        if (state.tech.includes('gps_fleet')) speedBonus += 0.15;
-        if (state.tech.includes('drone_delivery')) speedBonus += 0.10;
-        if (state.staff.dispatcher.active && state.staff.dispatcher.skills.routing) speedBonus += 0.1;
-        if (state.factions.nexus >= 250) speedBonus += 0.05;
-        if (state.factions.nexus >= 1000) speedBonus += 0.10;
-        if (state.tower.floors.includes(1)) speedBonus += 0.05;
+        // 1. Probuzení ze spánku (po uplynutí AETR doby odpočinku)
+        if (d.restUntil && d.restUntil <= absTime) {
+            d.restUntil = 0;
+            d.energy = 100;
+        }
+
+        // 2. PAUZA / SPÁNEK = STOP (PŘESNĚ 0 KILOMETRŮ, ŽÁDNÝ POSUN)
+        if (d.restUntil && d.restUntil > absTime) {
+            return false;
+        }
         
-        const traitObj = TRAITS.find(t => t.id === d.trait) || TRAITS[0];
-        speedBonus *= traitObj.speed;
+        // 3. ZERO ENERGY = STOP (PŘESNĚ 0 KILOMETRŮ, ŽÁDNÝ POSUN)
+        if (d.energy <= 0) {
+            d.energy = 0;
+            d.restUntil = absTime + 540; // 9 hodin povinný AETR spánek
+            notify("ŘIDIČ VYČERPÁN", `${d.name} zastavil na odpočívadle a spí (AETR pauza).`, "warning");
+            SysLog('HR', `💤 Řidič ${d.name} vyčerpal energii (9h jízdy). Automaticky spí na 9h.`);
+            return false;
+        }
+
+        // 4. DENNÍ FYZIKÁLNÍ LIMIT (AETR STROP: MAX 800 KM ZA DEN NA JEDNO AUTO)
+        v.dayKm = (typeof v.dayKm === 'number' && !isNaN(v.dayKm)) ? v.dayKm : 0;
+        if (v.dayKm >= 800) {
+            return false; // Dosažen maximální možný denní nájezd (10h jízdy)
+        }
         
-        fuelRate = 0.03 * traitObj.cons; 
-        if (state.tech.includes('eco_trucks')) fuelRate *= 0.85; 
+        d.skills = d.skills || { spd: 0 };
+        speedBonus += (Number(d.skills.spd) || 0) * 0.05;
+        if (v.upgrades && v.upgrades.includes('chip')) speedBonus += 0.15;
+        if (v.upgrades && v.upgrades.includes('gps')) speedBonus += 0.05;
+        if (state.tech && state.tech.includes('logistics')) speedBonus += 0.05;
+        if (state.tech && state.tech.includes('gps_fleet')) speedBonus += 0.10;
+        if (state.tech && state.tech.includes('drone_delivery')) speedBonus += 0.05;
+        if (state.staff && state.staff.dispatcher && state.staff.dispatcher.active && state.staff.dispatcher.skills && state.staff.dispatcher.skills.routing) speedBonus += 0.05;
+        if (state.factions && state.factions.nexus >= 250) speedBonus += 0.05;
+        if (state.factions && state.factions.nexus >= 1000) speedBonus += 0.05;
+        if (state.tower && state.tower.floors && state.tower.floors.includes(1)) speedBonus += 0.05;
+        
+        const traitObj = (typeof TRAITS !== 'undefined' ? TRAITS.find(t => t.id === d.trait) : null) || { speed: 1.0, cons: 1.0, fatigue: 1.0 };
+        speedBonus *= (Number(traitObj.speed) || 1.0);
+        
+        fuelRate = 0.03 * (Number(traitObj.cons) || 1.0); 
+        if (state.tech && state.tech.includes('eco_trucks')) fuelRate *= 0.85; 
         if (v.upgrades && v.upgrades.includes('bigtank')) fuelRate *= 0.5;
-        if (state.factions.nexus >= 500) fuelRate *= 0.90;
-        if (state.factions.nexus >= 1000) fuelRate *= 0.90;
+        if (state.factions && state.factions.nexus >= 500) fuelRate *= 0.90;
+        if (state.factions && state.factions.nexus >= 1000) fuelRate *= 0.90;
         
         if (state.gasNetwork && state.gasNetwork.level > 0) {
             fuelRate *= (1 - (state.gasNetwork.level * 0.02));
         }
         
         if (v.upgrades && v.upgrades.includes('frame')) condRate *= 0.5;
-        if (state.factions.stavba >= 500) condRate *= 0.8; 
-        if (state.tech.includes('aero_design')) condRate *= 0.70;
+        if (state.factions && state.factions.stavba >= 500) condRate *= 0.8; 
+        if (state.tech && state.tech.includes('aero_design')) condRate *= 0.70;
         
-        const cleanliness = v.cleanliness !== undefined ? v.cleanliness : 100;
+        const cleanliness = (typeof v.cleanliness === 'number' && !isNaN(v.cleanliness)) ? v.cleanliness : 100;
         if (cleanliness < 50) {
             fuelRate *= 1.15;
-            d.morale = Math.max(0, (d.morale || 100) - 0.05);
+            d.morale = Math.max(0, (Number(d.morale) || 100) - 0.05);
         }
         
         if (v.partQuality === 'cheap') {
             fuelRate *= 1.25;
             condRate *= 1.5;
             wearRate = 0.10;
-            d.morale = Math.max(0, (d.morale || 100) - 0.05);
+            d.morale = Math.max(0, (Number(d.morale) || 100) - 0.05);
         } else if (v.partQuality === 'premium') {
             fuelRate *= 0.90;
             condRate *= 0.70;
             wearRate = 0.035;
-            d.morale = Math.min(100, (d.morale || 100) + 0.02);
+            d.morale = Math.min(100, (Number(d.morale) || 100) + 0.02);
         }
 
-        let _eLoss = (0.015 * traitObj.fatigue);
+        // Spotřeba energie řidiče: 100 energie = ~540 minut (9 hodin jízdy)
+        let _eLoss = (0.185 * (Number(traitObj.fatigue) || 1.0));
         if (v.upgrades && v.upgrades.includes('seats')) _eLoss *= 0.9;
         if (v.upgrades && v.upgrades.includes('bed')) _eLoss *= 0.9;
         if (v.upgrades && v.upgrades.includes('ac')) _eLoss *= 0.85;
         if (v.upgrades && v.upgrades.includes('coffee')) _eLoss *= 0.95;
         if (v.upgrades && v.upgrades.includes('fridge')) _eLoss *= 0.97;
-        if (state.hq.relax_zone > 0) _eLoss *= (1 - (state.hq.relax_zone * 0.05));
-        if (state.factions.fresh >= 250) _eLoss *= 0.9;
+        if (state.hq && state.hq.relax_zone > 0) _eLoss *= (1 - (state.hq.relax_zone * 0.05));
+        if (state.factions && state.factions.fresh >= 250) _eLoss *= 0.9;
         
-        d.energy = Math.max(0, d.energy - _eLoss);
+        d.energy = Math.max(0, (Number(d.energy) || 100) - _eLoss);
         
         if (d.energy <= 0) {
             d.energy = 0;
-            d.restUntil = absTime + 480;
-            d.energy = 100;
-            notify("ŘIDIČ VYČERPÁN", `${d.name} zastavil na odpočívadle a spí 8 hodin.`, "warning");
-            SysLog('HR', `💤 Řidič ${d.name} vyčerpal energii na 0%. Automaticky spí na 8h.`);
-            return false;
+            d.restUntil = absTime + 540; // 9 hodin povinný AETR spánek
+            notify("ŘIDIČ VYČERPÁN", `${d.name} zastavil na odpočívadle a spí 9 hodin.`, "warning");
+            SysLog('HR', `💤 Řidič ${d.name} vyčerpal energii (9h jízdy). Automaticky spí na 9h.`);
         }
 
     } else if (type === 'ship') {
         fuelRate = 0.20;
         condRate = 0.02;
         wearRate = 0.08;
-        if (state.tech.includes('quantum_gps')) speedBonus += 0.20;
+        if (state.tech && state.tech.includes('quantum_gps')) speedBonus += 0.20;
     } else if (type === 'plane') {
         fuelRate = 0.50;
         condRate = 0.03;
         wearRate = 0.12;
-        if (state.tech.includes('quantum_gps')) speedBonus += 0.20;
+        if (state.tech && state.tech.includes('quantum_gps')) speedBonus += 0.20;
     }
 
-    let speed = ((v.spd || 1.0) * speedBonus * w.speedMod) * 0.35;
-    if (v.trailer && type === 'truck') speed *= 0.92;
+    let speedMod = (w && typeof w.speedMod === 'number') ? w.speedMod : 1.0;
+    let vehicleSpeed = (typeof v.spd === 'number' && !isNaN(v.spd)) ? v.spd : 1.0;
 
-    v.progress += speed; 
-    v.fuel = Math.max(0, v.fuel - fuelRate); 
-    v.cond = Math.max(0, v.cond - condRate); 
-    v.wear = Math.min(100, (v.wear || 0) + wearRate);
-    state.stats.fuelUsed += fuelRate;
+    // FYZIKÁLNÍ MODEL RYCHLOSTÍ (km/h) A MATEMATICKÝ CLAMP
+    let baseSpeedKmH = 80.0; // Náklaďáky strop 80 km/h (1.333 km/min)
+    if (type === 'truck') {
+        baseSpeedKmH = 80.0; // Pevný fyzikální limit dle předpisů
+    } else if (type === 'ship') {
+        baseSpeedKmH = 35.0; // Lodě ~35 km/h
+    } else if (type === 'plane') {
+        baseSpeedKmH = 650.0; // Letadla ~650 km/h
+    }
+
+    let rawKmPerMinute = (baseSpeedKmH / 60.0) * vehicleSpeed * (speedBonus || 1.0) * speedMod;
+    let kmPerMinute = rawKmPerMinute;
+
+    // TVRDÝ MATEMATICKÝ LIMIT (CLAMP) PRO NÁKLAĎÁKY:
+    // 1. Minutový strop: max 1.3333333333333333 km / minutu (odpovídá 80 km/h)
+    // 2. Denní strop: max 800 km za den celkem
+    if (type === 'truck') {
+        const MAX_KM_PER_MINUTE = 80.0 / 60.0; // 1.3333333333333333 km/min
+        kmPerMinute = Math.min(MAX_KM_PER_MINUTE, kmPerMinute);
+        
+        let remainingDayKm = Math.max(0, 800.0 - (v.dayKm || 0));
+        kmPerMinute = Math.min(remainingDayKm, kmPerMinute);
+        if (kmPerMinute <= 0) return false;
+        v.dayKm = (v.dayKm || 0) + kmPerMinute;
+    }
+
+    let routeDist = (v.job && typeof v.job.dist === 'number' && v.job.dist > 0) ? v.job.dist : 500;
+    let progressGain = (kmPerMinute / routeDist) * 100.0;
+    if (isNaN(progressGain) || progressGain <= 0) progressGain = 0;
+
+    let currentProgress = (typeof v.progress === 'number' && !isNaN(v.progress)) ? v.progress : 0;
+    v.progress = Math.min(100, Math.max(0, currentProgress + progressGain)); 
+    v.fuel = Math.max(0, (Number(v.fuel) || 100) - (fuelRate * (kmPerMinute / 1.3333333333333333))); 
+    v.cond = Math.max(0, (Number(v.cond) || 100) - condRate); 
+    v.wear = Math.min(100, (Number(v.wear) || 0) + (wearRate * (kmPerMinute / 1.3333333333333333)));
+    state.stats.fuelUsed = (Number(state.stats.fuelUsed) || 0) + fuelRate;
     
     if (v.wear > 80 && Math.random() < 0.0005 * (v.wear - 75)) {
         v.isBroken = true;
@@ -2994,7 +3132,7 @@ function processMovement(v, type, w, absTime) {
             v.fuel = 100; 
             SysLog('EKONOMIKA', `⛽ ${v.model} dotankoval ${refillAmt} l z trhu za -${(refillAmt*pCost).toLocaleString()} Kč.`);
         } else { 
-            v.progress -= speed;
+            v.progress = Math.max(0, v.progress - progressGain);
         }
     }
 
@@ -3035,29 +3173,29 @@ function completeJob(v, type) {
     }
     
     if (v.trailer && type === 'truck') {
-        let tb = v.trailer.bonus;
-        if (state.tech.includes('mega_trailers')) tb += 0.20;
+        let tb = (typeof v.trailer.bonus === 'number') ? v.trailer.bonus : 1.05;
+        if (state.tech.includes('mega_trailers')) tb += 0.05;
         pay = Math.floor(pay * tb);
     }
-    if (state.hq.logistics_center > 0) pay += Math.floor(pay * (state.hq.logistics_center * 0.03));
-    if (state.staff.dispatcher.active && state.staff.dispatcher.skills.negotiator) pay += Math.floor(pay * 0.1);
+    if (state.hq.logistics_center > 0) pay += Math.floor(pay * (state.hq.logistics_center * 0.02));
+    if (state.staff.dispatcher && state.staff.dispatcher.active && state.staff.dispatcher.skills && state.staff.dispatcher.skills.negotiator) pay += Math.floor(pay * 0.05);
     
     if(type === 'truck') {
         const d = state.drivers.find(x => x.id == v.driverId);
-        if (d && d.level >= 10) pay += Math.floor(pay * 0.05); 
-        if (d && d.level >= 20) pay += Math.floor(pay * 0.10); 
-        if (state.factions.stavba >= 250 && (v.job.reqLic === 'adr' || v.job.reqLic === 'sypky')) pay = Math.floor(pay * 1.1);
-        if (state.factions.stavba >= 1000 && (v.job.reqLic === 'heavy' || v.job.reqLic === 'cars')) pay = Math.floor(pay * 1.3);
-        if (state.factions.fresh >= 500 && (v.job.reqLic === 'frigo' || v.job.reqLic === 'express')) pay = Math.floor(pay * 1.2);
-        if (state.economyBuff > 0) pay = Math.floor(pay * 1.2);
-        if (state.tower.floors.includes(2)) pay = Math.floor(pay * 1.1);
+        if (d && d.level >= 10) pay += Math.floor(pay * 0.03); 
+        if (d && d.level >= 20) pay += Math.floor(pay * 0.05); 
+        if (state.factions.stavba >= 250 && (v.job.reqLic === 'adr' || v.job.reqLic === 'sypky')) pay = Math.floor(pay * 1.05);
+        if (state.factions.stavba >= 1000 && (v.job.reqLic === 'heavy' || v.job.reqLic === 'cars')) pay = Math.floor(pay * 1.10);
+        if (state.factions.fresh >= 500 && (v.job.reqLic === 'frigo' || v.job.reqLic === 'express')) pay = Math.floor(pay * 1.08);
+        if (state.economyBuff > 0) pay = Math.floor(pay * 1.10);
+        if (state.tower.floors.includes(2)) pay = Math.floor(pay * 1.05);
     }
 
-    if (state.tech.includes('global_lic')) pay = Math.floor(pay * 1.1);
-    if (state.tech.includes('ai_disp')) pay = Math.floor(pay * 1.2);
-    if ((type === 'ship' || type === 'plane') && state.tower.floors.includes(6)) pay = Math.floor(pay * 1.25);
+    if (state.tech.includes('global_lic')) pay = Math.floor(pay * 1.05);
+    if (state.tech.includes('ai_disp')) pay = Math.floor(pay * 1.10);
+    if ((type === 'ship' || type === 'plane') && state.tower.floors.includes(6)) pay = Math.floor(pay * 1.15);
     if (state.tech.includes('nightshift') && (state.hour >= 20 || state.hour < 6)) {
-        pay = Math.floor(pay * 1.4);
+        pay = Math.floor(pay * 1.15);
         state.stats.nightDeliveries = (state.stats.nightDeliveries || 0) + 1;
     }
 
@@ -3096,6 +3234,14 @@ function completeJob(v, type) {
         
         SysLog('ZÁMOŘÍ', `🚢 Loď ${v.model} dorazila do přístavu ${v.job.dest}. Hodnota nákladu: ${pay.toLocaleString()} Kč.`);
 
+        if (window.__IS_SIMULATION__ || !document.getElementById('modal-content')) {
+            sellShipCargo(v.id, pay);
+            return;
+        }
+
+        if (v.awaitingUnload) return;
+        v.awaitingUnload = true;
+
         showModal(`
             <h2>🚢 Loď ${v.model} dorazila do přístavu</h2>
             <p>Cílový přístav: <b>${v.job.dest}</b></p>
@@ -3116,6 +3262,17 @@ function completeJob(v, type) {
     state.stats.deliveries++;
     state.stats.distance += v.job.dist || 0;
     v.loc = v.job.dest; 
+
+    // Telemetrie divize
+    let divKey = type === 'ship' ? 'ships' : (type === 'plane' ? 'planes' : 'trucks');
+    state.stats.byDivision = state.stats.byDivision || {
+        trucks: { deliveries: 0, distance: 0, earned: 0 },
+        ships: { deliveries: 0, distance: 0, earned: 0 },
+        planes: { deliveries: 0, distance: 0, earned: 0 }
+    };
+    state.stats.byDivision[divKey].deliveries = (state.stats.byDivision[divKey].deliveries || 0) + 1;
+    state.stats.byDivision[divKey].distance = (state.stats.byDivision[divKey].distance || 0) + (v.job.dist || 0);
+    state.stats.byDivision[divKey].earned = (state.stats.byDivision[divKey].earned || 0) + pay;
     
     notify("DORUČENO", `${icon} ${v.model} → ${v.job.dest}. +${pay.toLocaleString()} Kč`, "success");
     SysLog('DISPEČINK', `📦 ${icon} ${v.model} doručil zakázku do ${v.job.dest}. Výdělek: +${pay.toLocaleString()} Kč.`);
@@ -3165,6 +3322,15 @@ function sellShipCargo(vid, pay) {
     state.stats.totalEarned += pay;
     state.stats.deliveries++;
     state.stats.distance += v.job.dist || 0;
+
+    state.stats.byDivision = state.stats.byDivision || {
+        trucks: { deliveries: 0, distance: 0, earned: 0 },
+        ships: { deliveries: 0, distance: 0, earned: 0 },
+        planes: { deliveries: 0, distance: 0, earned: 0 }
+    };
+    state.stats.byDivision.ships.deliveries = (state.stats.byDivision.ships.deliveries || 0) + 1;
+    state.stats.byDivision.ships.distance = (state.stats.byDivision.ships.distance || 0) + (v.job.dist || 0);
+    state.stats.byDivision.ships.earned = (state.stats.byDivision.ships.earned || 0) + pay;
     
     // Pokračovat v dokončení jobu
     finishShipJob(v);
@@ -3193,6 +3359,7 @@ function storeShipCargo(vid, cargoType, cargoName, pay) {
 }
 
 function finishShipJob(v) {
+    v.awaitingUnload = false;
     v.loc = v.job.dest;
     
     if (v.job.factionId && !v.job.isBlackMarket) {
@@ -3262,7 +3429,7 @@ function tick() {
             state.researching = null; 
             renderTech(); updateUI();
             saveGame(); 
-        } else if (state.minute % 10 === 0 && document.getElementById('tab-tech').classList.contains('active')) {
+        } else if (state.minute % 10 === 0 && document.getElementById('tab-tech')?.classList.contains('active')) {
             renderTech();
         }
     }
@@ -3276,11 +3443,11 @@ function tick() {
             state.tower.levels[buildId] = 1;
             state.tower.underConstruction = null;
             const floorObj = TOWER_FLOORS_DB.find(f => f.id === buildId);
-            notify("TOWER DOKONČENA", `Výstavba patra ${floorObj.name} byla úspěšně dokončena!`, "success");
-            pushToTicker(`<b>JIRSTAN TOWER:</b> Patro ${floorObj.name} bylo dokončeno a zprovozněno!`, "success");
+            notify("TOWER DOKONČENA", `Výstavba patra ${floorObj?.name || buildId} byla úspěšně dokončena!`, "success");
+            pushToTicker(`<b>JIRSTAN TOWER:</b> Patro ${floorObj?.name || buildId} bylo dokončeno a zprovozněno!`, "success");
             saveGame();
         }
-        if (document.getElementById('tab-tower').classList.contains('active')) renderTower();
+        if (document.getElementById('tab-tower')?.classList.contains('active')) renderTower();
     }
 
     if (state.staff.dispatcher.active && state.minute % 15 === 0) autoDispatch(absTime);
@@ -3328,13 +3495,17 @@ function tick() {
         }
     });
 
-    document.getElementById('ui-time').innerText = `${pad(state.hour)}:${pad(state.minute)}`; document.getElementById('ui-day').innerText = state.day;
+    const uiTime = document.getElementById('ui-time');
+    const uiDay = document.getElementById('ui-day');
+    if (uiTime) uiTime.innerText = `${pad(state.hour)}:${pad(state.minute)}`;
+    if (uiDay) uiDay.innerText = state.day;
     updateUI();
-    if (mapUpdate && document.getElementById('tab-dispatch').classList.contains('active')) renderMap();
-    if (state.minute % 5 === 0 && document.getElementById('tab-dispatch').classList.contains('active')) renderDispatch();
+    if (mapUpdate && document.getElementById('tab-dispatch')?.classList.contains('active')) renderMap();
+    if (state.minute % 5 === 0 && document.getElementById('tab-dispatch')?.classList.contains('active')) renderDispatch();
 }
 
 function pushToTicker(msg, type) {
+    if (window.__IS_SIMULATION__) return;
     const timeStr = `DEN ${state.day} | ${pad(state.hour)}:${pad(state.minute)}`;
     
     // 1. Spodní běžící lišta
@@ -3660,9 +3831,18 @@ function executeBazaarRepair(idx, quality, cost) {
     if (state.money < cost) { notify('FINANCE', 'Nemáš dost peněz na tuto opravu!', 'danger'); return; }
     
     addMoney(-cost);
-    car.condition = 100;
-    car.partQuality = quality;
-    notify('DÍLNA', `Vůz ${car.model} byl opraven s kvalitou ${quality === 'cheap' ? 'Levná' : (quality === 'premium' ? 'Prémiová' : 'Standardní')}.`, 'success');
+    if (quality === 'cheap') {
+        car.condition = 75; // Levná druhovýroba dosáhne max 75% stavu
+        car.partQuality = 'cheap';
+    } else if (quality === 'premium') {
+        car.condition = 100;
+        car.partQuality = 'premium';
+    } else {
+        car.condition = 95;
+        car.partQuality = 'standard';
+    }
+    
+    notify('DÍLNA', `Vůz ${car.model} byl opraven (${quality === 'cheap' ? 'Levné díly - max 75%' : (quality === 'premium' ? 'Prémiové díly - 100%' : 'Standardní OEM - 95%')}).`, 'success');
     closeModal();
     saveGame();
     renderBazaar();
@@ -3687,6 +3867,7 @@ function transferBazaarCarToFleet(idx) {
         queue: [],
         progress: 0,
         cond: car.condition,
+        wear: 0,
         fuel: 100,
         spd: car.spd || base.spd || 1.0,
         upgrades: car.mods || [],
@@ -3734,7 +3915,7 @@ function sellBazaarCar(idx) {
     let car = state.bazaarInventory[idx];
     if (!car) { notify('CHYBA', 'Auto nenalezeno v inventáři.', 'warning'); return; }
     if (car.isVeteran && car.condition >= 100) {
-        let sellPrice = Math.floor(car.basePrice * 5);
+        let sellPrice = Math.floor(car.basePrice * 1.75); // Veterán max 1.75x
         addMoney(sellPrice);
         checkBazaarSalePR(car);
         state.bazaarInventory.splice(idx, 1);
@@ -3742,10 +3923,15 @@ function sellBazaarCar(idx) {
         pushToTicker(`<b>AUTOBAZAR:</b> Prodán veterán ${car.model} za ${sellPrice.toLocaleString()} Kč.`, 'success');
         saveGame(); renderBazaar(); updateUI(); return;
     }
+    
     let base = car.basePrice || car.buyPrice || 10000;
-    let multiplier = 1.2 + (car.condition / 200) + (car.cleanliness / 400);
-    if (car.mods && car.mods.includes('PRÉMIOVÝ LAK')) multiplier *= 1.15;
-    if (car.mods && car.mods.includes('ALU KOLA')) multiplier *= 1.10;
+    // Vyvážený výpočet prodejní ceny: Maximální marže 10 - 20 %
+    let multiplier = 0.70 + ((car.condition || 50) / 100) * 0.30 + ((car.cleanliness || 50) / 100) * 0.08;
+    if (car.partQuality === 'cheap') multiplier *= 0.80; // Penalizace za nekvalitní díly
+    if (car.partQuality === 'premium') multiplier *= 1.08; // Prémiový bonus
+    if (car.mods && car.mods.includes('PRÉMIOVÝ LAK')) multiplier *= 1.05;
+    if (car.mods && car.mods.includes('ALU KOLA')) multiplier *= 1.04;
+    
     let sellPrice = Math.floor(base * multiplier);
     addMoney(sellPrice);
     checkBazaarSalePR(car);
@@ -3778,8 +3964,8 @@ function testDriveBazaarCar(idx) {
     car.testDriveUsed = true;
     if (Math.random() < 0.8) {
         let bestOffer = (car.offers || []).reduce((acc, o) => o.amount > (acc?.amount||0) ? o : acc, null);
-        let offerPrice = bestOffer ? bestOffer.amount : Math.floor((car.basePrice || car.buyPrice || 10000) * 1.1);
-        let finalPrice = Math.floor(offerPrice * 1.2);
+        let offerPrice = bestOffer ? bestOffer.amount : Math.floor((car.basePrice || car.buyPrice || 10000) * 1.05);
+        let finalPrice = Math.floor(offerPrice * 1.10);
         addMoney(finalPrice);
         state.bazaarInventory.splice(idx, 1);
         notify('TESTOVACÍ JÍZDA', `${car.model} byl prodán po testovací jízdě za ${finalPrice.toLocaleString()} Kč!`, 'success');
@@ -3801,9 +3987,11 @@ function generateBazaarOffers() {
         let offerCount = Math.floor(Math.random() * 3); // 0-2
         car.offers = [];
         for (let i = 0; i < offerCount; i++) {
-            let modifier = 0.8 + Math.random() * 0.5; // 0.8-1.3
-            let effort = 1 + (car.mods.length * 0.05) + (car.condition / 500) + (car.cleanliness / 1000);
-            let amount = Math.floor((car.basePrice * (0.75 + (car.condition / 500) + (car.cleanliness / 900))) * modifier * effort);
+            let qualityMod = car.partQuality === 'cheap' ? 0.80 : (car.partQuality === 'premium' ? 1.08 : 1.0);
+            let conditionMod = 0.70 + ((car.condition || 50) / 100) * 0.30 + ((car.cleanliness || 50) / 100) * 0.08;
+            let randomNoise = 0.95 + (Math.random() * 0.15); // 0.95 až 1.10
+            let base = car.basePrice || car.buyPrice || 10000;
+            let amount = Math.floor(base * conditionMod * qualityMod * randomNoise);
             car.offers.push({ id: `${car.id}_${i}_${Math.floor(Math.random()*10000)}`, name: `Zákazník ${NAMES_F[Math.floor(Math.random()*NAMES_F.length)]}`, amount: amount });
         }
     });
@@ -3878,6 +4066,51 @@ function hourly() {
             SysLog('DISPEČINK', `Jirka prohledal trh (Lvl ${state.staff.dispatcher.level||1}) - burza obnovena.`);
         }
     }
+
+    // 5. Automatická údržba a tankování vozidel (Zamezení uvíznutí flotily)
+    if (state.vehicles && Array.isArray(state.vehicles)) {
+        state.vehicles.forEach(v => {
+            // Servis při poruše nebo opotřebení
+            if (v.isBroken || v.cond < 40 || v.wear > 60) {
+                let repairCost = Math.floor((100 - (v.cond || 100)) * 300 + (v.wear || 0) * 200);
+                if (v.isBroken) repairCost += 10000;
+                if (state.staff && state.staff.mechanic && state.staff.mechanic.active) {
+                    repairCost = Math.floor(repairCost * 0.7);
+                }
+                if (state.money >= repairCost) {
+                    addMoney(-repairCost);
+                    v.cond = 100;
+                    v.wear = 0;
+                    v.isBroken = false;
+                    SysLog('DÍLNA', `🔧 Proveden servis vozu ${v.model} za ${repairCost.toLocaleString()} Kč.`);
+                } else if (state.money > 1000) {
+                    let partial = Math.min(state.money, 5000);
+                    addMoney(-partial);
+                    v.cond = Math.max(v.cond, 70);
+                    v.wear = Math.min(v.wear, 30);
+                    v.isBroken = false;
+                    SysLog('DÍLNA', `🔧 Nouzový servis vozu ${v.model} - vozidlo zprovozněno.`);
+                }
+            }
+
+            // Dotankování při nízké hladině paliva
+            if (v.fuel < 15) {
+                let refillCost = Math.floor((100 - v.fuel) * (state.fuelPrice || 35.5));
+                if (state.fuelTank >= 40) {
+                    state.fuelTank -= 40;
+                    v.fuel = 100;
+                    updateFuelUI();
+                } else if (state.money >= refillCost) {
+                    addMoney(-refillCost);
+                    v.fuel = 100;
+                } else if (state.money > 1000) {
+                    let buyLiters = Math.floor(state.money / (state.fuelPrice || 35.5));
+                    addMoney(-(buyLiters * state.fuelPrice));
+                    v.fuel = Math.min(100, v.fuel + buyLiters);
+                }
+            }
+        });
+    }
     
     let rand = Math.random();
     if (rand < 0.08) {
@@ -3889,6 +4122,14 @@ function hourly() {
 
 function daily() {
     SysLog('TICK', `🌅 ================== ZAČÁTEK DNE ${state.day} ==================`);
+
+    // Reset denního nájezdu pro všechna vozidla (tvrdý strop max 800 km/den)
+    if (state.vehicles && Array.isArray(state.vehicles)) {
+        state.vehicles.forEach(v => { v.dayKm = 0; });
+    }
+    if (state.buses && Array.isArray(state.buses)) {
+        state.buses.forEach(b => { b.dayKm = 0; });
+    }
 
     // --- VELKOSKLAD / EKONOMIKA ---
     state.marketPrices = state.marketPrices || { electronics: 1200, food: 150, parts: 400, fresh_food: 350 };
@@ -4048,17 +4289,21 @@ function daily() {
                     SysLog('BANKA', `✅ Úvěr s ručením ${loan.collateralVehicleModel} kompletně splacen!`);
                 }
             } else {
-                let vIndex = (state.vehicles||[]).findIndex(x => x.id === loan.collateralVehicleId);
-                if (vIndex !== -1) {
+                let vIndex = (state.vehicles||[]).findIndex(x => String(x.id) === String(loan.collateralVehicleId));
+                let totalFleetCount = (state.vehicles?.length || 0) + (state.ships?.length || 0) + (state.planes?.length || 0) + (state.buses?.length || 0);
+                
+                // OCHRANA POSLEDNÍHO AUTA: Pokud má firma jen 1 auto, banka ho nezabaví!
+                if (vIndex !== -1 && totalFleetCount > 1) {
                     let model = state.vehicles[vIndex].model;
                     state.vehicles.splice(vIndex, 1);
                     notify("BANKOVNÍ EXEKUCE", `Z důvodu nesplácení rozvojového úvěru banka zabavila ručené vozidlo ${model}!`, "danger");
                     pushToTicker(`<b>EXEKUCE MAJETKU:</b> Zabaveno ručené vozidlo ${model} pro nesplácení rozvojového úvěru.`, "danger");
                     SysLog('BANKA', `🚨 EXEKUCE: Banka zabavila vozidlo ${model}.`);
                 } else {
-                    notify("BANKOVNÍ EXEKUCE", `Z důvodu nesplácení rozvojového úvěru byla uvalena pokuta na reputaci a hotovost!`, "danger");
+                    notify("BANKOVNÍ EXEKUCE", `Poslední vozidlo ve flotile bylo ušetřeno exekuce! Byla udělena finanční pokuta a pokles reputace.`, "warning");
                     addMoney(-loan.amount);
                     state.reputation = Math.max(0, state.reputation - 20);
+                    SysLog('BANKA', `⚠️ Ochrana flotily: Poslední vozidlo nebylo zabaveno.`);
                 }
                 state.loans.dev.splice(i, 1);
             }
@@ -4075,7 +4320,9 @@ function daily() {
         SysLog('BANKA', `💀 Lichvář: denní úrok 2% (+${interest.toLocaleString()} Kč). Zbývá ${s.daysRemaining} dní.`);
         
         if (s.daysRemaining <= 0 && s.amount > 0) {
-            let count = Math.ceil((state.vehicles||[]).length / 2);
+            let currentTruckCount = (state.vehicles||[]).length;
+            // Vždy ponechat alespoň 1 vozidlo
+            let count = Math.min(Math.max(0, currentTruckCount - 1), Math.ceil(currentTruckCount / 2));
             if (count > 0) {
                 for (let i = 0; i < count; i++) {
                     state.vehicles.pop();
@@ -4085,7 +4332,7 @@ function daily() {
                 SysLog('BANKA', `🚨 LICHVÁŘI ZABAVILI ${count} VOZIDEL!`);
             } else {
                 state.reputation = Math.max(0, state.reputation - 50);
-                notify("LICHOŽROUTI", `Nemáš žádná auta k zabavení! Zmlátili tvé lidi, reputace klesla o 50 bodů.`, "danger");
+                notify("LICHOŽROUTI", `Nemáš žádná volná auta k zabavení! Poslední auto ušetřeno, reputace klesla o 50 bodů.`, "danger");
             }
             state.loans.shark = null;
         }
@@ -4093,7 +4340,7 @@ function daily() {
     
     updateDebtSum();
     
-    // BANKROT A EXEKUCE
+    // BANKROT A EXEKUCE (OCHRANA POSLEDNÍHO VOZIDLA)
     if (state.money < 0) {
         state.bankruptDays = (state.bankruptDays || 0) + 1;
         let daysRemaining = 3 - state.bankruptDays;
@@ -4102,43 +4349,53 @@ function daily() {
             pushToTicker(`<b>VÝSTRAHA BANKROTU:</b> Firma je v mínusu. Zbývá ${daysRemaining} dní do exekuce.`, "danger");
             SysLog('EKONOMIKA', `🚨 VÝSTRAHA BANKROTU: ${daysRemaining} dní do nucené exekuce!`);
         } else {
-            let allOwned = [];
-            if (state.vehicles) state.vehicles.forEach(v => allOwned.push({ref: v, type: 'truck', db: CAR_DB}));
-            if (state.ships) state.ships.forEach(s => allOwned.push({ref: s, type: 'ship', db: SHIP_DB}));
-            if (state.planes) state.planes.forEach(p => allOwned.push({ref: p, type: 'plane', db: PLANE_DB}));
-            if (state.buses) state.buses.forEach(b => allOwned.push({ref: b, type: 'bus', db: BUS_DB}));
+            let totalVehicles = (state.vehicles?.length || 0) + (state.ships?.length || 0) + (state.planes?.length || 0) + (state.buses?.length || 0);
             
-            if (allOwned.length > 0) {
-                let target = allOwned[Math.floor(Math.random() * allOwned.length)];
-                let dbRef = target.db.find(x => x.model === target.ref.model);
-                let price = dbRef ? dbRef.price : 500000;
-                let debtReduction = Math.floor(price * 0.75);
-                
-                if (target.type === 'truck') {
-                    state.vehicles = state.vehicles.filter(x => x.id !== target.ref.id);
-                } else if (target.type === 'ship') {
-                    state.ships = state.ships.filter(x => x.id !== target.ref.id);
-                } else if (target.type === 'plane') {
-                    state.planes = state.planes.filter(x => x.id !== target.ref.id);
-                } else if (target.type === 'bus') {
-                    state.buses = state.buses.filter(x => x.id !== target.ref.id);
+            // Pokud má firma více než 1 vozidlo, banka jedno zabaví
+            if (totalVehicles > 1) {
+                let allOwned = [];
+                // Pozemní vozidla přidat jen pokud jich je více než 1, nebo pokud má firma lodě/letadla
+                if (state.vehicles && (state.vehicles.length > 1 || totalVehicles > state.vehicles.length)) {
+                    state.vehicles.forEach(v => allOwned.push({ref: v, type: 'truck', db: CAR_DB}));
                 }
+                if (state.ships) state.ships.forEach(s => allOwned.push({ref: s, type: 'ship', db: SHIP_DB}));
+                if (state.planes) state.planes.forEach(p => allOwned.push({ref: p, type: 'plane', db: PLANE_DB}));
+                if (state.buses) state.buses.forEach(b => allOwned.push({ref: b, type: 'bus', db: BUS_DB}));
                 
-                state.debt = Math.max(0, state.debt - debtReduction);
-                state.bankruptDays = 0;
-                notify("BANKOVNÍ EXEKUCE", `Banka exekuovala vozidlo ${target.ref.model}! Tvůj dluh byl snížen o ${debtReduction.toLocaleString()} Kč.`, "danger");
-                pushToTicker(`<b>EXEKUCE MAJETKU:</b> Zabaveno vozidlo ${target.ref.model} pro splacení dluhu.`, "danger");
-                SysLog('BANKA', `🚨 EXEKUCE BANKROTU: Zabaveno ${target.ref.model}.`);
+                if (allOwned.length > 0) {
+                    let target = allOwned[Math.floor(Math.random() * allOwned.length)];
+                    let dbRef = target.db.find(x => x.model === target.ref.model);
+                    let price = dbRef ? dbRef.price : 500000;
+                    let debtReduction = Math.floor(price * 0.75);
+                    
+                    if (target.type === 'truck') {
+                        state.vehicles = state.vehicles.filter(x => x.id !== target.ref.id);
+                    } else if (target.type === 'ship') {
+                        state.ships = state.ships.filter(x => x.id !== target.ref.id);
+                    } else if (target.type === 'plane') {
+                        state.planes = state.planes.filter(x => x.id !== target.ref.id);
+                    } else if (target.type === 'bus') {
+                        state.buses = state.buses.filter(x => x.id !== target.ref.id);
+                    }
+                    
+                    state.debt = Math.max(0, state.debt - debtReduction);
+                    state.bankruptDays = 0;
+                    notify("BANKOVNÍ EXEKUCE", `Banka exekuovala vozidlo ${target.ref.model}! Tvůj dluh byl snížen o ${debtReduction.toLocaleString()} Kč.`, "danger");
+                    pushToTicker(`<b>EXEKUCE MAJETKU:</b> Zabaveno vozidlo ${target.ref.model} pro splacení dluhu.`, "danger");
+                    SysLog('BANKA', `🚨 EXEKUCE BANKROTU: Zabaveno ${target.ref.model}.`);
+                }
             } else if (state.machines && state.machines.length > 0) {
                 let m = state.machines.pop();
                 state.bankruptDays = 0;
                 notify("BANKOVNÍ EXEKUCE", `Banka exekuovala tvůj stroj ${m.n}!`, "danger");
                 pushToTicker(`<b>EXEKUCE MAJETKU:</b> Zabaven stroj ${m.n}.`, "danger");
             } else {
-                state.reputation = Math.max(0, state.reputation - 50);
+                // POSLEDNÍ VOZIDLO UŠETŘENO
+                state.reputation = Math.max(0, state.reputation - 30);
                 state.bankruptDays = 0;
-                notify("BANKOVNÍ EXEKUCE", `Banka nenašla žádný majetek! Reputace firmy klesla o 50 bodů.`, "danger");
-                pushToTicker(`<b>EXEKUCE:</b> Nenašlo se žádné zabavitelné aktivum. Reputace snížena o 50 bodů.`, "danger");
+                notify("BANKROT: OCHRANA", `Banka ušetřila tvé poslední vozidlo, abys mohl firmu zachránit zakázkami! Reputace firmy klesla o 30 bodů.`, "warning");
+                pushToTicker(`<b>BANKROT:</b> Poslední vozidlo ušetřeno exekuce. Reputace snížena o 30 bodů.`, "warning");
+                SysLog('EKONOMIKA', `⚠️ Ochrana posledního vozidla před likvidací.`);
             }
         }
     } else {
@@ -4248,15 +4505,38 @@ function daily() {
         m.history.push(m.price); if(m.history.length > 30) m.history.shift();
     });
 
-    // Personál contracts countdown
+    // Personál contracts countdown & Auto-Renew (Vyvážené náklady)
     state.staff = state.staff || {};
     Object.keys(state.staff).forEach(k => {
         if(state.staff[k] && state.staff[k].active) {
             state.staff[k].days--;
             if(state.staff[k].days <= 0) { 
-                state.staff[k].active = false; 
-                notify("HR ODDĚLENÍ", `${STAFF_DEFS[k]?.n || k} nemá smlouvu a přestal pracovat!`, "warning"); 
-                SysLog('HR', `⚠️ Vypršela pracovní smlouva personálu: ${STAFF_DEFS[k]?.n || k}.`);
+                const sDef = typeof STAFF_DEFS !== 'undefined' ? STAFF_DEFS[k] : null;
+                const roleName = sDef ? sDef.n : k;
+                let renewCost = 25000;
+                if (k === 'mechanic') renewCost = 45000;
+                if (k === 'accountant') renewCost = 60000;
+
+                if (state.money >= renewCost) {
+                    addMoney(-renewCost);
+                    state.staff[k].days = 30;
+                    state.staff[k].active = true;
+                    notify("HR ODDĚLENÍ", `Smlouva s ${roleName} byla automaticky prodloužena o 30 dní.`, "success");
+                    pushToTicker(`<b>HR ODDĚLENÍ:</b> Smlouva s ${roleName} byla automaticky prodloužena o 30 dní.`, "success");
+                    SysLog('HR', `Smlouva s ${roleName} byla automaticky prodloužena o 30 dní.`);
+                } else if (state.money >= 10000) {
+                    // Nouzové týdenní prodloužení
+                    addMoney(-10000);
+                    state.staff[k].days = 7;
+                    state.staff[k].active = true;
+                    notify("HR ODDĚLENÍ", `Smlouva s ${roleName} byla prodloužena o 7 dní (nouzový režim).`, "info");
+                    SysLog('HR', `Smlouva s ${roleName} prodloužena o 7 dní.`);
+                } else {
+                    state.staff[k].active = false; 
+                    notify("HR ODDĚLENÍ", `${roleName} nemá smlouvu a přestal pracovat! (Nedostatek financí na auto-renew)`, "warning"); 
+                    pushToTicker(`<b>HR ODDĚLENÍ:</b> Vypršela smlouva s ${roleName}.`, "danger");
+                    SysLog('HR', `⚠️ Vypršela pracovní smlouva personálu: ${roleName}.`);
+                }
             }
         }
     });
@@ -4519,11 +4799,16 @@ function renderOverview() {
     if(!tbody || !tbodyOv) return; 
     
     tbody.innerHTML = state.vehicles.map(v => { 
-        const d = state.drivers.find(x => x.id == v.driverId); 
+        const d = (state.drivers && Array.isArray(state.drivers)) ? state.drivers.find(x => x.id == v.driverId) : null; 
         
+        let prog = (typeof v.progress === 'number' && !isNaN(v.progress)) ? Math.floor(Math.max(0, Math.min(100, v.progress))) : 0;
+        let fuelVal = (typeof v.fuel === 'number' && !isNaN(v.fuel)) ? Math.floor(Math.max(0, Math.min(100, v.fuel))) : 100;
+        let energyVal = d ? ((typeof d.energy === 'number' && !isNaN(d.energy)) ? Math.floor(Math.max(0, Math.min(100, d.energy))) : 100) : 0;
+        let moraleVal = d ? ((typeof d.morale === 'number' && !isNaN(d.morale)) ? Math.floor(Math.max(0, Math.min(100, d.morale))) : 100) : 0;
+
         let status = '';
         if (v.job) {
-            status = `<span style="color:${v.job.isBlackMarket ? 'var(--red)' : 'var(--orange)'}; font-weight:600">${v.job.isBlackMarket ? '☠️ ILLEGÁLNÍ TRASA' : 'Trasa'} → ${v.job.dest} (${Math.floor(v.progress)}%)</span>`;
+            status = `<span style="color:${v.job.isBlackMarket ? 'var(--red)' : 'var(--orange)'}; font-weight:600">${v.job.isBlackMarket ? '☠️ ILLEGÁLNÍ TRASA' : 'Trasa'} → ${v.job.dest} (${prog}%)</span>`;
             if (v.queue && v.queue.length > 0) {
                 status += `<br><span style="font-size:11px; color:var(--gold); display:inline-block; margin-top:4px">+ ${v.queue.length} čeká ve frontě</span>`;
             }
@@ -4547,10 +4832,10 @@ function renderOverview() {
           <td>${d ? `<b style="color:white">${d.name}</b> ${dTitle}` : '<span style="color:var(--red)">Bez řidiče</span>'}</td>
           <td>${status}</td>
           <td style="width: 15%">
-            <div class="xp-bar-bg" style="margin:0"><div class="xp-bar-fill" style="width:${Math.floor(v.fuel)}%; background:var(--red)"></div></div>
+            <div class="xp-bar-bg" style="margin:0"><div class="xp-bar-fill" style="width:${fuelVal}%; background:var(--red)"></div></div>
           </td>
-          <td><b style="color:${d && d.energy>50?'var(--green)':'var(--red)'}">${d ? Math.floor(d.energy)+'%' : '-'}</b></td>
-          <td><b style="color:white">${d ? Math.floor(d.morale)+'%' : '-'}</b></td>
+          <td><b style="color:${d && energyVal>50?'var(--green)':'var(--red)'}">${d ? energyVal+'%' : '-'}</b></td>
+          <td><b style="color:white">${d ? moraleVal+'%' : '-'}</b></td>
           <td>${acts}</td>
         </tr>`; 
     }).join(''); 
@@ -4558,9 +4843,13 @@ function renderOverview() {
     // ZÁMOŘÍ V OVERVIEW
     let ovHtml = '';
     const renderOvRow = (v, isShip) => {
+        let prog = (typeof v.progress === 'number' && !isNaN(v.progress)) ? Math.floor(Math.max(0, Math.min(100, v.progress))) : 0;
+        let fuelVal = (typeof v.fuel === 'number' && !isNaN(v.fuel)) ? Math.floor(Math.max(0, Math.min(100, v.fuel))) : 100;
+        let condVal = (typeof v.cond === 'number' && !isNaN(v.cond)) ? Math.floor(Math.max(0, Math.min(100, v.cond))) : 100;
+        
         let status = '';
         if (v.job) {
-            status = `<span style="color:var(--cyan); font-weight:600">Trasa → ${v.job.dest} (${Math.floor(v.progress)}%)</span>`;
+            status = `<span style="color:var(--cyan); font-weight:600">Trasa → ${v.job.dest} (${prog}%)</span>`;
             if (v.queue && v.queue.length > 0) status += `<br><span style="font-size:11px; color:var(--gold); display:inline-block; margin-top:4px">+ ${v.queue.length} čeká ve frontě</span>`;
         } else {
             status = `<span style="color:var(--green)">V ${isShip?'přístavu':'hangáru'}</span>`;
@@ -4570,8 +4859,8 @@ function renderOverview() {
           <td><b style="color:${isShip?'#0072ff':'#ffffff'}; font-size:15px">${isShip?'🚢':'✈️'} ${v.model}</b></td>
           <td><span style="color:var(--text-muted)">Automatická Posádka</span></td>
           <td>${status}</td>
-          <td style="width: 15%"><div class="xp-bar-bg" style="margin:0"><div class="xp-bar-fill" style="width:${Math.floor(v.fuel)}%; background:var(--orange)"></div></div></td>
-          <td><b style="color:${v.cond < 50 ? 'var(--red)' : 'var(--green)'}">${Math.floor(v.cond)}%</b></td>
+          <td style="width: 15%"><div class="xp-bar-bg" style="margin:0"><div class="xp-bar-fill" style="width:${fuelVal}%; background:var(--orange)"></div></div></td>
+          <td><b style="color:${condVal < 50 ? 'var(--red)' : 'var(--green)'}">${condVal}%</b></td>
           <td>-</td>
           <td>${acts}</td>
         </tr>`;
@@ -4625,6 +4914,7 @@ function renderDispatch() {
         if(v.vCat === 'ship') { bColor = '#0072ff'; driverName = 'Lodní posádka'; }
         if(v.vCat === 'plane') { bColor = '#ffffff'; driverName = 'Piloti a obsluha'; }
         
+        let prog = (typeof v.progress === 'number' && !isNaN(v.progress)) ? Math.max(0, Math.min(100, v.progress)) : 0;
         return `<div class="card" style="border-left:4px solid ${bColor}; ${v.job.isBlackMarket ? 'animation: pulseGlow 2s infinite;' : ''}">
             <div class="card-body">
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px">
@@ -4635,7 +4925,7 @@ function renderDispatch() {
                     Náklad: <span style="color:${v.job.isBlackMarket ? 'var(--red)' : 'var(--orange)'}; font-weight:bold">${v.job.cargo || 'Zboží'} ${v.job.isBlackMarket ? '☠️' : ''}</span><br>
                     Posádka: <span style="color:white">${driverName}</span>
                 </div>
-                <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${v.progress}%; background:${bColor}; transition:width 1s linear"></div></div>
+                <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${prog}%; background:${bColor}; transition:width 1s linear"></div></div>
             </div>
         </div>`;
     }).join('') : '<div style="color:var(--text-muted); font-style:italic">Nikdo není momentálně na cestě.</div>'; 
@@ -4800,32 +5090,58 @@ function filterAuction(type, btn) {
     renderAuction();
 }
 
-const getEligibility = (vehicle, offer) => {
-    // Rule 1: Strict vehicle types
-    if (offer.type === 'van' && vehicle.type !== 'van') return { eligible: false, reason: 'Tuto zakázku může vzít jen dodávka.' };
-    if (offer.type === 'solo' && vehicle.type !== 'solo') return { eligible: false, reason: 'Tuto zakázku může vzít jen solo náklaďák.' };
-    if (offer.type === 'semi' && vehicle.type !== 'semi') return { eligible: false, reason: 'Tuto zakázku může vzít jen kamion (tahač).' };
+const findCity = (name) => {
+    if (!name || typeof CITIES === 'undefined') return null;
+    if (CITIES[name]) return CITIES[name];
+    const key = Object.keys(CITIES).find(k => k.toLowerCase() === String(name).trim().toLowerCase());
+    return key ? CITIES[key] : null;
+};
 
-    // Ships and planes are already filtered by type, so we just check for land vehicles
-    if (vehicle.type !== 'ship' && vehicle.type !== 'plane') {
-        const startCity = CITIES[vehicle.loc];
-        const destCity = CITIES[offer.dest];
-        if (startCity && destCity) {
-            const isOverseas = (startCity.x < 0.4 && destCity.x > 0.4) || (startCity.x > 0.4 && destCity.x < 0.4);
-            if (isOverseas) {
-                return { eligible: false, reason: 'Pozemní vozidla nemohou přes oceán.' };
-            }
+const getEligibility = (vehicle, offer) => {
+    // 1. Vehicle category matching
+    if (offer.type === 'van' && vehicle.type !== 'van') return { eligible: false, reason: 'Tuto zakázku může vzít jen dodávka.' };
+    if (offer.type === 'solo' && vehicle.type !== 'solo') return { eligible: false, reason: 'Tuto zakázku může vzít jen sólo náklaďák.' };
+    if (offer.type === 'semi' && vehicle.type !== 'semi') return { eligible: false, reason: 'Tuto zakázku může vzít jen kamion (tahač).' };
+    if (offer.type === 'ship' && vehicle.type !== 'ship') return { eligible: false, reason: 'Tuto zámořskou zakázku může vézt pouze nákladní loď.' };
+    if (offer.type === 'plane' && vehicle.type !== 'plane') return { eligible: false, reason: 'Tuto expresní zakázku může přepravit pouze letadlo.' };
+
+    const destCity = findCity(offer.dest);
+    let startCity = findCity(vehicle.loc) || findCity('Praha') || { isOverseas: false, continent: 'Europe' };
+
+    // Automatická repatriace pozemního vozidla do Evropy, pokud má v datech omylem zámořské město
+    if (vehicle.type !== 'ship' && vehicle.type !== 'plane' && startCity.isOverseas) {
+        vehicle.loc = 'Praha';
+        startCity = findCity('Praha');
+    }
+
+    // 2. Geographic & Infrastructure Checks
+    if (vehicle.type === 'ship') {
+        if (destCity && !destCity.isPort) {
+            return { eligible: false, reason: 'Cílové město nemá námořní přístav.' };
         }
+    } else if (vehicle.type === 'plane') {
+        if (destCity && !destCity.isAirport) {
+            return { eligible: false, reason: 'Cílové město nemá letiště pro nákladní letadla.' };
+        }
+    } else {
+        // Pozemní vozidla (van, solo, semi)
+        if (destCity && destCity.isOverseas) {
+            return { eligible: false, reason: 'Pozemní vozidla nemohou přes oceán (vyžaduje loď nebo letadlo).' };
+        }
+
         const driver = state.drivers.find(d => d.id === vehicle.driverId);
         if (!driver) return { eligible: false, reason: 'Vozidlo nemá přiřazeného řidiče.' };
 
-        // Rule 2: License check
-        if (offer.reqLic && !driver.lic.includes(offer.reqLic)) {
-            const licenseName = LICENSES.find(l => l.id === offer.reqLic)?.n || offer.reqLic.toUpperCase();
-            return { eligible: false, reason: `Řidič nemá licenci: ${licenseName}.` };
+        // License check (Běžný náklad a dodávky bez specifické licence jsou vždy volné)
+        if (offer.reqLic && offer.reqLic !== 'none') {
+            const hasLic = driver.lic && Array.isArray(driver.lic) && driver.lic.includes(offer.reqLic);
+            if (!hasLic) {
+                const licenseName = (typeof LICENSES !== 'undefined' ? LICENSES.find(l => l.id === offer.reqLic)?.n : null) || offer.reqLic.toUpperCase();
+                return { eligible: false, reason: `Řidič nemá licenci: ${licenseName}.` };
+            }
         }
 
-        // Rule 3: Trailer check for semi
+        // Trailer check for semi
         if (vehicle.type === 'semi' && offer.type === 'semi') {
             if (!vehicle.trailer) {
                 return { eligible: false, reason: 'Kamion musí mít připojený návěs.' };
@@ -4862,13 +5178,49 @@ function genOffers(force = false) {
             dList = dests.filter(k => CITIES[k].isPort);
         } else if (type === 'plane') {
             dList = dests.filter(k => CITIES[k].isAirport);
+        } else {
+            // Pozemní vozidla (van, solo, semi) operují na evropském kontinentu
+            dList = dests.filter(k => !CITIES[k].isOverseas && (CITIES[k].continent === 'Europe' || CITIES[k].region === 'Europe'));
         }
 
         if (dList.length === 0) continue;
         let dest = dList[Math.floor(Math.random() * dList.length)];
         
-        let pay = Math.floor(Math.random() * 50000) + 10000;
-        if(type === 'semi') pay *= 3; if(type === 'ship') pay *= 15; if(type === 'plane') pay *= 25;
+        // Reálný výpočet vzdálenosti (km) z centrály do cílového města
+        let baseCity = CITIES['Zájezd'] || CITIES['Praha'] || { lat: 50.08, lng: 14.43 };
+        let destCity = CITIES[dest] || { lat: 50.08, lng: 14.43 };
+        let dist = 350;
+        if (destCity && baseCity && typeof destCity.lat === 'number' && typeof baseCity.lat === 'number') {
+            let dLat = (destCity.lat - baseCity.lat) * 111.0;
+            let dLng = (destCity.lng - baseCity.lng) * 71.0;
+            let directKm = Math.sqrt(dLat * dLat + dLng * dLng);
+            dist = Math.max(60, Math.floor(directKm * 1.3)); // 1.3 silniční faktor
+        }
+        if (type === 'ship') dist = Math.max(1200, dist * 3);
+        if (type === 'plane') dist = Math.max(1500, dist * 2);
+
+        // Reálné sazby za kilometr (Kč/km) a základní paušál (Zkrocení hyperinflace)
+        let baseFee = 1200;
+        let ratePerKm = 12;
+
+        if (type === 'van') {
+            baseFee = 1000 + Math.floor(Math.random() * 800);
+            ratePerKm = 10 + Math.floor(Math.random() * 3); // 10 - 13 Kč/km
+        } else if (type === 'solo') {
+            baseFee = 2000 + Math.floor(Math.random() * 1000);
+            ratePerKm = 15 + Math.floor(Math.random() * 4); // 15 - 19 Kč/km
+        } else if (type === 'semi') {
+            baseFee = 3200 + Math.floor(Math.random() * 1500);
+            ratePerKm = 21 + Math.floor(Math.random() * 5); // 21 - 26 Kč/km
+        } else if (type === 'ship') {
+            baseFee = 30000 + Math.floor(Math.random() * 15000);
+            ratePerKm = 30 + Math.floor(Math.random() * 12); // 30 - 42 Kč/km
+        } else if (type === 'plane') {
+            baseFee = 50000 + Math.floor(Math.random() * 25000);
+            ratePerKm = 50 + Math.floor(Math.random() * 20); // 50 - 70 Kč/km
+        }
+
+        let pay = Math.floor(baseFee + (dist * ratePerKm));
 
         let reqLic = null;
         let cargo;
@@ -4878,32 +5230,45 @@ function genOffers(force = false) {
             const cargoKey = type === 'ship' ? 'sea' : 'air';
             const cList = CARGO_TYPES[cargoKey];
             cargo = cList[Math.floor(Math.random() * cList.length)];
+        } else if (type === 'van') {
+            // Dodávky: 70% běžný náklad bez licence (Early game přístupnost), 30% lehký expres
+            if (Math.random() < 0.70) {
+                const commonList = CARGO_TYPES['none'] || ['Palety papíru', 'Minerální voda', 'Elektronika', 'Díly pro Škoda Auto', 'Hračky'];
+                cargo = commonList[Math.floor(Math.random() * commonList.length)];
+                reqLic = null;
+            } else {
+                const vanLicList = ['express', 'stehovani'];
+                const chosenLic = vanLicList[Math.floor(Math.random() * vanLicList.length)];
+                const vList = CARGO_TYPES[chosenLic];
+                cargo = vList[Math.floor(Math.random() * vList.length)];
+                reqLic = chosenLic;
+                pay = Math.floor(pay * 1.15);
+            }
         } else {
-            // Land vehicles can be black market
-            isBM = state.tech.includes('darkweb') && Math.random() < 0.1; // Increased chance for BM to be noticeable
+            isBM = state.tech.includes('darkweb') && Math.random() < 0.1;
             if (isBM) {
                 cargo = BLACK_MARKET_CARGO[Math.floor(Math.random() * BLACK_MARKET_CARGO.length)];
-                pay *= 4;
+                pay = Math.floor(pay * 1.4); // +40% za černej trh
             } else {
                 cargo = allLandCargoes[Math.floor(Math.random() * allLandCargoes.length)];
                 reqLic = cargoToLicenseMap[cargo] || null;
-                if (reqLic) pay *= 1.5;
+                if (reqLic) pay = Math.floor(pay * 1.15); // +15% za specializovanou licenci
             }
         }
         
-        // Apply Jirstan dumping price pressure immediately to offer listing
+        // Jirstan dumping
         if (state.jirstanPressure && state.jirstanPressure.eventType === 'dumping' && dest === state.jirstanPressure.targetCity) {
-            pay = Math.floor(pay * 0.6);
+            pay = Math.floor(pay * 0.75);
         }
         
         let isVIP = false;
         if (state.reputation >= 100 && Math.random() < 0.20) {
             isVIP = true;
-            pay *= 2;
+            pay = Math.floor(pay * 1.25); // +25% za VIP
             cargo = `⭐ VIP ${cargo}`;
         }
         
-        state.offers.push({ id: Date.now() + i, type, dest, pay, cargo, reqLic, isBlackMarket: isBM, isVIP, dist: Math.floor(Math.random() * 1500) + 100 });
+        state.offers.push({ id: Date.now() + i, type, dest, pay, cargo, reqLic, isBlackMarket: isBM, isVIP, dist });
     }
 
     state.auctionFilter = 'all';
@@ -5749,6 +6114,7 @@ function dispatchCustomCommodity() {
         qty: qty,
         dist: Math.floor(Math.random() * 800) + 200
     };
+    v.progress = 0;
     
     notify("EXPEDICE SPUŠTĚNA", `Vozidlo ${v.model} vyrazilo směr ${dest} s ${qty} ks ${label}.`, "success");
     pushToTicker(`<b>EXPEDICE:</b> Odeslána dodávka ${label} do ${dest} vozem ${v.model}.`, "info");
@@ -7912,7 +8278,7 @@ function hireNewDriver() {
         let n = NAMES_F[Math.floor(Math.random()*NAMES_F.length)] + " " + NAMES_L[Math.floor(Math.random()*NAMES_L.length)];
         let b = BIOS[Math.floor(Math.random()*BIOS.length)];
         let t = TRAITS[Math.floor(Math.random()*TRAITS.length)].id;
-        state.drivers.push({id: Date.now(), name: n, level: 1, xp: 0, req: 100, skills: {spd:0}, energy: 100, morale: 100, tacho: 0, restUntil: 0, lic: [], bio: b, trait: t, deliveries: 0});
+        state.drivers.push({id: Date.now(), name: n, level: 1, xp: 0, req: 100, skills: {spd:0}, energy: 100, morale: 100, tacho: 0, restUntil: 0, lic: ['express', 'stehovani'], bio: b, trait: t, deliveries: 0});
         notify("HR", `Najat nový řidič: ${n}!`, "success"); renderHR(); saveGame();
     } else notify("FINANCE", "Nemáš peníze na nábor!", "warning");
 }
@@ -7926,11 +8292,31 @@ function fireDriver(id) {
 }
 
 function openTrainingCenter() {
-    let h = `<h2 style="color:var(--teal)">🎓 TRÉNINKOVÉ CENTRUM</h2><p>Vyber řidiče a zaplať mu odborný kurz.</p><div style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto">`;
+    let h = `
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:10px; margin-bottom:15px">
+            <h2 style="color:var(--teal); margin:0">🎓 TRÉNINKOVÉ CENTRUM & LICENCE</h2>
+            <button class="btn btn-sm btn-dark" onclick="closeModal()" style="font-size:16px; padding:4px 10px; cursor:pointer;">&times;</button>
+        </div>
+        <p style="color:var(--text-muted); font-size:13px; margin-bottom:15px">Vyber řidiče a zaplať mu odborný kurz nebo rozšiřující přepravní licenci.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto; padding-right:5px">
+    `;
     state.drivers.forEach(d => {
-        h += `<div style="background:rgba(0,0,0,0.4);padding:10px;border-radius:6px;border:1px solid var(--border-light)"><b>${d.name}</b> (Lvl ${d.level})<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">` + TRAINING_DB.map(t => `<button class="btn btn-sm btn-dark" onclick="trainDriver(${d.id}, '${t.id}', ${t.cost}, ${t.xp})">${t.icon} ${t.n} (${t.cost.toLocaleString()} Kč)</button>`).join('') + `</div><div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">` + LICENSES.map(l => `<button class="btn btn-sm ${d.lic.includes(l.id)?'btn-green':'btn-dark'}" ${d.lic.includes(l.id)||d.level<l.minLvl?'disabled':''} onclick="assignLicence(${d.id}, '${l.id}', ${l.cost})">${l.n} (L${l.minLvl} / ${l.cost/1000}k)</button>`).join('') + `</div></div>`;
+        h += `<div style="background:rgba(0,0,0,0.4);padding:12px;border-radius:6px;border:1px solid var(--border-light)">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <b style="color:white; font-size:14px">${d.name}</b>
+                <span style="color:var(--green); font-weight:bold; font-size:12px">Lvl ${d.level}</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:3px">Aktuální licence: ${d.lic && d.lic.length > 0 ? d.lic.map(l => (typeof LICENSES !== 'undefined' ? LICENSES.find(x=>x.id===l)?.n : l) || l).join(', ') : 'Žádné'}</div>
+            <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">` + TRAINING_DB.map(t => `<button class="btn btn-sm btn-dark" onclick="trainDriver(${d.id}, '${t.id}', ${t.cost}, ${t.xp})">${t.icon} ${t.n} (${t.cost.toLocaleString()} Kč)</button>`).join('') + `</div>
+            <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap">` + LICENSES.map(l => `<button class="btn btn-sm ${d.lic.includes(l.id)?'btn-green':'btn-dark'}" ${d.lic.includes(l.id)||d.level<l.minLvl?'disabled':''} onclick="assignLicence(${d.id}, '${l.id}', ${l.cost})">${l.n} (L${l.minLvl} / ${(l.cost/1000).toFixed(0)}k)</button>`).join('') + `</div>
+        </div>`;
     });
-    h += `</div>`; document.getElementById('modal-content').innerHTML = h; document.getElementById('modal-overlay').style.display = 'flex';
+    h += `</div>
+        <div style="margin-top:15px; text-align:right">
+            <button class="btn btn-dark" onclick="closeModal()">ZAVŘÍT</button>
+        </div>
+    `;
+    showModal(h);
 }
 
 function trainDriver(did, tid, cost, xp) {
@@ -7960,9 +8346,22 @@ function assignLicence(did, lid, cost) {
 }
 
 function openMoraleCenter() {
-    let h = `<h2 style="color:var(--cyan)">😊 CENTRUM POHODY</h2><p>Doplň morálku a motivaci celému svému týmu řidičů.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-dark" onclick="boostMorale(20000, 20)">Pivo a Gril (20k / +20%)</button><button class="btn btn-cyan" onclick="boostMorale(50000, 50)">Firemní večírek (50k / +50%)</button><button class="btn btn-gold" onclick="boostMorale(150000, 100)">Wellness Víkend (150k / MAX)</button></div>`;
-    document.getElementById('modal-content').innerHTML = h; 
-    document.getElementById('modal-overlay').style.display = 'flex';
+    let h = `
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:10px; margin-bottom:15px">
+            <h2 style="color:var(--cyan); margin:0">😊 CENTRUM POHODY</h2>
+            <button class="btn btn-sm btn-dark" onclick="closeModal()" style="font-size:16px; padding:4px 10px; cursor:pointer;">&times;</button>
+        </div>
+        <p style="color:var(--text-muted); font-size:13px">Doplň morálku a motivaci celému svému týmu řidičů.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap; margin-bottom:15px">
+            <button class="btn btn-dark" onclick="boostMorale(20000, 20)">🍺 Pivo a Gril (20k / +20%)</button>
+            <button class="btn btn-cyan" onclick="boostMorale(50000, 50)">🎉 Firemní večírek (50k / +50%)</button>
+            <button class="btn btn-gold" onclick="boostMorale(150000, 100)">🏖️ Wellness Víkend (150k / MAX)</button>
+        </div>
+        <div style="text-align:right">
+            <button class="btn btn-dark" onclick="closeModal()">ZAVŘÍT</button>
+        </div>
+    `;
+    showModal(h);
 }
 
 function boostMorale(cost, amount) {
@@ -8338,8 +8737,11 @@ function claimChallenge(id, reward, repReward) {
 }
 
 function showModal(html) {
-    document.getElementById('modal-content').innerHTML = html;
-    document.getElementById('modal-overlay').style.display = 'flex';
+    if (window.__IS_SIMULATION__) return;
+    const content = document.getElementById('modal-content');
+    const overlay = document.getElementById('modal-overlay');
+    if (content) content.innerHTML = html;
+    if (overlay) overlay.style.display = 'flex';
 }
 
 // ==========================================
@@ -8462,12 +8864,14 @@ function skipTime(hours) {
 }
 
 function closeModal() { 
-    document.getElementById('modal-overlay').style.display = 'none'; 
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay) overlay.style.display = 'none'; 
 }
 
 function notify(title, msg, type = 'info') {
-    const box = document.getElementById('toast-box');
-    if(!box) return;
+    if (window.__IS_SIMULATION__) return;
+    const box = document.getElementById('toast-box');
+    if(!box) return;
     const toast = document.createElement('div');
     toast.className = 'toast';
     const bColor = type === 'success' ? 'var(--green)' : (type === 'warning' ? 'var(--gold)' : (type === 'danger' ? 'var(--red)' : (type === 'pink' ? 'var(--pink)' : 'var(--blue)')));
@@ -8629,4 +9033,518 @@ function refreshLeaderboard() {
     }, 800);
 }
 
+/**
+ * ============================================================
+ * AUTOMATIZOVANÝ DIAGNOSTICKÝ AUDIT & SIMULAČNÍ BOT
+ * ============================================================
+ * Spustitelný v konzoli: runWorldSimulation(30)
+ * @param {number} days - Počet herních dní pro bleskovou simulaci
+ * @param {object} options - Konfigurace chování bota
+ * @returns {object} - Detailní telemetrický report
+ */
+function runWorldSimulation(days = 30, options = {}) {
+    const config = Object.assign({
+        autoAssign: true,
+        autoRestRecovery: true,
+        autoRefuel: true,
+        autoRepairBroken: true,
+        autoPayLoans: true,
+        autoExpandFleet: true,
+        safetyBufferCash: 80000,
+        silent: false,
+        logIntervalDays: Math.max(1, Math.floor(days / 10))
+    }, options);
+
+    const startTime = Date.now();
+    window.__IS_SIMULATION__ = true;
+
+    // Resetovat případné staré přestřelené nabídky z burzy
+    genOffers(true);
+
+    // Inicializace statistik divizí
+    state.stats = state.stats || {};
+    state.stats.byDivision = state.stats.byDivision || {
+        trucks: { deliveries: 0, distance: 0, earned: 0 },
+        ships: { deliveries: 0, distance: 0, earned: 0 },
+        planes: { deliveries: 0, distance: 0, earned: 0 }
+    };
+
+    // Snapshot výchozího stavu
+    const initialStats = {
+        day: state.day,
+        money: state.money,
+        debt: state.debt || 0,
+        reputation: state.reputation,
+        deliveries: state.stats.deliveries || 0,
+        distance: state.stats.distance || 0,
+        totalEarned: state.stats.totalEarned || 0,
+        totalSpent: state.stats.totalSpent || 0,
+        trucks: state.vehicles.length,
+        ships: (state.ships || []).length,
+        planes: (state.planes || []).length,
+        buses: (state.buses || []).length,
+        drivers: state.drivers.length,
+        divTrucks: Object.assign({}, state.stats.byDivision.trucks),
+        divShips: Object.assign({}, state.stats.byDivision.ships),
+        divPlanes: Object.assign({}, state.stats.byDivision.planes)
+    };
+
+    const telemetry = {
+        daysSimulated: days,
+        dailyLogs: [],
+        events: {
+            jobsDispatched: 0,
+            jobsCompleted: 0,
+            repairsMade: 0,
+            driverRests: 0,
+            bankruptcyWarnings: 0,
+            fuelRefills: 0,
+            loansRepaidTotal: 0,
+            vehiclesPurchased: 0,
+            driversHired: 0,
+            staffRenewed: 0
+        },
+        bottlenecks: {
+            idleTrucksNoDriver: 0,
+            idleTrucksFatiguedDriver: 0,
+            idleVehiclesNoJobs: 0,
+            brokenVehicles: 0
+        }
+    };
+
+    console.log(`%c[SIMULAČNÍ BOT 2.0]%c Spouštím realistickou simulaci na ${days} herních dní...`, 'color:#ff9d00; font-weight:bold;', 'color:#fff;');
+
+    // 1. Finanční AI: Inteligentní správa dluhů
+    function simManageFinances() {
+        if (!config.autoPayLoans) return;
+        state.loans = state.loans || { overdraft: 0, dev: [], shark: null };
+        updateDebtSum();
+        
+        if (state.debt > 0 && state.money > config.safetyBufferCash) {
+            let availableForDebt = Math.floor(state.money - config.safetyBufferCash);
+            if (availableForDebt > 0) {
+                let startDebt = state.debt;
+                payLoan(availableForDebt);
+                let repaid = startDebt - (state.debt || 0);
+                if (repaid > 0) {
+                    telemetry.events.loansRepaidTotal += repaid;
+                }
+            }
+        }
+    }
+
+    // 2. Flotilová AI: Expanze a údržba vozového parku
+    function simManageFleet() {
+        // Oprava a údržba všech vozidel (Priorita #1 - zamezení uváznutí)
+        state.vehicles.forEach(v => {
+            if (v.isBroken || (v.cond !== undefined && v.cond < 60) || (v.wear !== undefined && v.wear > 40)) {
+                let repairCost = Math.floor((100 - (v.cond || 100)) * 300 + (v.wear || 0) * 200);
+                if (v.isBroken) repairCost += 10000;
+                
+                if (state.money >= repairCost) {
+                    addMoney(-repairCost);
+                    v.cond = 100;
+                    v.wear = 0;
+                    v.isBroken = false;
+                    telemetry.events.repairsMade++;
+                } else if (state.money > 1000) {
+                    let partial = Math.min(state.money, 5000);
+                    addMoney(-partial);
+                    v.cond = Math.max(v.cond || 0, 70);
+                    v.wear = Math.min(v.wear || 0, 30);
+                    v.isBroken = false;
+                    telemetry.events.repairsMade++;
+                }
+            }
+
+            // Dotankování při nízkém stavu nádrže (< 20%)
+            if (v.fuel !== undefined && v.fuel < 20) {
+                let refillCost = Math.floor((100 - v.fuel) * (state.fuelPrice || 35.5));
+                if (state.fuelTank >= 40) {
+                    state.fuelTank -= 40;
+                    v.fuel = 100;
+                    telemetry.events.fuelRefills++;
+                } else if (state.money >= refillCost) {
+                    addMoney(-refillCost);
+                    v.fuel = 100;
+                    telemetry.events.fuelRefills++;
+                } else if (state.money > 1000) {
+                    let buyLiters = Math.floor(state.money / (state.fuelPrice || 35.5));
+                    addMoney(-(buyLiters * (state.fuelPrice || 35.5)));
+                    v.fuel = Math.min(100, v.fuel + buyLiters);
+                    telemetry.events.fuelRefills++;
+                }
+            }
+        });
+
+        // Expanze flotily při přebytku kapitálu
+        if (config.autoExpandFleet && state.money > 450000 && state.vehicles.length < 20) {
+            // Kontrola kapacity garáže
+            if (state.vehicles.length >= (state.garageCapacity || 5)) {
+                if (state.money > config.safetyBufferCash + 150000) {
+                    state.hq.garage = (state.hq.garage || 0) + 1;
+                    state.garageCapacity = (state.garageCapacity || 5) + 2;
+                    addMoney(-100000);
+                }
+            }
+
+            if (state.vehicles.length < (state.garageCapacity || 5)) {
+                // Vybrat vhodný model (střídat dodávky, sólo a tahače)
+                let carChoice = null;
+                if (state.vehicles.length < 4) {
+                    carChoice = CAR_DB.find(c => c.cat === 'van') || CAR_DB[0];
+                } else if (state.vehicles.length < 8) {
+                    carChoice = CAR_DB.find(c => c.cat === 'solo') || CAR_DB[5];
+                } else {
+                    carChoice = CAR_DB.find(c => c.cat === 'semi') || CAR_DB[12];
+                }
+
+                if (carChoice && state.money > config.safetyBufferCash + carChoice.price) {
+                    addMoney(-carChoice.price);
+                    let newVid = Date.now() + Math.floor(Math.random() * 1000);
+                    let newVeh = {
+                        id: newVid,
+                        type: carChoice.cat,
+                        model: carChoice.model,
+                        driverId: null,
+                        loc: 'Praha',
+                        job: null,
+                        queue: [],
+                        progress: 0,
+                        cond: 100,
+                        wear: 0,
+                        fuel: 100,
+                        spd: carChoice.spd,
+                        dayKm: 0,
+                        trailer: carChoice.cat === 'semi' ? (typeof TRAILERS_DB !== 'undefined' ? TRAILERS_DB[0] : { id: 'plachta', n: 'Standard návěs', bonus: 1.05 }) : null
+                    };
+                    state.vehicles.push(newVeh);
+                    telemetry.events.vehiclesPurchased++;
+
+                    // Najmout řidiče pro nové vozidlo
+                    let newDid = state.drivers.length + 1;
+                    let firstNames = ["Martin", "Tomáš", "Jakub", "Jan", "David", "Petr", "Lukáš", "Michal"];
+                    let lastNames = ["Novák", "Svoboda", "Dvořák", "Černý", "Procházka", "Kučera", "Veselý"];
+                    let rName = `${firstNames[Math.floor(Math.random()*firstNames.length)]} ${lastNames[Math.floor(Math.random()*lastNames.length)]}`;
+                    let newDriver = {
+                        id: newDid,
+                        name: rName,
+                        level: 1,
+                        xp: 0,
+                        req: 100,
+                        skills: { spd: 1 },
+                        energy: 100,
+                        tacho: 0,
+                        restUntil: 0,
+                        lic: ['express', 'stehovani', 'sypky', 'wood', 'frigo', 'leky', 'cars', 'adr', 'heavy'],
+                        bio: "Najatý profesionální řidič",
+                        trait: 'iron',
+                        deliveries: 0,
+                        morale: 95
+                    };
+                    state.drivers.push(newDriver);
+                    newVeh.driverId = newDid;
+                    telemetry.events.driversHired++;
+                }
+            }
+        }
+    }
+
+    // 3. Dispatcher bot helper pro simulaci
+    function simAutoDispatch() {
+        const absTime = state.day * 1440 + state.hour * 60 + state.minute;
+
+        // 0. Probudit odpočívající řidiče
+        (state.drivers || []).forEach(d => {
+            if (d.restUntil && d.restUntil <= absTime) {
+                d.restUntil = 0;
+                d.energy = 100;
+            }
+        });
+
+        // 1. Pozemní vozidla
+        state.vehicles.forEach(v => {
+            // Auto-Unload: Pokud vozidlo čeká na vykládku nebo má 100% postup
+            if (v.awaitingUnload || (v.progress >= 100 && v.job)) {
+                completeJob(v, 'truck');
+                telemetry.events.jobsCompleted++;
+            }
+
+            if (v.isBroken) {
+                telemetry.bottlenecks.brokenVehicles++;
+                v.isBroken = false;
+                v.cond = 100;
+                v.wear = 0;
+                let cost = Math.min(15000, Math.max(1000, Math.floor(state.money * 0.15)));
+                addMoney(-cost);
+                telemetry.events.repairsMade++;
+            }
+
+            // Zajištění řidiče pro vozidlo (Auto-Pairing)
+            let assignedDriver = v.driverId ? state.drivers.find(x => x.id == v.driverId) : null;
+            if (!assignedDriver) {
+                telemetry.bottlenecks.idleTrucksNoDriver++;
+                const freeDriver = state.drivers.find(d => !state.vehicles.some(veh => veh.driverId === d.id));
+                if (freeDriver) {
+                    v.driverId = freeDriver.id;
+                    assignedDriver = freeDriver;
+                } else {
+                    let newDid = state.drivers.length + 1;
+                    let newDriver = {
+                        id: newDid,
+                        name: `Řidič #${newDid}`,
+                        level: 1,
+                        xp: 0,
+                        req: 100,
+                        skills: { spd: 0 },
+                        energy: 100,
+                        tacho: 0,
+                        restUntil: 0,
+                        lic: ['express', 'stehovani'],
+                        bio: "Nábor dispečinku",
+                        trait: 'iron',
+                        deliveries: 0,
+                        morale: 90
+                    };
+                    state.drivers.push(newDriver);
+                    v.driverId = newDid;
+                    assignedDriver = newDriver;
+                    telemetry.events.driversHired++;
+                }
+            }
+
+            if (assignedDriver) {
+                // Zámek spánku: Pokud spí, neposílat na novou zakázku
+                if (assignedDriver.restUntil && assignedDriver.restUntil > absTime) {
+                    telemetry.bottlenecks.idleTrucksFatiguedDriver++;
+                    return;
+                }
+
+                // Pokud je unavený, odeslat na odpočinek
+                if (assignedDriver.energy < 15) {
+                    telemetry.bottlenecks.idleTrucksFatiguedDriver++;
+                    assignedDriver.energy = 0;
+                    assignedDriver.restUntil = absTime + 480;
+                    telemetry.events.driverRests++;
+                    return;
+                }
+            }
+
+            // Dotankování před vyjetím
+            if (v.fuel !== undefined && v.fuel < 20) {
+                if (state.fuelTank >= 40) {
+                    state.fuelTank -= 40;
+                    v.fuel = 100;
+                } else if (state.money >= 2000) {
+                    addMoney(-2000);
+                    v.fuel = 100;
+                }
+            }
+
+            if (!v.job && (!v.queue || v.queue.length === 0)) {
+                let offerIndex = state.offers.findIndex(o => {
+                    if (o.type !== v.type) return false;
+                    const elig = getEligibility(v, o);
+                    return elig.eligible;
+                });
+
+                if (offerIndex !== -1) {
+                    const offer = state.offers.splice(offerIndex, 1)[0];
+                    v.job = offer;
+                    v.progress = 0;
+                    telemetry.events.jobsDispatched++;
+                } else {
+                    telemetry.bottlenecks.idleVehiclesNoJobs++;
+                }
+            }
+        });
+
+        // 2. Lodě (Auto-Unload)
+        (state.ships || []).forEach(s => {
+            if (s.awaitingUnload || (s.progress >= 100 && s.job)) {
+                sellShipCargo(s.id, s.job ? s.job.pay : 50000);
+                telemetry.events.jobsCompleted++;
+            }
+
+            if (!s.job && (!s.queue || s.queue.length === 0)) {
+                const offerIndex = state.offers.findIndex(o => o.type === 'ship' && getEligibility(s, o).eligible);
+                if (offerIndex !== -1) {
+                    const offer = state.offers.splice(offerIndex, 1)[0];
+                    s.job = offer;
+                    s.progress = 0;
+                    telemetry.events.jobsDispatched++;
+                }
+            }
+        });
+
+        // 3. Letadla (Auto-Unload)
+        (state.planes || []).forEach(p => {
+            if (p.awaitingUnload || (p.progress >= 100 && p.job)) {
+                completeJob(p, 'plane');
+                telemetry.events.jobsCompleted++;
+            }
+
+            if (!p.job && (!p.queue || p.queue.length === 0)) {
+                const offerIndex = state.offers.findIndex(o => o.type === 'plane' && getEligibility(p, o).eligible);
+                if (offerIndex !== -1) {
+                    const offer = state.offers.splice(offerIndex, 1)[0];
+                    p.job = offer;
+                    p.progress = 0;
+                    telemetry.events.jobsDispatched++;
+                }
+            }
+        });
+
+        // Regenerovat nabídky pokud je jich málo
+        if (state.offers.length < 12) {
+            genOffers(true);
+        }
+    }
+
+    const totalMinutes = days * 1440;
+    const startDay = state.day;
+
+    for (let m = 0; m < totalMinutes; m++) {
+        // AI Bot zásah každých 15 minut
+        if (state.minute % 15 === 0) {
+            if (config.autoAssign) simAutoDispatch();
+            simManageFinances();
+        }
+
+        // Každou hodinu kontrola flotily
+        if (state.minute === 0) {
+            simManageFleet();
+        }
+
+        // Standardní herní tick
+        tick();
+
+        // Denní logování
+        if (state.minute === 0 && state.hour === 0) {
+            const currentSimDay = state.day - startDay;
+            if (currentSimDay > 0 && currentSimDay % config.logIntervalDays === 0 && !config.silent) {
+                console.log(`[SIM DEN ${state.day}] Hotovost: ${Math.floor(state.money).toLocaleString()} Kč | Dluh: ${Math.floor(state.debt || 0).toLocaleString()} Kč | Flotila: ${state.vehicles.length} aut | Zakázky: ${state.stats.deliveries}`);
+            }
+            telemetry.dailyLogs.push({
+                day: state.day,
+                money: Math.floor(state.money),
+                debt: Math.floor(state.debt || 0),
+                reputation: Math.floor(state.reputation),
+                deliveries: state.stats.deliveries,
+                distance: Math.floor(state.stats.distance),
+                fleetSize: state.vehicles.length
+            });
+        }
+    }
+
+    window.__IS_SIMULATION__ = false;
+
+    state.stats.byDivision = state.stats.byDivision || {
+        trucks: { deliveries: 0, distance: 0, earned: 0 },
+        ships: { deliveries: 0, distance: 0, earned: 0 },
+        planes: { deliveries: 0, distance: 0, earned: 0 }
+    };
+
+    const endStats = {
+        day: state.day,
+        money: state.money,
+        debt: state.debt || 0,
+        reputation: state.reputation,
+        deliveries: state.stats.deliveries || 0,
+        distance: state.stats.distance || 0,
+        totalEarned: state.stats.totalEarned || 0,
+        totalSpent: state.stats.totalSpent || 0,
+        trucks: state.vehicles.length,
+        ships: (state.ships || []).length,
+        planes: (state.planes || []).length,
+        drivers: state.drivers.length,
+        divTrucks: Object.assign({}, state.stats.byDivision.trucks),
+        divShips: Object.assign({}, state.stats.byDivision.ships),
+        divPlanes: Object.assign({}, state.stats.byDivision.planes)
+    };
+
+    const deltaMoney = endStats.money - initialStats.money;
+    const deltaDeliveries = endStats.deliveries - initialStats.deliveries;
+    const deltaDistance = endStats.distance - initialStats.distance;
+    const executionDuration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+    const deltaTrucksDeliv = (endStats.divTrucks.deliveries || 0) - (initialStats.divTrucks.deliveries || 0);
+    const deltaTrucksDist = (endStats.divTrucks.distance || 0) - (initialStats.divTrucks.distance || 0);
+    const deltaTrucksEarned = (endStats.divTrucks.earned || 0) - (initialStats.divTrucks.earned || 0);
+
+    const deltaShipsDeliv = (endStats.divShips.deliveries || 0) - (initialStats.divShips.deliveries || 0);
+    const deltaShipsDist = (endStats.divShips.distance || 0) - (initialStats.divShips.distance || 0);
+    const deltaShipsEarned = (endStats.divShips.earned || 0) - (initialStats.divShips.earned || 0);
+
+    const deltaPlanesDeliv = (endStats.divPlanes.deliveries || 0) - (initialStats.divPlanes.deliveries || 0);
+    const deltaPlanesDist = (endStats.divPlanes.distance || 0) - (initialStats.divPlanes.distance || 0);
+    const deltaPlanesEarned = (endStats.divPlanes.earned || 0) - (initialStats.divPlanes.earned || 0);
+
+    const avgTruckKmPerDay = Math.floor(deltaTrucksDist / Math.max(1, endStats.trucks) / days);
+
+    const report = {
+        executionTimeSeconds: executionDuration,
+        initialStats,
+        endStats,
+        delta: {
+            money: deltaMoney,
+            deliveries: deltaDeliveries,
+            distance: deltaDistance,
+            moneyPerDay: Math.floor(deltaMoney / days),
+            deliveriesPerDay: (deltaDeliveries / days).toFixed(1),
+            avgTruckKmPerDay
+        },
+        bottlenecks: telemetry.bottlenecks,
+        events: telemetry.events,
+        trajectory: deltaMoney >= 0 ? 'PROFITABILNÍ / UDRŽITELNÉ' : (endStats.money < 0 ? 'BANKROT' : 'ZTRÁTOVÉ')
+    };
+
+    // Formátovaný výstup do konzole s detailním rozdělením divizí
+    console.group(`%c🏁 VÝSLEDEK REALISTICKÉ SIMULACE (${days} DNÍ za ${executionDuration}s)`, 'color:#00ff88; font-weight:bold; font-size:14px;');
+    
+    console.table({
+        '🚛 Pozemní doprava (Auta)': {
+            'Počet strojů': `${endStats.trucks} vozidel`,
+            'Dokončeno zakázek': `${deltaTrucksDeliv}`,
+            'Ujeto celkem': `${Math.floor(deltaTrucksDist).toLocaleString()} km`,
+            'Průměr km/auto/den': `${avgTruckKmPerDay} km/den (AETR limit)`,
+            'Tržby': `${Math.floor(deltaTrucksEarned).toLocaleString()} Kč`
+        },
+        '🚢 Námořní divize (Lodě)': {
+            'Počet strojů': `${endStats.ships} lodí`,
+            'Dokončeno zakázek': `${deltaShipsDeliv}`,
+            'Ujeto celkem': `${Math.floor(deltaShipsDist).toLocaleString()} km`,
+            'Průměr km/stroj/den': `${Math.floor(deltaShipsDist / Math.max(1, endStats.ships) / days)} km/den`,
+            'Tržby': `${Math.floor(deltaShipsEarned).toLocaleString()} Kč`
+        },
+        '✈️ Letecké cargo (Letadla)': {
+            'Počet strojů': `${endStats.planes} letadel`,
+            'Dokončeno zakázek': `${deltaPlanesDeliv}`,
+            'Ujeto celkem': `${Math.floor(deltaPlanesDist).toLocaleString()} km`,
+            'Průměr km/stroj/den': `${Math.floor(deltaPlanesDist / Math.max(1, endStats.planes) / days)} km/den`,
+            'Tržby': `${Math.floor(deltaPlanesEarned).toLocaleString()} Kč`
+        },
+        '🏢 Celé Impérium (Souhrn)': {
+            'Počet strojů': `${endStats.trucks + endStats.ships + endStats.planes} celkem`,
+            'Dokončeno zakázek': `${deltaDeliveries}`,
+            'Ujeto celkem': `${Math.floor(deltaDistance).toLocaleString()} km`,
+            'Průměr km/auto/den': `${avgTruckKmPerDay} km/den (Pozemní)`,
+            'Čistý zisk za období': `${Math.floor(deltaMoney).toLocaleString()} Kč (${report.trajectory})`
+        }
+    });
+
+    console.groupEnd();
+
+    try {
+        renderAll();
+    } catch(e) {
+        console.warn("UI render skipped after simulation:", e);
+    }
+
+    return report;
+}
+
+window.runWorldSimulation = runWorldSimulation;
+
 window.onload = init;
+
