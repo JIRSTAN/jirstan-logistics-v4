@@ -148,9 +148,9 @@ const DEFAULT_CEO_SILHOUETTE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w
 const DEFAULT_CTO_SILHOUETTE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='200' viewBox='0 0 160 200' style='background:%23060a16;'><rect x='30' y='50' width='100' height='100' fill='%23d09585'/><rect x='20' y='140' width='120' height='60' fill='%232b6cb0'/><rect x='45' y='80' width='18' height='12' fill='%2300ff66' opacity='0.8'/><rect x='97' y='80' width='18' height='12' fill='%2300ff66' opacity='0.8'/><rect x='30' y='25' width='100' height='35' fill='%23222222'/></svg>";
 
 const STAFF_DEFS = {
-    dispatcher: { id: 'dispatcher', n: 'DISPEČER', cost: 20000, img: 'staff_dispatcher.jpg', desc: 'Může vkládat zakázky autům přímo do fronty.', xpPerLevel: 200, skills: [{id: 'negotiator', n: 'Vyjednávač (+10% platba)', cost: 80000}, {id: 'routing', n: 'Efektivní trasy (+10% Rychlost)', cost: 80000}] },
-    mechanic: { id: 'mechanic', n: 'HLAVNÍ MECHANIK', cost: 75000, img: 'staff_mechanic.jpg', desc: 'Zajišťuje zlevnění a prevenci oprav.', xpPerLevel: 200, skills: [{id: 'preventive', n: 'Prevence (-25% rozbití)', cost: 80000}, {id: 'quickfix', n: 'Rychloservis', cost: 100000}] },
-    accountant: { id: 'accountant', n: 'KATEŘINA FUTEROVÁ', cost: 150000, img: 'katerina.jpg', desc: 'Tvá CFO. Stará se o finance a hledá skulinky v daních.', xpPerLevel: 150, skills: [{id: 'tax', n: 'Daňové ráje (-20% poplatky)', cost: 80000}, {id: 'audit', n: 'Auditní profík', cost: 100000}, {id: 'investment', n: 'Investiční guru', cost: 120000}, {id: 'costcutter', n: 'Šetřitel (-10% na nákupy)', cost: 150000}, {id: 'payroll', n: 'Mzdová (Slevy na školení)', cost: 100000}, {id: 'hedging', n: 'Palivový Hedging', cost: 80000}] }
+    dispatcher: { id: 'dispatcher', n: 'HLAVNÍ DISPEČER', cost: 20000, img: 'staff_dispatcher.jpg', desc: 'Zajišťuje chod burzy, automatizuje fronty zakázek a hlídá únavu řidičů.', xpPerLevel: 200, skills: [{id: 'negotiator', n: 'Vyjednávač (+10% platba)', cost: 80000}, {id: 'routing', n: 'Efektivní trasy (+10% Rychlost)', cost: 80000}] },
+    mechanic: { id: 'mechanic', n: 'HLAVNÍ MECHANIK', cost: 75000, img: 'staff_mechanic.jpg', desc: 'Udržuje flotilu v kondici a snižuje náklady na servis.', xpPerLevel: 200, skills: [{id: 'preventive', n: 'Prevence (-25% rozbití)', cost: 80000}, {id: 'quickfix', n: 'Rychloservis', cost: 100000}] },
+    accountant: { id: 'accountant', n: 'KATEŘINA FUTEROVÁ (CFO)', cost: 150000, img: 'katerina.jpg', desc: 'Optimalizuje firemní cashflow, pasivní výnosy ze spoření a hlídá daně.', xpPerLevel: 150, skills: [{id: 'tax', n: 'Daňové ráje (-20% poplatky)', cost: 80000}, {id: 'audit', n: 'Auditní profík', cost: 100000}, {id: 'investment', n: 'Investiční guru', cost: 120000}, {id: 'costcutter', n: 'Šetřitel (-10% na nákupy)', cost: 150000}, {id: 'payroll', n: 'Mzdová (Slevy na školení)', cost: 100000}, {id: 'hedging', n: 'Palivový Hedging', cost: 80000}] }
 };
 
 const MARKET_DB = { 
@@ -759,13 +759,68 @@ function renderAll() {
     renderBuses(); renderCarwash(); renderChallenges(); renderBank(); renderInvestments(); updateFuelUI(); drawFuelChart(); drawMarketChart();
     renderFactions(); renderInsurance(); renderOverseas(); renderGasNetwork(); renderBazaar(); renderTower(); renderWarehouse(); renderMultiplayer();
 }
-function renderBank() { renderInsurance(); }
+function renderBank() {
+    try {
+        state.loans = state.loans || { overdraft: 0, dev: [], shark: null };
+        updateDebtSum();
+        
+        // 1. Shark banner in bank tab
+        const sharkBanner = document.getElementById('bank-shark-banner');
+        if (sharkBanner) {
+            if (state.loans && state.loans.shark && state.loans.shark.amount > 0) {
+                let s = state.loans.shark;
+                let amt = Math.floor(s.amount || 0);
+                let days = s.daysRemaining || 0;
+                sharkBanner.style.display = 'block';
+                sharkBanner.innerHTML = `
+                    <div style="background: linear-gradient(135deg, rgba(255, 42, 85, 0.15) 0%, rgba(45, 15, 25, 0.4) 100%); border: 1px solid rgba(255, 42, 85, 0.5); border-left: 5px solid var(--red); padding: 18px 22px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 30px rgba(255, 42, 85, 0.2);">
+                        <div>
+                            <div style="color: var(--red); font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">☠️ AKTIVNÍ DLUH U LICHVÁŘE ("Temná ulička")</div>
+                            <div style="font-size: 26px; font-weight: 900; font-family: 'Orbitron', sans-serif; color: #ffffff;">${amt.toLocaleString()} Kč <span style="font-size: 12px; color: var(--text-muted); font-family: 'Rajdhani', sans-serif; font-weight: 600;">(Denní úrok 2%)</span></div>
+                            <div style="color: #cbd5e1; font-size: 13px; margin-top: 4px;">Lhůta do exekuce 50% flotily: <b style="color: var(--orange); font-size: 14px;">${days} dní</b></div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-green" onclick="repayShark()" style="font-weight: 800; padding: 10px 18px;">💸 SPLATIT LICHVÁŘI (${amt.toLocaleString()} Kč)</button>
+                            <button class="btn btn-red" onclick="openUsurerModal()" style="font-weight: 800; padding: 10px 16px;">DETAIL LICHVY</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                sharkBanner.style.display = 'none';
+                sharkBanner.innerHTML = '';
+            }
+        }
+        
+        // 2. Safe credit limits
+        if (typeof getCompanyValue === 'function') {
+            let compVal = getCompanyValue() || 0;
+            let maxLimit = compVal * 0.5;
+            let availLimit = Math.max(0, maxLimit - (state.debt || 0));
+            if (document.getElementById('bank-company-value')) document.getElementById('bank-company-value').innerText = Math.floor(compVal).toLocaleString();
+            if (document.getElementById('bank-max-credit')) document.getElementById('bank-max-credit').innerText = Math.floor(maxLimit).toLocaleString();
+            if (document.getElementById('bank-avail-credit')) document.getElementById('bank-avail-credit').innerText = Math.floor(availLimit).toLocaleString();
+        }
+        
+        if (document.getElementById('bank-debt')) {
+            document.getElementById('bank-debt').innerText = Math.floor(state.debt || 0).toLocaleString();
+        }
+        
+        // 3. Child components
+        renderInsurance();
+        renderTermDeposits();
+        renderInvestments();
+        updateFuelUI();
+        updateBankThreatVisuals();
+    } catch(err) {
+        console.error("Chyba v renderBank:", err);
+    }
+}
 
 function renderInsurance() {
     const el = document.getElementById('insurance-status');
     if(!el) return;
-    if(state.insurance.active) {
-        el.innerHTML = `<div style="background:rgba(0,212,255,0.1); border-left:4px solid var(--blue); padding:10px; border-radius:6px; color:white; font-size:13px"><b style="color:var(--blue)">✅ POJIŠTĚNÍ AKTIVNÍ</b><br>Kryje 80% všech pokut a oprav na cestách.<br><span style="color:var(--orange); font-size:12px; margin-top:4px; display:inline-block">Platnost zbývá: ${state.insurance.days} dní</span></div>`;
+    if(state.insurance && state.insurance.active) {
+        el.innerHTML = `<div style="background:rgba(0,212,255,0.1); border-left:4px solid var(--blue); padding:10px; border-radius:6px; color:white; font-size:13px"><b style="color:var(--blue)">✅ POJIŠTĚNÍ AKTIVNÍ</b><br>Kryje 80% všech pokut a oprav na cestách.<br><span style="color:var(--orange); font-size:12px; margin-top:4px; display:inline-block">Platnost zbývá: ${state.insurance.days || 0} dní</span></div>`;
     } else {
         el.innerHTML = `<div style="background:rgba(255,42,85,0.1); border-left:4px solid var(--red); padding:10px; border-radius:6px; color:white; font-size:13px"><b style="color:var(--red)">❌ FLOTILA NENÍ POJIŠTĚNA</b><br>Veškeré defekty a pokuty platíš v plné výši.</div>`;
     }
@@ -773,6 +828,7 @@ function renderInsurance() {
 function buyInsurance() {
     if (state.money >= 150000) {
         addMoney(-150000);
+        state.insurance = state.insurance || { active: false, days: 0 };
         state.insurance.active = true;
         state.insurance.days += 7;
         notify("POJIŠŤOVNA", "Flotila pojištěna na 7 dní!", "info");
@@ -798,13 +854,15 @@ function updateUI() {
     if (uiMoney) uiMoney.innerText = Math.floor(state.money || 0).toLocaleString();
     if(document.getElementById('bank-debt')) document.getElementById('bank-debt').innerText = (state.debt || 0).toLocaleString();
     if(document.getElementById('bank-deposit-val')) document.getElementById('bank-deposit-val').innerText = Math.floor(state.bankDeposit || 0).toLocaleString();
+    let repNum = Number(state.reputation !== undefined ? state.reputation : 100);
+    if (isNaN(repNum)) repNum = 100;
+    let repVal = Math.round(repNum);
+    if (repVal === 0) repVal = 0;
     const uiRep = document.getElementById('ui-rep');
-    if (uiRep) uiRep.innerText = state.reputation || 100;
-    
-    let repVal = state.reputation || 100;
+    if (uiRep) uiRep.innerText = repVal;
     if(document.getElementById('ui-rep2')) document.getElementById('ui-rep2').innerText = repVal;
     if(document.getElementById('ui-rep-bar')) {
-        let pct = (repVal / 150) * 100;
+        let pct = Math.max(0, Math.min(100, (repVal / 150) * 100));
         document.getElementById('ui-rep-bar').style.width = `${pct}%`;
         let barColor = repVal >= 100 ? 'linear-gradient(90deg, #b5179e, #ff0055)' : 'linear-gradient(90deg, #7209b7, #b5179e)';
         document.getElementById('ui-rep-bar').style.background = barColor;
@@ -891,9 +949,62 @@ function gainDispatcherXP(amount) {
     if(state.staff.dispatcher.xp >= reqXp) {
         state.staff.dispatcher.xp -= reqXp;
         state.staff.dispatcher.level++;
-        pushToTicker(`<b>PERSONÁL:</b> Dispečer Jirka postoupil na Level ${state.staff.dispatcher.level}! Bude nacházet lepší zakázky častěji.`, "success");
+        pushToTicker(`<b>PERSONÁL:</b> Hlavní dispečer postoupil na Level ${state.staff.dispatcher.level}! Bude nacházet lepší zakázky častěji.`, "success");
         updateUI();
     }
+}
+
+function depositMoney(amount) {
+    state.bankDeposit = state.bankDeposit || 0;
+    if (amount === undefined || amount === null) {
+        let input = prompt("Zadej částku pro vklad na spořicí účet (Kč):", "100000");
+        if (!input) return;
+        amount = parseInt(input, 10);
+    }
+    if (isNaN(amount) || amount <= 0) {
+        notify("CHYBA", "Zadej platnou kladnou částku k uložení.", "warning");
+        return;
+    }
+    if (state.money < amount) {
+        notify("NEDOSTATEK PENĚZ", "Nemáš dostatek volné hotovosti na účtu.", "danger");
+        return;
+    }
+    state.money -= amount;
+    state.bankDeposit += amount;
+    notify("SPOŘICÍ ÚČET", `Vloženo ${amount.toLocaleString()} Kč na spořicí účet (úrok 1.5% denně).`, "success");
+    pushToTicker(`<b>SPOŘICÍ ÚČET:</b> Vložen vklad +${amount.toLocaleString()} Kč.`, "success");
+    updateUI();
+    renderBank();
+    saveGame();
+}
+
+function withdrawMoney(amount) {
+    state.bankDeposit = state.bankDeposit || 0;
+    if (state.bankDeposit <= 0) {
+        notify("SPOŘICÍ ÚČET", "Na spořicím účtu nemáš žádné uložené prostředky.", "warning");
+        return;
+    }
+    if (amount === 'all') {
+        amount = state.bankDeposit;
+    } else if (amount === undefined || amount === null) {
+        let input = prompt(`Zadej částku k výběru (Dostupné: ${state.bankDeposit.toLocaleString()} Kč):`, String(state.bankDeposit));
+        if (!input) return;
+        amount = parseInt(input, 10);
+    }
+    if (isNaN(amount) || amount <= 0) {
+        notify("CHYBA", "Zadej platnou kladnou částku k výběru.", "warning");
+        return;
+    }
+    if (amount > state.bankDeposit) {
+        amount = state.bankDeposit;
+    }
+    state.bankDeposit -= amount;
+    state.money += amount;
+    notify("SPOŘICÍ ÚČET", `Vybráno ${amount.toLocaleString()} Kč ze spořicího účtu do hotovosti.`, "info");
+    pushToTicker(`<b>SPOŘICÍ ÚČET:</b> Vybráno ${amount.toLocaleString()} Kč.`, "info");
+    updateUI();
+    renderBank();
+    saveGame();
 }
 
 function createTermDeposit() {
@@ -974,6 +1085,7 @@ function renderStaffHire() {
 
             return `<div class="card staff-card" style="border-left:4px solid var(--orange)"><img src="${s.img}" class="staff-img" onerror="this.src=DEFAULT_SILHOUETTE">
                 <div class="staff-content"><h3 style="margin:0; color:var(--orange)">${s.n} <span style="color:var(--green); float:right; font-size:14px; background:rgba(0,242,96,0.1); padding:4px 10px; border-radius:12px">Level ${st.level}</span></h3>
+                    <p style="font-size:12px; color:var(--text-muted); margin:4px 0 8px 0; line-height:1.4;">${s.desc}</p>
                     ${extHtml}
                     ${k === 'accountant' ? `<div style="display:flex;gap:8px; margin-bottom:8px"><button class="btn btn-pink btn-sm" onclick="runAudit()">🔎 PROVÉST AUDIT</button><button class="btn btn-orange btn-sm" onclick="buyChocolate()">🍫 KOUPIT ČOKOLÁDU (5k)</button></div>` : ''}
                     <div style="margin-top:auto"><div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:1px">Speciální dovednosti:</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">${skHtml}</div></div>
@@ -1981,9 +2093,9 @@ function buyCoffeeJirkaSilent() {
         addMoney(-5000);
         if (state.staff.dispatcher && state.staff.dispatcher.active) {
             state.staff.dispatcher.xp = (state.staff.dispatcher.xp || 0) + 20;
-            notify("JIRKA", "Dispečer Jirka dostal čerstvou kávu! (+20 XP)", "success");
+            notify("DISPEČINK", "Hlavní dispečer dostal čerstvou kávu! (+20 XP)", "success");
         } else {
-            notify("JIRKA", "Jirka není najatý, ale káva provoněla prázdnou kancelář.", "info");
+            notify("DISPEČINK", "Dispečer není najatý, ale káva provoněla prázdnou kancelář.", "info");
         }
         saveGame();
         renderStaffHire();
@@ -2106,7 +2218,7 @@ function renderHqFloorDetails() {
                 
                 <h4 style="margin:10px 0 5px 0; font-size:11px; color:var(--pink)">MANAŽERSKÉ AKCE</h4>
                 <button class="btn btn-xs btn-pink" onclick="buyChocolate()">🍫 ČOKOLÁDA PRO KATEŘINU (5k Kč)</button>
-                <button class="btn btn-xs btn-pink" onclick="buyCoffeeJirka()">☕ KÁVA PRO JIŘÍHO (5k Kč)</button>
+                <button class="btn btn-xs btn-pink" onclick="buyCoffeeJirka()">☕ KÁVA PRO DISPEČERA (5k Kč)</button>
                 <button class="btn btn-xs btn-green" onclick="runAudit()" ${state.staff.accountant.active ? '' : 'disabled'}>🔎 PROVÉST FINANČNÍ AUDIT</button>
             </div>
         `;
@@ -2856,6 +2968,9 @@ function autoDispatch(absTime) {
 
     // 2. Find all vehicles that can accept more jobs
     const availableVehicles = state.vehicles.filter(v => {
+        if (v.autoDispatch === false) {
+            return false; // Player explicitly disabled auto-dispatch for this vehicle
+        }
         if (!v.driverId) {
             SysLog('DISPEČINK', `Vozidlo ${v.model} (${v.type}) nemá přiřazeného řidiče.`);
             return false;
@@ -3506,16 +3621,18 @@ function tick() {
 
 function pushToTicker(msg, type) {
     if (window.__IS_SIMULATION__) return;
-    const timeStr = `DEN ${state.day} | ${pad(state.hour)}:${pad(state.minute)}`;
+    const timeStr = `D${state.day} ${pad(state.hour)}:${pad(state.minute)}`;
     
-    // 1. Spodní běžící lišta
+    // 1. Spodní statický panel Live Feed (max 3 položky, nejnovější nahoře)
     const track = document.getElementById('ticker-track');
     if (track) {
-        const span = document.createElement('span');
-        span.className = `ticker-item ${type}`;
-        span.innerHTML = `<span style="color:#aaa; font-family:'Orbitron'; font-size:11px; margin-right:8px">[${timeStr}]</span> <span>${msg}</span>`;
-        track.appendChild(span);
-        if(track.children.length > 20) track.removeChild(track.firstChild);
+        const row = document.createElement('div');
+        row.className = `ticker-item ${type || 'info'}`;
+        row.innerHTML = `<span class="ticker-time">[${timeStr}]</span> <span class="ticker-text">${msg}</span>`;
+        track.insertBefore(row, track.firstChild);
+        while (track.children.length > 3) {
+            track.removeChild(track.lastChild);
+        }
     }
 
     // 2. Dispečerský Terminál
@@ -3526,7 +3643,7 @@ function pushToTicker(msg, type) {
         if(type === 'success') color = "var(--green)";
         if(type === 'warning') color = "var(--gold)";
         if(type === 'danger') color = "var(--red)";
-        if(type === 'info') color = "var(--blue)";
+        if(type === 'info') color = "#38bdf8";
         
         const log = document.createElement('div');
         log.style.cssText = `border-left: 3px solid ${color}; padding-left: 12px; background: rgba(255,255,255,0.04); padding-top: 8px; padding-bottom: 8px; border-radius: 0 6px 6px 0; animation: fadeInScale 0.3s ease-out forwards;`;
@@ -4062,8 +4179,8 @@ function hourly() {
         let refreshRate = Math.max(1, 6 - Math.floor((state.staff.dispatcher.level || 1) / 2));
         if (state.hour % refreshRate === 0) {
             genOffers(true);
-            pushToTicker(`<b>DISPEČER:</b> Jirka právě prohledal trh a aktualizoval Burzu zakázek.`, "info");
-            SysLog('DISPEČINK', `Jirka prohledal trh (Lvl ${state.staff.dispatcher.level||1}) - burza obnovena.`);
+            pushToTicker(`<b>DISPEČINK:</b> Hlavní dispečer prohledal trh a aktualizoval Burzu zakázek.`, "info");
+            SysLog('DISPEČINK', `Hlavní dispečer prohledal trh (Lvl ${state.staff.dispatcher.level||1}) - burza obnovena.`);
         }
     }
 
@@ -4794,11 +4911,11 @@ function daily() {
 // --- VYKRESLOVACÍ FUNKCE A AKCE ---
 
 function renderOverview() { 
-    const tbody = document.getElementById('overview-body'); 
-    const tbodyOv = document.getElementById('overview-overseas-body');
-    if(!tbody || !tbodyOv) return; 
+    const container = document.getElementById('overview-body'); 
+    const containerOv = document.getElementById('overview-overseas-body');
+    if(!container || !containerOv) return; 
     
-    tbody.innerHTML = state.vehicles.map(v => { 
+    container.innerHTML = state.vehicles.map(v => { 
         const d = (state.drivers && Array.isArray(state.drivers)) ? state.drivers.find(x => x.id == v.driverId) : null; 
         
         let prog = (typeof v.progress === 'number' && !isNaN(v.progress)) ? Math.floor(Math.max(0, Math.min(100, v.progress))) : 0;
@@ -4806,68 +4923,227 @@ function renderOverview() {
         let energyVal = d ? ((typeof d.energy === 'number' && !isNaN(d.energy)) ? Math.floor(Math.max(0, Math.min(100, d.energy))) : 100) : 0;
         let moraleVal = d ? ((typeof d.morale === 'number' && !isNaN(d.morale)) ? Math.floor(Math.max(0, Math.min(100, d.morale))) : 100) : 0;
 
-        let status = '';
-        if (v.job) {
-            status = `<span style="color:${v.job.isBlackMarket ? 'var(--red)' : 'var(--orange)'}; font-weight:600">${v.job.isBlackMarket ? '☠️ ILLEGÁLNÍ TRASA' : 'Trasa'} → ${v.job.dest} (${prog}%)</span>`;
-            if (v.queue && v.queue.length > 0) {
-                status += `<br><span style="font-size:11px; color:var(--gold); display:inline-block; margin-top:4px">+ ${v.queue.length} čeká ve frontě</span>`;
-            }
-        } else {
-            status = '<span style="color:var(--green)">Čeká v garáži</span>';
-        }
-
         let acts = ''; 
-        if (d && !v.job) acts = `<button class="btn btn-dark btn-sm" onclick="forceRest(${d.id})">POSLAT SPÁT</button>`; 
-        if (v.queue && v.queue.length > 0) acts += `<button class="btn btn-red btn-sm" onclick="clearQueue(${v.id}, 'truck')">ZRUŠIT FRONTU</button>`;
-        if (d && !v.job && d.energy < 100) acts += `<button class="btn btn-dark btn-sm" onclick="giveCoffee(${d.id})">☕ KÁVA (5k)</button>`;
+        if (d && !v.job) acts += `<button class="vcard-btn vcard-btn-sleep" onclick="forceRest(${d.id})">💤 SPÁT</button>`; 
+        if (d && !v.job && d.energy < 100) acts += `<button class="vcard-btn vcard-btn-coffee" onclick="giveCoffee(${d.id})">☕ KÁVA (5k)</button>`;
+        if (v.queue && v.queue.length > 0) acts += `<button class="vcard-btn vcard-btn-cancel" onclick="clearQueue(${v.id}, 'truck')">✖ ZRUŠIT FRONTU</button>`;
 
         let dTitle = "";
         if(d) {
-            if(d.level >= 20) dTitle = '<span style="color:var(--gold); font-size:10px; border:1px solid var(--gold); padding:2px; border-radius:3px">MISTR</span>';
-            else if (d.level >= 10) dTitle = '<span style="color:var(--purple); font-size:10px; border:1px solid var(--purple); padding:2px; border-radius:3px">ELITA</span>';
+            if(d.level >= 20) dTitle = '<span class="driver-badge badge-master">MISTR</span>';
+            else if (d.level >= 10) dTitle = '<span class="driver-badge badge-elite">ELITA</span>';
+            else dTitle = `<span class="driver-badge badge-lvl">Lvl ${d.level}</span>`;
         }
 
-        return `<tr>
-          <td><b style="color:var(--blue); font-size:15px">${v.model}</b> <span style="font-size:11px; color:var(--text-muted)">(${v.type})</span>${v.trailer ? `<br><span style="font-size:11px; color:var(--gold)">+ Návěs</span>`:''}</td>
-          <td>${d ? `<b style="color:white">${d.name}</b> ${dTitle}` : '<span style="color:var(--red)">Bez řidiče</span>'}</td>
-          <td>${status}</td>
-          <td style="width: 15%">
-            <div class="xp-bar-bg" style="margin:0"><div class="xp-bar-fill" style="width:${fuelVal}%; background:var(--red)"></div></div>
-          </td>
-          <td><b style="color:${d && energyVal>50?'var(--green)':'var(--red)'}">${d ? energyVal+'%' : '-'}</b></td>
-          <td><b style="color:white">${d ? moraleVal+'%' : '-'}</b></td>
-          <td>${acts}</td>
-        </tr>`; 
+        let typeLabel = (v.type || 'van').toUpperCase();
+        let dbCar = (typeof CAR_DB !== 'undefined') ? (CAR_DB.find(x => x.model === v.model) || CAR_DB.find(x => x.cat === v.type)) : null;
+        let fallbackImg = v.type === 'semi' ? 'semi_scania.jpg' : (v.type === 'solo' ? 'solo_iveco.jpg' : 'van_fiat.jpg');
+        let imgSrc = v.img || (dbCar ? dbCar.img : fallbackImg);
+
+        let isAutoDisp = v.autoDispatch !== false;
+        let autoDispBtn = `<button class="${isAutoDisp ? 'vcard-btn-disp-on' : 'vcard-btn-disp-off'}" onclick="toggleVehicleAutoDispatch(${v.id})" title="Přepnout automatický dispečink pro toto vozidlo">${isAutoDisp ? '🤖 AUTO-DISP: ZAP' : '🛑 AUTO-DISP: VYP'}</button>`;
+
+        return `
+        <div class="vehicle-glass-card">
+          <!-- 1. LEVÁ ČÁST: Obrázek, model, řidič, auto-disp toggle -->
+          <div class="vcard-left">
+            <div class="vcard-img-wrap">
+              <img src="${imgSrc}" class="vehicle-img" onerror="this.onerror=null; this.src='${fallbackImg}';">
+              <span class="vcard-type-tag">${typeLabel}${v.trailer ? ' + NÁVĚS' : ''}</span>
+            </div>
+            <div class="vcard-identity">
+              <div class="vcard-model">${v.model}</div>
+              <div class="vcard-driver">
+                <span class="driver-icon">👤</span>
+                ${d ? `<span class="driver-name">${d.name}</span> ${dTitle}` : '<span class="no-driver-alert">Bez řidiče</span>'}
+              </div>
+              ${autoDispBtn}
+            </div>
+          </div>
+
+          <!-- 2. STŘEDNÍ ČÁST: Trasa a Masivní zaoblený Progress Bar -->
+          <div class="vcard-center">
+            <div class="vcard-route-header">
+              ${v.job ? `
+                <div class="route-path">
+                  <span class="route-city">🚩 ${v.job.from || v.loc || 'Depo'}</span>
+                  <span class="route-arrow">➔</span>
+                  <span class="route-city dest">🏁 ${v.job.dest}</span>
+                </div>
+                <div class="route-details">
+                  <span class="route-cargo">${v.job.isBlackMarket ? '☠️ ILLEGÁLNÍ NÁKLAD' : '📦 ' + (v.job.cargo || 'Zakázka')}</span>
+                  <span class="route-reward">+${(v.job.pay || 0).toLocaleString()} Kč</span>
+                </div>
+              ` : `
+                <div class="route-idle">
+                  <span class="pulse-dot-green"></span>
+                  <span class="idle-text">Čeká v depu na zakázku (${v.loc || 'Praha'})</span>
+                </div>
+              `}
+            </div>
+
+            <!-- Masivní zakulacený Progress bar -->
+            <div class="vcard-progress-box">
+              <div class="vcard-progress-bar">
+                <div class="vcard-progress-fill ${v.job ? (v.job.isBlackMarket ? 'fill-bm' : 'fill-route') : 'fill-empty'}" style="width:${prog}%">
+                  ${v.job ? '<span class="progress-tip-glow"></span>' : ''}
+                </div>
+              </div>
+              <div class="vcard-progress-meta">
+                <span>${v.job ? 'Postup přepravy' : 'Status vozu: Volné'}</span>
+                <b>${prog}%</b>
+              </div>
+            </div>
+
+            ${(v.queue && v.queue.length > 0) ? `
+              <div class="vcard-queue-badge">
+                <span>📋 Ve frontě: <b>${v.queue.length} zakáz${v.queue.length === 1 ? 'ka' : v.queue.length < 5 ? 'ky' : 'ek'}</b></span>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- 3. PRAVÁ ČÁST: Kompaktní pill-bary (Nádrž, Energie, Morálka) -->
+          <div class="vcard-right">
+            <!-- Nádrž -->
+            <div class="stat-pill-item">
+              <div class="pill-title-row">
+                <span class="pill-label">⛽ NÁDRŽ</span>
+                <span class="pill-val">${fuelVal}%</span>
+              </div>
+              <div class="pill-track">
+                <div class="pill-fill fill-fuel" style="width:${fuelVal}%"></div>
+              </div>
+            </div>
+
+            <!-- Energie -->
+            <div class="stat-pill-item">
+              <div class="pill-title-row">
+                <span class="pill-label">⚡ ENERGIE</span>
+                <span class="pill-val" style="color:${d && energyVal > 50 ? 'var(--green)' : 'var(--red)'}">${d ? energyVal + '%' : '-'}</span>
+              </div>
+              <div class="pill-track">
+                <div class="pill-fill ${energyVal > 50 ? 'fill-energy' : 'fill-danger'}" style="width:${d ? energyVal : 0}%"></div>
+              </div>
+            </div>
+
+            <!-- Morálka -->
+            <div class="stat-pill-item">
+              <div class="pill-title-row">
+                <span class="pill-label">😊 MORÁLKA</span>
+                <span class="pill-val">${d ? moraleVal + '%' : '-'}</span>
+              </div>
+              <div class="pill-track">
+                <div class="pill-fill fill-morale" style="width:${d ? moraleVal : 0}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. KRAJNÍ PRAVÁ ČÁST: Akce -->
+          <div class="vcard-actions">
+            ${acts || '<div class="vcard-status-badge">AKTIVNÍ V PROVOZU</div>'}
+          </div>
+        </div>
+        `;
     }).join(''); 
     
     // ZÁMOŘÍ V OVERVIEW
     let ovHtml = '';
-    const renderOvRow = (v, isShip) => {
+    const renderOvCard = (v, isShip) => {
         let prog = (typeof v.progress === 'number' && !isNaN(v.progress)) ? Math.floor(Math.max(0, Math.min(100, v.progress))) : 0;
         let fuelVal = (typeof v.fuel === 'number' && !isNaN(v.fuel)) ? Math.floor(Math.max(0, Math.min(100, v.fuel))) : 100;
         let condVal = (typeof v.cond === 'number' && !isNaN(v.cond)) ? Math.floor(Math.max(0, Math.min(100, v.cond))) : 100;
         
-        let status = '';
-        if (v.job) {
-            status = `<span style="color:var(--cyan); font-weight:600">Trasa → ${v.job.dest} (${prog}%)</span>`;
-            if (v.queue && v.queue.length > 0) status += `<br><span style="font-size:11px; color:var(--gold); display:inline-block; margin-top:4px">+ ${v.queue.length} čeká ve frontě</span>`;
-        } else {
-            status = `<span style="color:var(--green)">V ${isShip?'přístavu':'hangáru'}</span>`;
-        }
-        let acts = (v.queue && v.queue.length > 0) ? `<button class="btn btn-red btn-sm" onclick="clearQueue(${v.id}, '${isShip?'ship':'plane'}')">ZRUŠIT FRONTU</button>` : '';
-        return `<tr>
-          <td><b style="color:${isShip?'#0072ff':'#ffffff'}; font-size:15px">${isShip?'🚢':'✈️'} ${v.model}</b></td>
-          <td><span style="color:var(--text-muted)">Automatická Posádka</span></td>
-          <td>${status}</td>
-          <td style="width: 15%"><div class="xp-bar-bg" style="margin:0"><div class="xp-bar-fill" style="width:${fuelVal}%; background:var(--orange)"></div></div></td>
-          <td><b style="color:${condVal < 50 ? 'var(--red)' : 'var(--green)'}">${condVal}%</b></td>
-          <td>-</td>
-          <td>${acts}</td>
-        </tr>`;
+        let dbShip = (typeof SHIP_DB !== 'undefined') ? SHIP_DB.find(x => x.model === v.model) : null;
+        let dbPlane = (typeof PLANE_DB !== 'undefined') ? PLANE_DB.find(x => x.model === v.model) : null;
+        let fallbackOvImg = isShip ? 'ship_container.jpg' : 'plane_747.jpg';
+        let ovImg = v.img || (isShip ? (dbShip ? dbShip.img : fallbackOvImg) : (dbPlane ? dbPlane.img : fallbackOvImg));
+
+        let acts = (v.queue && v.queue.length > 0) ? `<button class="vcard-btn vcard-btn-cancel" onclick="clearQueue(${v.id}, '${isShip?'ship':'plane'}')">✖ ZRUŠIT FRONTU</button>` : '';
+        
+        return `
+        <div class="vehicle-glass-card overseas-glass-card">
+          <!-- 1. LEVÁ ČÁST -->
+          <div class="vcard-left">
+            <div class="vcard-img-wrap">
+              <img src="${ovImg}" class="vehicle-img" onerror="this.onerror=null; this.src='${fallbackOvImg}';">
+              <span class="vcard-type-tag" style="background:rgba(0,212,255,0.7); color:#ffffff">${isShip ? 'NÁMOŘNÍ' : 'LETECKÁ'}</span>
+            </div>
+            <div class="vcard-identity">
+              <div class="vcard-model" style="color:${isShip ? '#00d4ff' : '#ffffff'}">${v.model}</div>
+              <div class="vcard-driver">
+                <span class="driver-name" style="color:var(--text-muted)">🛡️ Automatická Posádka</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. STŘEDNÍ ČÁST -->
+          <div class="vcard-center">
+            <div class="vcard-route-header">
+              ${v.job ? `
+                <div class="route-path">
+                  <span class="route-city">🚩 ${v.job.from || (isShip ? 'Rotterdam' : 'Praha')}</span>
+                  <span class="route-arrow">➔</span>
+                  <span class="route-city dest">🏁 ${v.job.dest}</span>
+                </div>
+                <div class="route-details">
+                  <span class="route-cargo">📦 ${v.job.cargo || (isShip ? 'Zámořský kontejner' : 'Expresní letecký náklad')}</span>
+                  <span class="route-reward" style="color:var(--cyan)">+${(v.job.pay || 0).toLocaleString()} Kč</span>
+                </div>
+              ` : `
+                <div class="route-idle">
+                  <span class="pulse-dot-cyan"></span>
+                  <span class="idle-text">V ${isShip ? 'přístavu' : 'hangáru'} připraven k plavbě/letu</span>
+                </div>
+              `}
+            </div>
+
+            <!-- Masivní zaoblený Progress Bar -->
+            <div class="vcard-progress-box">
+              <div class="vcard-progress-bar">
+                <div class="vcard-progress-fill ${v.job ? 'fill-overseas' : 'fill-empty'}" style="width:${prog}%">
+                  ${v.job ? '<span class="progress-tip-glow" style="background:#00e5ff; box-shadow:0 0 10px #00e5ff"></span>' : ''}
+                </div>
+              </div>
+              <div class="vcard-progress-meta">
+                <span>${v.job ? (isShip ? 'Průběh plavby' : 'Průběh letu') : 'Status: Kotví / V hangáru'}</span>
+                <b>${prog}%</b>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. PRAVÁ ČÁST -->
+          <div class="vcard-right">
+            <div class="stat-pill-item">
+              <div class="pill-title-row">
+                <span class="pill-label">⛽ PALIVO</span>
+                <span class="pill-val">${fuelVal}%</span>
+              </div>
+              <div class="pill-track">
+                <div class="pill-fill fill-fuel" style="width:${fuelVal}%"></div>
+              </div>
+            </div>
+
+            <div class="stat-pill-item">
+              <div class="pill-title-row">
+                <span class="pill-label">🛠️ KONDICE</span>
+                <span class="pill-val" style="color:${condVal < 50 ? 'var(--red)' : 'var(--green)'}">${condVal}%</span>
+              </div>
+              <div class="pill-track">
+                <div class="pill-fill ${condVal > 50 ? 'fill-morale' : 'fill-danger'}" style="width:${condVal}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. KRAJNÍ PRAVÁ ČÁST -->
+          <div class="vcard-actions">
+            ${acts || '<div class="vcard-status-badge">PLAVBA / LET</div>'}
+          </div>
+        </div>
+        `;
     };
-    state.ships.forEach(s => ovHtml += renderOvRow(s, true));
-    state.planes.forEach(p => ovHtml += renderOvRow(p, false));
-    tbodyOv.innerHTML = ovHtml || '<tr><td colspan="7" style="text-align:center; color:var(--text-muted)">Zámořská divize zatím nevlastní žádné stroje.</td></tr>';
+    state.ships.forEach(s => ovHtml += renderOvCard(s, true));
+    state.planes.forEach(p => ovHtml += renderOvCard(p, false));
+    containerOv.innerHTML = ovHtml || '<div style="text-align:center; padding:30px; color:var(--text-muted); font-style:italic; background:rgba(30,35,45,0.4); border-radius:16px; border:1px solid rgba(255,255,255,0.06)">Zámořská divize zatím nevlastní žádné lodě ani letadla.</div>';
 }
 
 function clearQueue(vid, type) {
@@ -5152,8 +5428,24 @@ const getEligibility = (vehicle, offer) => {
     return { eligible: true, reason: '' };
 };
 
+function toggleVehicleAutoDispatch(vid) {
+    let v = state.vehicles.find(x => x.id == vid);
+    if (!v) return;
+    v.autoDispatch = v.autoDispatch === false ? true : false;
+    notify("AUTO-DISPEČINK", `Vozidlo ${v.model}: Auto-dispečink ${v.autoDispatch ? 'POVOLEN' : 'ZAKÁZÁN'}.`, v.autoDispatch ? "success" : "info");
+    SysLog('DISPEČINK', `⚙️ Auto-dispečink pro ${v.model} nastaven na: ${v.autoDispatch ? 'ZAP' : 'VYP'}.`);
+    renderOverview();
+    saveGame();
+}
+
 function genOffers(force = false) {
-    if (!force && state.money >= 500) addMoney(-500);
+    if (!force) {
+        if (state.money < 5000) {
+            notify("BURZA", "Dispečer nemůže obnovit burzu zakázek (rezerva pod 5 000 Kč).", "warning");
+            return;
+        }
+        addMoney(-500);
+    }
     state.offers = [];
     let num = 15 + Math.floor(state.reputation / 10) + (state.hq.office * 2);
     const dests = Object.keys(CITIES);
@@ -5199,25 +5491,25 @@ function genOffers(force = false) {
         if (type === 'ship') dist = Math.max(1200, dist * 3);
         if (type === 'plane') dist = Math.max(1500, dist * 2);
 
-        // Reálné sazby za kilometr (Kč/km) a základní paušál (Zkrocení hyperinflace)
-        let baseFee = 1200;
-        let ratePerKm = 12;
+        // Reálné sazby za kilometr (Kč/km) a základní paušál (+15% balanc pro plynulejší grind)
+        let baseFee = 1400;
+        let ratePerKm = 14;
 
         if (type === 'van') {
-            baseFee = 1000 + Math.floor(Math.random() * 800);
-            ratePerKm = 10 + Math.floor(Math.random() * 3); // 10 - 13 Kč/km
+            baseFee = 1200 + Math.floor(Math.random() * 900);
+            ratePerKm = 12 + Math.floor(Math.random() * 3); // 12 - 15 Kč/km
         } else if (type === 'solo') {
-            baseFee = 2000 + Math.floor(Math.random() * 1000);
-            ratePerKm = 15 + Math.floor(Math.random() * 4); // 15 - 19 Kč/km
+            baseFee = 2400 + Math.floor(Math.random() * 1200);
+            ratePerKm = 18 + Math.floor(Math.random() * 4); // 18 - 22 Kč/km
         } else if (type === 'semi') {
-            baseFee = 3200 + Math.floor(Math.random() * 1500);
-            ratePerKm = 21 + Math.floor(Math.random() * 5); // 21 - 26 Kč/km
+            baseFee = 3800 + Math.floor(Math.random() * 1800);
+            ratePerKm = 24 + Math.floor(Math.random() * 6); // 24 - 30 Kč/km
         } else if (type === 'ship') {
-            baseFee = 30000 + Math.floor(Math.random() * 15000);
-            ratePerKm = 30 + Math.floor(Math.random() * 12); // 30 - 42 Kč/km
+            baseFee = 35000 + Math.floor(Math.random() * 18000);
+            ratePerKm = 35 + Math.floor(Math.random() * 14); // 35 - 49 Kč/km
         } else if (type === 'plane') {
-            baseFee = 50000 + Math.floor(Math.random() * 25000);
-            ratePerKm = 50 + Math.floor(Math.random() * 20); // 50 - 70 Kč/km
+            baseFee = 58000 + Math.floor(Math.random() * 28000);
+            ratePerKm = 58 + Math.floor(Math.random() * 22); // 58 - 80 Kč/km
         }
 
         let pay = Math.floor(baseFee + (dist * ratePerKm));
@@ -5305,9 +5597,37 @@ function renderAuction() {
         el.innerHTML = offers.map(o => {
             let cardClass = o.isBlackMarket ? 'bm-card' : (o.isVIP ? 'vip-card' : '');
             let titleColor = o.isBlackMarket ? 'var(--red)' : (o.isVIP ? 'var(--gold)' : 'var(--orange)');
-            let badgeHtml = o.isVIP ? '<span class="lic-badge" style="background:var(--gold);color:black">⭐ VIP ZAKÁZKA</span>' : (o.reqLic ? '<span class="lic-badge">'+LICENSES.find(l=>l.id===o.reqLic).n+'</span>' : 'Běžný náklad');
-            let borderStyle = o.isVIP ? 'border-top: 4px solid var(--gold); background: rgba(255, 195, 0, 0.03);' : '';
-            return `<div class="card ${cardClass}" style="${borderStyle}"><div class="card-body"><div style="display:flex;justify-content:space-between"><h3 style="margin:0;color:${titleColor}">${o.dest}</h3><b style="font-size:16px">${o.pay.toLocaleString()} Kč</b></div><div style="font-size:12px;color:var(--text-muted);margin:10px 0">${o.cargo}</div><div style="font-size:11px;margin-bottom:10px">${badgeHtml} | ${o.type.toUpperCase()}</div><button class="btn btn-blue" onclick="takeJobModal(${o.id})">PŘIJMOUT</button></div></div>`;
+            let badgeHtml = o.isVIP ? '<span class="lic-badge" style="background:var(--gold);color:black">⭐ VIP ZAKÁZKA</span>' : (o.reqLic ? '<span class="lic-badge">'+LICENSES.find(l=>l.id===o.reqLic).n+'</span>' : '<span style="color:var(--text-muted); font-size:11px;">📦 Běžný náklad</span>');
+            let borderStyle = o.isVIP ? 'border-top: 3px solid var(--gold);' : (o.isBlackMarket ? 'border-left: 3px solid var(--red);' : '');
+            let distKm = o.dist || Math.floor(Math.random() * 400 + 200);
+
+            return `
+            <div class="card ${cardClass}" style="${borderStyle}; animation: slideIn .3s ease-out;">
+                <div class="card-body" style="display:flex; flex-direction:column; gap:12px; padding:18px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <div style="font-size:10px; color:var(--text-muted); font-family:'Rajdhani'; letter-spacing:1.5px; font-weight:700;">CÍLOVÁ DESTINACE</div>
+                            <h3 style="margin:2px 0 0 0; color:${titleColor}; font-size:17px; display:flex; align-items:center; gap:6px;">🏁 ${o.dest}</h3>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:10px; color:var(--text-muted); font-family:'Rajdhani'; letter-spacing:1px; font-weight:700;">ODMĚNA</div>
+                            <div style="color:var(--green); font-family:'Orbitron'; font-size:16px; font-weight:800; text-shadow:0 0 10px rgba(0,242,96,0.3);">+${o.pay.toLocaleString()} Kč</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+                        <span style="color:#e2e8f0; font-weight:600;">📦 ${o.cargo || 'Zboží'}</span>
+                        <span style="color:var(--blue); font-family:'Rajdhani'; font-weight:700;">🛣️ ~${distKm} km</span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+                        <div>${badgeHtml}</div>
+                        <span class="vcard-type-tag" style="position:static; padding:3px 8px; border-radius:6px; font-size:9.5px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,212,255,0.12); color:#00d4ff;">${o.type.toUpperCase()}</span>
+                    </div>
+
+                    <button class="btn btn-blue" style="width:100%; border-radius:8px; font-size:12px; font-weight:700; padding:9px; letter-spacing:1px;" onclick="takeJobModal(${o.id})">🚀 PŘEVZÍT ZAKÁZKU</button>
+                </div>
+            </div>`;
         }).join('');
     }
 }
@@ -5969,59 +6289,94 @@ function renderWarehouse() {
     let pct = Math.min(100, Math.round(totalStock / state.warehouse.capacity * 100));
 
     let freeVehicles = state.vehicles.filter(v => !v.job);
-    let vehicleSelectOptions = freeVehicles.map(v => {
+    let vehicleSelectOptions = state.vehicles.map(v => {
         let cap = v.type === 'van' ? 30 : v.type === 'solo' ? 80 : 200;
-        return `<option value="${v.id}">${v.model} (${v.type.toUpperCase()}, Max ${cap} ks)</option>`;
+        let statusTag = v.job ? `(Na trase -> ${v.job.dest})` : `(Volné v depu)`;
+        return `<option value="${v.id}">${v.model} [${v.type.toUpperCase()}, Max ${cap} ks] ${statusTag}</option>`;
     }).join('');
     if (!vehicleSelectOptions) {
-        vehicleSelectOptions = `<option value="" disabled>Žádné volné vozidlo v garáži</option>`;
+        vehicleSelectOptions = `<option value="" disabled>Nemáš žádná vozidla ve flotile</option>`;
     }
 
-    let citySelectOptions = Object.keys(CITIES).filter(c => c !== "Zájezd").map(c => `<option value="${c}">${c}</option>`).join('');
+    let citySelectOptions = Object.keys(CITIES).filter(c => c !== "Zájezd").map(c => {
+        let p = state.cityPrices[c] || { food: 150, parts: 400, electronics: 1200 };
+        return `<option value="${c}">${c} (Obilí: ${p.food || 150} Kč, Ocel: ${p.parts || 400} Kč)</option>`;
+    }).join('');
 
     s.innerHTML = `
         <h3 style="margin-top:0">Tvůj sklad (${totalStock}/${state.warehouse.capacity})</h3>
-        <div style="height:14px; background: rgba(255,255,255,0.08); border-radius:7px; overflow:hidden; margin-bottom:12px; border: 1px solid var(--border-light)">
+        <div style="height:14px; background: rgba(255,255,255,0.08); border-radius:7px; overflow:hidden; margin-bottom:16px; border: 1px solid var(--border-light)">
            <div style="height:100%; width:${pct}%; background: linear-gradient(90deg, var(--blue), var(--orange)); transition: width 0.3s ease;"></div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:13px; margin-bottom:10px">
-            <div>🌾 Obilí: <b>${state.warehouse.stock.food || 0}</b></div>
-            <div>🔩 Ocel: <b>${state.warehouse.stock.parts || 0}</b></div>
-            <div>💻 Elektronika: <b>${state.warehouse.stock.electronics || 0}</b></div>
-            <div>🍎 Čerstvé jídlo: <b>${state.warehouse.stock.fresh_food || 0}</b></div>
+        
+        <!-- Přímé akce naložení pro každou komoditu -->
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:18px">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                <div>
+                    <div style="font-weight:700; font-size:14px; color:#ffffff;">🌾 Obilí (Pytle / Volně)</div>
+                    <div style="font-size:11px; color:var(--text-muted);">Skladem: <b style="color:var(--orange); font-size:13px;">${state.warehouse.stock.food || 0} ks</b></div>
+                </div>
+                <button class="btn btn-sm btn-orange" onclick="openLoadCommodityModal('food')" ${(state.warehouse.stock.food || 0) <= 0 ? 'disabled' : ''}>📦 NALOŽIT DO VOZIDLA</button>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                <div>
+                    <div style="font-weight:700; font-size:14px; color:#ffffff;">🔩 Ocel & Náhradní díly</div>
+                    <div style="font-size:11px; color:var(--text-muted);">Skladem: <b style="color:var(--blue); font-size:13px;">${state.warehouse.stock.parts || 0} ks</b></div>
+                </div>
+                <button class="btn btn-sm btn-blue" onclick="openLoadCommodityModal('parts')" ${(state.warehouse.stock.parts || 0) <= 0 ? 'disabled' : ''}>📦 NALOŽIT DO VOZIDLA</button>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                <div>
+                    <div style="font-weight:700; font-size:14px; color:#ffffff;">💻 High-Tech Elektronika</div>
+                    <div style="font-size:11px; color:var(--text-muted);">Skladem: <b style="color:var(--gold); font-size:13px;">${state.warehouse.stock.electronics || 0} ks</b></div>
+                </div>
+                <button class="btn btn-sm btn-gold" onclick="openLoadCommodityModal('electronics')" ${(state.warehouse.stock.electronics || 0) <= 0 ? 'disabled' : ''}>📦 NALOŽIT DO VOZIDLA</button>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                <div>
+                    <div style="font-weight:700; font-size:14px; color:#ffffff;">🍎 Čerstvé potraviny (Chlazeno)</div>
+                    <div style="font-size:11px; color:var(--text-muted);">Skladem: <b style="color:var(--green); font-size:13px;">${state.warehouse.stock.fresh_food || 0} ks</b></div>
+                </div>
+                <button class="btn btn-sm btn-teal" onclick="openLoadCommodityModal('fresh_food')" ${(state.warehouse.stock.fresh_food || 0) <= 0 ? 'disabled' : ''}>📦 NALOŽIT DO VOZIDLA</button>
+            </div>
         </div>
+
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:15px">
             <button class="btn btn-sm btn-teal" onclick="upgradeColdStorage()" ${state.warehouse.cold_storage >= 3 ? 'disabled' : ''}>Upgradovat chladění (2M)</button>
             <button class="btn btn-sm btn-orange" onclick="upgradeWarehouse()">Zvětšit sklad (+500) za ${(500000 * state.warehouse.level).toLocaleString()} Kč</button>
         </div>
         
-        <h3 style="margin-top:15px; color:var(--orange)">🚚 VLASTNÍ EXPEDICE ZBOŽÍ</h3>
-        <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:6px; border:1px solid rgba(255,255,255,0.05); font-size:12px">
+        <h3 style="margin-top:15px; color:var(--orange)">🚚 RYCHLÁ EXPEDICE ZE SKLADU</h3>
+        <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); font-size:12px">
             <div style="margin-bottom:8px">
                 <label>Zvolit komoditu:</label>
-                <select id="exp-comm" style="width:100%; background:rgba(6,12,24,0.9); border:1px solid var(--border-light); color:white; padding:4px; border-radius:4px; margin-top:2px">
+                <select id="exp-comm" style="width:100%; background:rgba(6,12,24,0.9); border:1px solid var(--border-light); color:white; padding:6px; border-radius:6px; margin-top:2px">
                     <option value="food">Obilí (Máš: ${state.warehouse.stock.food || 0})</option>
                     <option value="parts">Ocel (Máš: ${state.warehouse.stock.parts || 0})</option>
                     <option value="electronics">Elektronika (Máš: ${state.warehouse.stock.electronics || 0})</option>
+                    <option value="fresh_food">Čerstvé jídlo (Máš: ${state.warehouse.stock.fresh_food || 0})</option>
                 </select>
             </div>
             <div style="margin-bottom:8px">
                 <label>Cílové město prodejce:</label>
-                <select id="exp-dest" style="width:100%; background:rgba(6,12,24,0.9); border:1px solid var(--border-light); color:white; padding:4px; border-radius:4px; margin-top:2px">
+                <select id="exp-dest" style="width:100%; background:rgba(6,12,24,0.9); border:1px solid var(--border-light); color:white; padding:6px; border-radius:6px; margin-top:2px">
                     ${citySelectOptions}
                 </select>
             </div>
             <div style="margin-bottom:8px">
-                <label>Vybrat tahač / dodávku:</label>
-                <select id="exp-vehicle" style="width:100%; background:rgba(6,12,24,0.9); border:1px solid var(--border-light); color:white; padding:4px; border-radius:4px; margin-top:2px">
+                <label>Vybrat vozidlo z flotily:</label>
+                <select id="exp-vehicle" style="width:100%; background:rgba(6,12,24,0.9); border:1px solid var(--border-light); color:white; padding:6px; border-radius:6px; margin-top:2px">
                     ${vehicleSelectOptions}
                 </select>
             </div>
             <div style="margin-bottom:12px">
                 <label>Množství k naložení (ks):</label>
-                <input type="number" id="exp-qty" class="form-input" style="background:rgba(0,0,0,0.5); border:1px solid var(--border-light); color:white; padding:4px; border-radius:4px; width:100%; margin-top:2px" placeholder="Počet kusů...">
+                <input type="number" id="exp-qty" class="form-input" style="background:rgba(0,0,0,0.5); border:1px solid var(--border-light); color:white; padding:6px; border-radius:6px; width:100%; margin-top:2px" placeholder="Počet kusů (např. 30)">
             </div>
-            <button class="btn btn-orange" onclick="dispatchCustomCommodity()">EXPEDOVAT A PRODAT</button>
+            <button class="btn btn-orange" style="width:100%; padding:10px; font-weight:700;" onclick="dispatchCustomCommodity()">🚀 NALOŽIT A EXPEDOVAT</button>
         </div>
         
         <h3 style="margin-top:20px; color:var(--blue);">🚢 ZÁSOBOVÁNÍ SÍTĚ</h3>
@@ -6077,50 +6432,149 @@ function renderWarehouse() {
     drawWarehouseChart();
 }
 
-function dispatchCustomCommodity() {
-    let vid = parseInt(document.getElementById('exp-vehicle').value);
-    let dest = document.getElementById('exp-dest').value;
-    let comm = document.getElementById('exp-comm').value;
-    let qty = parseInt(document.getElementById('exp-qty').value);
+function openLoadCommodityModal(commType) {
+    let stock = (state.warehouse && state.warehouse.stock) ? (state.warehouse.stock[commType] || 0) : 0;
+    let label = commType === 'food' ? 'Obilí (v pytlích)' : (commType === 'parts' ? 'Ocel & Náhradní díly' : (commType === 'fresh_food' ? 'Čerstvé potraviny' : 'Elektronika'));
+    
+    if (stock <= 0) {
+        return notify("SKLAD", `Nemáš žádné ${label} na skladě k naložení.`, "warning");
+    }
+
+    let cityOpts = Object.keys(CITIES).filter(c => c !== "Zájezd").map(c => {
+        let p = (state.cityPrices && state.cityPrices[c]) ? state.cityPrices[c][commType] : 150;
+        return `<option value="${c}">${c} — Výkupní cena: ${p || 150} Kč/ks</option>`;
+    }).join('');
+
+    let vehicleCards = state.vehicles.map(v => {
+        let cap = v.type === 'van' ? 30 : (v.type === 'solo' ? 80 : 200);
+        let typeDesc = v.type === 'van' ? 'Dodávka (Pytle/balíky max 30 ks)' : (v.type === 'solo' ? 'Sólo náklaďák (Palety max 80 ks)' : 'Tahač (Volně ložené max 200 ks)');
+        let dr = state.drivers.find(d => d.id == v.driverId);
+        let drName = dr ? `👤 ${dr.name}` : '<span style="color:var(--orange)">⚠️ Bez řidiče (Bude automaticky přiřazen)</span>';
+        let isFree = !v.job;
+        let qtyToLoad = Math.min(stock, cap);
+
+        return `
+        <div class="card" style="background:rgba(45,55,70,0.55); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <div style="flex:1">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <b style="color:var(--blue); font-size:15px">${v.model}</b>
+                    <span class="vcard-type-tag" style="position:static; padding:2px 6px; border-radius:4px; font-size:9px;">${v.type.toUpperCase()}</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${typeDesc}</div>
+                <div style="font-size:12px; margin-top:4px;">Řidič: ${drName}</div>
+                <div style="font-size:11px; color:${isFree ? 'var(--green)' : 'var(--gold)'}; margin-top:2px;">
+                    ${isFree ? '✅ Volné v depu Zájezd (Připraveno okamžitě)' : `⏳ Na trase (${v.job.dest}) — Bude zařazeno do fronty`}
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <button class="btn btn-green btn-sm" style="font-weight:700; padding:8px 14px;" onclick="dispatchCustomCommodity(${v.id}, '${commType}', document.getElementById('modal-load-dest').value, ${qtyToLoad})">
+                    📦 NALOŽIT ${qtyToLoad} KS
+                </button>
+            </div>
+        </div>
+        `;
+    }).join('');
+
+    let html = `
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:10px; margin-bottom:15px">
+            <h2 style="color:var(--orange); margin:0">📦 NALOŽIT DO VOZIDLA: ${label}</h2>
+            <button class="btn btn-sm btn-dark" onclick="closeModal()" style="font-size:16px; padding:4px 10px; cursor:pointer;">&times;</button>
+        </div>
+        <div style="background:rgba(0,0,0,0.35); padding:10px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+            <span>Dostupné zásoby ve skladu: <b style="color:var(--orange); font-size:16px;">${stock} ks</b></span>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:12px;">Cíl výkupu:</label>
+                <select id="modal-load-dest" style="background:#0c121c; color:#fff; border:1px solid var(--border-light); padding:4px 8px; border-radius:6px; font-size:12px;">
+                    ${cityOpts}
+                </select>
+            </div>
+        </div>
+        <div style="max-height:55vh; overflow-y:auto; padding-right:5px">
+            ${vehicleCards || '<div style="color:var(--text-muted); text-align:center; padding:20px;">Nemáš žádná vozidla. Kup si nejprve dodávku nebo kamion.</div>'}
+        </div>
+    `;
+    showModal(html);
+}
+
+function renderWholesale() { 
+    renderWarehouse(); 
+}
+
+function assignWarehouseJob(comm) { 
+    openLoadCommodityModal(comm || 'food'); 
+}
+
+function dispatchCustomCommodity(explicitVid, explicitComm, explicitDest, explicitQty) {
+    let vid = (explicitVid !== undefined) ? explicitVid : parseInt(document.getElementById('exp-vehicle')?.value);
+    let dest = explicitDest || document.getElementById('exp-dest')?.value;
+    let comm = explicitComm || document.getElementById('exp-comm')?.value;
+    let qty = (explicitQty !== undefined) ? explicitQty : parseInt(document.getElementById('exp-qty')?.value);
     
     if (isNaN(vid)) return notify("EXPEDICE", "Vyber platné vozidlo.", "warning");
     if (!dest) return notify("EXPEDICE", "Vyber cílové město.", "warning");
     if (!comm) return notify("EXPEDICE", "Vyber komoditu.", "warning");
-    if (isNaN(qty) || qty <= 0) return notify("EXPEDICE", "Zadej platné množství.", "warning");
     
     let v = state.vehicles.find(x => x.id === vid);
     if (!v) return notify("EXPEDICE", "Vozidlo nenalezeno.", "danger");
-    if (v.job) return notify("EXPEDICE", "Vozidlo je již na cestě.", "warning");
     
     let stock = state.warehouse.stock[comm] || 0;
-    if (stock < qty) return notify("EXPEDICE", "Nedostatek zásob ve skladu.", "danger");
+    if (stock <= 0) return notify("EXPEDICE", "Nedostatek zásob ve skladu.", "danger");
     
-    let capacity = v.type === 'van' ? 30 : v.type === 'solo' ? 80 : 200;
-    if (qty > capacity) return notify("EXPEDICE", `Množství překračuje kapacitu vozidla (${capacity} ks).`, "warning");
+    let capacity = v.type === 'van' ? 30 : (v.type === 'solo' ? 80 : 200);
+    if (isNaN(qty) || qty <= 0) qty = Math.min(stock, capacity);
+    qty = Math.min(qty, stock, capacity);
     
+    // Auto-Pair driver if missing so vehicle never freezes
+    if (!v.driverId) {
+        let freeDriver = state.drivers.find(d => !state.vehicles.some(veh => veh.driverId === d.id));
+        if (freeDriver) {
+            v.driverId = freeDriver.id;
+        } else if (state.drivers.length > 0) {
+            v.driverId = state.drivers[0].id;
+        } else {
+            let newId = Date.now();
+            let newD = { id: newId, name: "Řidič Skladu", level: 1, xp: 0, req: 100, skills: { spd: 0 }, energy: 100, morale: 100, tacho: 0, restUntil: 0, lic: ['express', 'stehovani', 'sypky'], bio: "Specialista na velkoobchodní závozy.", trait: 'safe', deliveries: 0 };
+            state.drivers.push(newD);
+            v.driverId = newId;
+        }
+    }
+
     // Deduct stock from warehouse
     state.warehouse.stock[comm] -= qty;
     
     // Create custom job
-    let label = comm === 'food' ? 'Obilí' : comm === 'parts' ? 'Ocel' : 'Elektronika';
-    v.job = {
+    let label = comm === 'food' ? 'Obilí' : (comm === 'parts' ? 'Ocel' : (comm === 'fresh_food' ? 'Čerstvé jídlo' : 'Elektronika'));
+    let customJob = {
         id: Date.now(),
         dest: dest,
+        from: "Zájezd",
         pay: 0,
         cargo: `EXPEDICE: ${label} (${qty} ks)`,
         type: v.type,
         isCustomCommodity: true,
+        isManualWarehouseJob: true,
         commodityType: comm,
         qty: qty,
-        dist: Math.floor(Math.random() * 800) + 200
+        dist: Math.floor(Math.random() * 400) + 200
     };
-    v.progress = 0;
     
-    notify("EXPEDICE SPUŠTĚNA", `Vozidlo ${v.model} vyrazilo směr ${dest} s ${qty} ks ${label}.`, "success");
+    if (!v.job) {
+        v.job = customJob;
+        v.progress = 0;
+    } else {
+        v.queue = v.queue || [];
+        v.queue.unshift(customJob);
+    }
+    v.newlyAssigned = true;
+    
+    if (typeof closeModal === 'function') closeModal();
+    notify("EXPEDICE SPUŠTĚNA", `Vozidlo ${v.model} veze ${qty} ks ${label} do ${dest}.`, "success");
     pushToTicker(`<b>EXPEDICE:</b> Odeslána dodávka ${label} do ${dest} vozem ${v.model}.`, "info");
     SysLog('SKLAD', `🚚 Vlastní expedice: ${v.model} veze ${qty} ks ${label} do ${dest}.`);
     
     renderWarehouse();
+    renderOverview();
+    renderDispatch();
     renderAll();
     saveGame();
 }
@@ -7627,12 +8081,12 @@ function showOfficeModal() {
         <h2 style="color:var(--green); margin-top:0; font-family:'Orbitron'">🏢 HLAVNÍ KANCELÁŘ VEDENÍ (1. PATRO)</h2>
         <p style="color:var(--text-muted)">Centrála vedení společnosti JIRSTAN LOGISTICS.</p>
         <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:8px; border:1px solid var(--border-light); margin-bottom:20px; font-size:13px; line-height:1.6">
-            <div>👨‍💼 <b>Stanislav Starosta</b> (CEO & Zakladatel) — Strategické řízení a finance</div>
-            <div>☕ <b>Jiří Češík</b> (CTO & Spoluzakladatel) — Technický dohled a automatizace</div>
-            <div>👩‍💼 <b>Kateřina</b> (Finanční ředitelka) — Účetnictví, daně a pojištění</div>
+            <div>👑 <b>Jirstan (Majitel)</b> (CEO & Zakladatel) — Hlavní vizionář a stratég</div>
+            <div>⚡ <b>Brácha</b> (COO & Spoluzakladatel) — Technický a operativní ředitel flotily</div>
+            <div>💼 <b>Kateřina Nováková</b> (CFO & Hlavní Účetní) — Železná pěst firemních financí</div>
         </div>
         <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap">
-            <button class="btn btn-orange" onclick="buyCoffeeJirka(); closeModal();">☕ Koupit kávu pro Jirku (5 000 Kč / +20 XP)</button>
+            <button class="btn btn-orange" onclick="buyCoffeeJirka(); closeModal();">☕ Koupit kávu pro dispečera (5 000 Kč / +20 XP)</button>
             <button class="btn btn-pink" onclick="if(state.money>=5000){addMoney(-5000); notify('KATEŘINA', 'Kateřina dostala čokoládu a má radost!', 'pink'); saveGame();}else{notify('FINANCE','Nemáš peníze!','warning');}">🍫 Čokoláda pro Kateřinu (5 000 Kč)</button>
         </div>
         <button class="btn btn-dark" onclick="closeModal()">ZAVŘÍT</button>
@@ -8268,7 +8722,71 @@ function renderAchievements() {
 // HR & DRIVERS
 function renderHR() {
     const el = document.getElementById('hr-grid'); if(!el) return;
-    el.innerHTML = state.drivers.map(d => `<div class="card" style="border-left:4px solid ${d.energy<30?'var(--red)':'var(--green)'}"><div class="card-body"><div style="display:flex;justify-content:space-between"><h3>${d.name}</h3><b style="color:var(--green)">Lvl ${d.level}</b></div><div style="font-size:11px;color:var(--text-muted);margin-bottom:10px"><i>"${d.bio}"</i> | Vlastnost: <b>${TRAITS.find(t=>t.id===d.trait).n}</b></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span>Energie: ${Math.floor(d.energy)}%</span><span>Morálka: ${Math.floor(d.morale||100)}%</span></div><div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${d.energy}%;background:var(--blue)"></div></div><div style="margin-top:10px;font-size:11px">Licence: ${d.lic.map(l=>'<span class="lic-badge">'+LICENSES.find(x=>x.id===l).n+'</span>').join('')}</div><div style="margin-top:10px;display:flex;gap:5px"><button class="btn btn-sm btn-dark" onclick="fireDriver(${d.id})">PROPUSTIT</button></div></div></div>`).join('');
+    el.innerHTML = state.drivers.map(d => {
+        let energyVal = Math.floor(d.energy || 100);
+        let moraleVal = Math.floor(d.morale || 100);
+        let traitObj = (typeof TRAITS !== 'undefined' ? TRAITS.find(t => t.id === d.trait) : null) || { n: 'Standardní' };
+        
+        let driverImg = d.img || (d.gender === 'f' ? 'katerina.jpg' : (d.trait === 'racer' ? 'JA.jpg' : (d.trait === 'iron' ? 'BRACHA.jpg' : 'staff_dispatcher.jpg')));
+
+        return `
+        <div class="card hr-driver-card" style="border-left: 4px solid ${energyVal < 30 ? 'var(--red)' : 'var(--green)'}; animation: slideIn .3s ease-out;">
+            <div class="card-body" style="padding: 16px; display:flex; flex-direction:column; gap: 12px;">
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <div style="width:52px; height:52px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.15); flex-shrink:0; background:#000;">
+                        <img src="${driverImg}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='staff_dispatcher.jpg'">
+                    </div>
+                    <div style="flex:1; overflow:hidden;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="margin:0; font-size:16px; color:#fff;">${d.name}</h3>
+                            <span class="driver-badge badge-lvl">Lvl ${d.level}</span>
+                        </div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                            Vlastnost: <b style="color:var(--orange);">${traitObj.n}</b>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="font-size:11.5px; color:#94a3b8; font-style:italic; background:rgba(0,0,0,0.25); padding:6px 10px; border-radius:6px; border-left:2px solid rgba(255,255,255,0.1);">
+                    "${d.bio || 'Zkušený řidič připravený na jakoukoliv trasu.'}"
+                </div>
+
+                <!-- Kompaktní pill bary: Energie & Morálka -->
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    <div class="stat-pill-item">
+                        <div class="pill-title-row">
+                            <span class="pill-label">⚡ ENERGIE</span>
+                            <span class="pill-val" style="color:${energyVal > 50 ? 'var(--green)' : 'var(--red)'};">${energyVal}%</span>
+                        </div>
+                        <div class="pill-track">
+                            <div class="pill-fill ${energyVal > 50 ? 'fill-energy' : 'fill-danger'}" style="width:${energyVal}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-pill-item">
+                        <div class="pill-title-row">
+                            <span class="pill-label">😊 MORÁLKA</span>
+                            <span class="pill-val">${moraleVal}%</span>
+                        </div>
+                        <div class="pill-track">
+                            <div class="pill-fill fill-morale" style="width:${moraleVal}%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="font-size:11px; display:flex; flex-wrap:wrap; gap:4px; margin-top:auto;">
+                    ${d.lic.map(l => '<span class="lic-badge">' + ((typeof LICENSES !== 'undefined' ? LICENSES.find(x => x.id === l)?.n : l) || l) + '</span>').join('')}
+                </div>
+
+                <div style="display:flex; gap:6px; margin-top:8px;">
+                    <button class="vcard-btn vcard-btn-coffee" style="flex:1; padding:6px;" onclick="giveCoffee(${d.id})">☕ KÁVA (5k)</button>
+                    <button class="vcard-btn vcard-btn-sleep" style="flex:1; padding:6px;" onclick="forceRest(${d.id})">💤 SPÁT</button>
+                    <button class="vcard-btn vcard-btn-cancel" style="padding:6px 10px;" onclick="fireDriver(${d.id})" title="Propustit řidiče">✖</button>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
 }
 
 function hireNewDriver() {
@@ -8777,7 +9295,7 @@ function switchTab(tabId, btn) {
     else if (tabId === 'hr') { renderHR(); }
     else if (tabId === 'gas') { renderGasNetwork(); }
     else if (tabId === 'competition') { renderCompetition(); renderChallenges(); renderFactions(); }
-    else if (tabId === 'bank') { drawMarketChart(); drawFuelChart(); renderTermDeposits(); renderInsurance(); }
+    else if (tabId === 'bank') { renderBank(); drawMarketChart(); drawFuelChart(); }
     else if (tabId === 'overseas') { renderOverseas(); }
     else if (tabId === 'achievements') { renderAchievements(); }
     else if (tabId === 'multiplayer') { renderMultiplayer(); }
@@ -9280,6 +9798,11 @@ function runWorldSimulation(days = 30, options = {}) {
                 telemetry.events.repairsMade++;
             }
 
+            // Pokud má hráč u tohoto vozidla vypnutý Auto-Dispečink, ignorovat ho!
+            if (v.autoDispatch === false) {
+                return;
+            }
+
             // Zajištění řidiče pro vozidlo (Auto-Pairing)
             let assignedDriver = v.driverId ? state.drivers.find(x => x.id == v.driverId) : null;
             if (!assignedDriver) {
@@ -9366,6 +9889,8 @@ function runWorldSimulation(days = 30, options = {}) {
                 telemetry.events.jobsCompleted++;
             }
 
+            if (s.autoDispatch === false) return;
+
             if (!s.job && (!s.queue || s.queue.length === 0)) {
                 const offerIndex = state.offers.findIndex(o => o.type === 'ship' && getEligibility(s, o).eligible);
                 if (offerIndex !== -1) {
@@ -9384,6 +9909,8 @@ function runWorldSimulation(days = 30, options = {}) {
                 telemetry.events.jobsCompleted++;
             }
 
+            if (p.autoDispatch === false) return;
+
             if (!p.job && (!p.queue || p.queue.length === 0)) {
                 const offerIndex = state.offers.findIndex(o => o.type === 'plane' && getEligibility(p, o).eligible);
                 if (offerIndex !== -1) {
@@ -9395,9 +9922,11 @@ function runWorldSimulation(days = 30, options = {}) {
             }
         });
 
-        // Regenerovat nabídky pokud je jich málo
+        // Regenerovat nabídky pouze pokud máme alespoň 5 000 Kč rezervu
         if (state.offers.length < 12) {
-            genOffers(true);
+            if (state.money >= 5000) {
+                genOffers(true);
+            }
         }
     }
 

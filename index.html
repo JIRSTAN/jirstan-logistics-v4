@@ -33,58 +33,92 @@
 <!-- SIDEBAR -->
 <div class="sidebar">
   <div class="brand">
-    <img src="logo_jirstan.png" class="brand-logo" onerror="this.style.display='none'">
-    <h1>JIRSTAN</h1>
-    <div class="brand-ver">OS V64.5 // DISPEČINK</div>
+    <div class="brand-terminal-badge"><span class="pulse-dot"></span> TERMINAL ONLINE</div>
+    <div class="brand-title">
+      <span class="brand-name">JIRSTAN</span>
+      <span class="brand-light">LOGISTICS</span>
+      <span class="brand-badge">OS v65</span>
+    </div>
   </div>
-  <nav>
-    <button class="nav-btn active" onclick="switchTab('overview', this)">📊 PŘEHLED</button>
-    <button class="nav-btn" onclick="switchTab('dispatch', this)">📟 DISPEČINK</button>
-    <button class="nav-btn" style="color:var(--cyan)" onclick="switchTab('tower', this)">🏢 JIRSTAN TOWER & HQ</button>
-    <button class="nav-btn" onclick="switchTab('fleet', this)">🚛 FLOTILA</button>
-    <button class="nav-btn" onclick="switchTab('overseas', this)" style="color:var(--cyan)">🌍 ZÁMOŘSKÁ DIVIZE</button>
-    <button class="nav-btn" onclick="switchTab('buses', this)" style="color:var(--green)">🚌 OSOBNÍ DOPRAVA</button>
-    <button class="nav-btn" onclick="switchTab('carwash', this)" style="color:var(--teal)">🧽 AUTOMYČKA</button>
-    <button class="nav-btn" onclick="switchTab('trailers', this)" style="color:var(--gold)">🔗 LOGISTIKA</button>
-    <button class="nav-btn" onclick="switchTab('auction', this)">📦 BURZA & SMLOUVY</button>
-    <button class="nav-btn" onclick="switchTab('factions', this)" style="color:var(--pink); display:none">🏙️ KORPORACE</button>
-    <button class="nav-btn" onclick="switchTab('machines', this)" style="color:var(--orange)">🏗️ TĚŽBA & SERVERY</button>
-    <button class="nav-btn" onclick="switchTab('workshop', this)" style="color:var(--purple)">🔧 DÍLNA</button>
-    <button class="nav-btn" onclick="switchTab('dealer', this)">💰 AUTOSALON</button>
-    <button class="nav-btn" onclick="switchTab('bazaar', this)">🚗 AUTOBAZAR</button>
-    <button class="nav-btn" onclick="switchTab('warehouse', this)">📦 VELKOSKLAD</button>
-    <button class="nav-btn" onclick="switchTab('gas', this)">⛽ BENZÍNKY</button>
-    <button class="nav-btn" onclick="switchTab('tech', this)" style="color:var(--blue)">🔬 VÝZKUM</button>
-    <button class="nav-btn" onclick="switchTab('achievements', this)" style="color:var(--gold)">🏆 ÚSPĚCHY</button>
-    <button class="nav-btn" onclick="switchTab('multiplayer', this)" style="color:var(--blue)">🌐 MULTIPLAYER</button>
-    <button class="nav-btn" onclick="switchTab('stats', this)" style="color:var(--green)">📈 STATISTIKY</button>
-    <button class="nav-btn" onclick="switchTab('hr', this)">👥 PERSONÁL</button>
-    <button class="nav-btn" onclick="switchTab('competition', this)" style="color:var(--red)">⚔️ TRH A RIVALOVÉ</button>
-    <button class="nav-btn" onclick="switchTab('bank', this)">🏦 FINANCE <span style="font-size:9px; background:var(--blue); color:white; padding:2px 4px; border-radius:4px; margin-left:4px">POJIŠTĚNÍ</span></button>
+  
+  <nav class="sidebar-nav">
+    <!-- OPERATIVA -->
+    <div class="nav-category">
+      <div class="nav-category-title">OPERATIVA</div>
+      <button class="nav-btn active" onclick="switchTab('overview', this)"><span class="nav-icon">📊</span> PŘEHLED</button>
+      <button class="nav-btn" onclick="switchTab('dispatch', this)"><span class="nav-icon">📟</span> DISPEČINK</button>
+      <button class="nav-btn" onclick="switchTab('fleet', this)"><span class="nav-icon">🚛</span> FLOTILA</button>
+      <button class="nav-btn" onclick="switchTab('auction', this)"><span class="nav-icon">📦</span> BURZA & SMLOUVY</button>
+      <button class="nav-btn" onclick="switchTab('trailers', this)"><span class="nav-icon">🔗</span> NÁVĚSY & LOGISTIKA</button>
+    </div>
+
+    <!-- MANAGEMENT -->
+    <div class="nav-category">
+      <div class="nav-category-title">MANAGEMENT</div>
+      <button class="nav-btn" onclick="switchTab('hr', this)"><span class="nav-icon">👥</span> PERSONÁL</button>
+      <button class="nav-btn" onclick="switchTab('bank', this)"><span class="nav-icon">🏦</span> FINANCE & BANKA</button>
+      <button class="nav-btn" onclick="switchTab('carwash', this)"><span class="nav-icon">🧽</span> AUTOMYČKA</button>
+      <button class="nav-btn" onclick="switchTab('warehouse', this)"><span class="nav-icon">📦</span> VELKOSKLAD</button>
+      <button class="nav-btn" onclick="switchTab('workshop', this)"><span class="nav-icon">🔧</span> DÍLNA & SERVIS</button>
+      <button class="nav-btn" onclick="switchTab('bazaar', this)"><span class="nav-icon">🚗</span> AUTOBAZAR</button>
+      <button class="nav-btn" onclick="switchTab('dealer', this)"><span class="nav-icon">💰</span> AUTOSALON</button>
+      <button class="nav-btn" onclick="switchTab('stats', this)"><span class="nav-icon">📈</span> STATISTIKY</button>
+    </div>
+
+    <!-- EXPANZE (ENDGAME) -->
+    <div class="nav-category">
+      <div class="nav-category-title">EXPANZE (ENDGAME)</div>
+      <button class="nav-btn" onclick="switchTab('tower', this)" style="color:var(--cyan)"><span class="nav-icon">🏢</span> JIRSTAN TOWER & HQ</button>
+      <button class="nav-btn" onclick="switchTab('overseas', this)" style="color:var(--cyan)"><span class="nav-icon">🌍</span> ZÁMOŘSKÁ DIVIZE</button>
+      <button class="nav-btn" onclick="switchTab('buses', this)" style="color:var(--green)"><span class="nav-icon">🚌</span> OSOBNÍ DOPRAVA</button>
+      <button class="nav-btn" onclick="switchTab('gas', this)" style="color:var(--gold)"><span class="nav-icon">⛽</span> SÍŤ BENZÍNEK</button>
+      <button class="nav-btn" onclick="switchTab('machines', this)" style="color:var(--orange)"><span class="nav-icon">🏗️</span> TĚŽBA & SERVERY</button>
+      <button class="nav-btn" onclick="switchTab('competition', this)" style="color:var(--red)"><span class="nav-icon">⚔️</span> TRH A RIVALOVÉ</button>
+      <button class="nav-btn" onclick="switchTab('tech', this)" style="color:var(--blue)"><span class="nav-icon">🔬</span> VÝZKUM & TECH</button>
+      <button class="nav-btn" onclick="switchTab('achievements', this)" style="color:var(--gold)"><span class="nav-icon">🏆</span> ÚSPĚCHY</button>
+      <button class="nav-btn" onclick="switchTab('multiplayer', this)" style="color:var(--blue)"><span class="nav-icon">🌐</span> MULTIPLAYER</button>
+    </div>
   </nav>
-  <div style="margin-top:auto; padding-top:20px; border-top:1px solid var(--border-light)">
-    <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px; font-family:'Rajdhani'; letter-spacing:1.5px; font-weight:600">STATUS KANCELÁŘE</div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; font-weight:500"><span style="color:var(--text-muted)">Dispečer:</span><span id="st-disp" style="color:#555">NE</span></div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; font-weight:500"><span style="color:var(--text-muted)">Mechanik:</span><span id="st-mech" style="color:#555">NE</span></div>
-    <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:500"><span style="color:var(--text-muted)">Kateřina:</span><span id="st-kat" style="color:#555">NE</span></div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-title">STATUS KANCELÁŘE</div>
+    <div class="status-row"><span style="color:var(--text-muted)">Dispečer:</span><span id="st-disp" style="color:#555">NE</span></div>
+    <div class="status-row"><span style="color:var(--text-muted)">Mechanik:</span><span id="st-mech" style="color:#555">NE</span></div>
+    <div class="status-row"><span style="color:var(--text-muted)">Kateřina:</span><span id="st-kat" style="color:#555">NE</span></div>
   </div>
 </div>
 
 <!-- MAIN -->
 <div class="main">
   <div class="top-bar">
-    <div class="top-stat-group">
-      <div class="top-stat-item"><div class="top-stat-label">FIREMNÍ ÚČET</div><div class="money-display"><span id="ui-money">0</span> <span style="font-size:18px; color:white; text-shadow:none">Kč</span></div></div>
-      <div class="top-stat-item"><div class="top-stat-label">POČASÍ</div><div class="top-val" id="ui-weather">☀️ Slunečno</div></div>
-      <div class="top-stat-item"><div class="top-stat-label">CENA NAFTY</div><div class="top-val" style="color:var(--red)"><span id="ui-fuel-price">0</span> Kč/l</div></div>
-      <div class="top-stat-item"><div class="top-stat-label">SYSTÉMOVÝ ČAS</div><div class="top-val">Den <span id="ui-day">1</span> &nbsp;<span id="ui-time" style="color:var(--orange)">08:00</span></div></div>
-      <div class="top-stat-item"><div class="top-stat-label">REPUTACE</div><div class="top-val" style="color:var(--purple)"><span id="ui-rep">100</span>%</div></div>
+    <div class="hud-stats-container">
+      <div class="hud-stat-box hud-stat-primary">
+        <div class="hud-stat-header"><span class="hud-stat-icon">💰</span> FIREMNÍ POKLADNA</div>
+        <div class="hud-stat-value money-glow"><span id="ui-money">0</span> <span class="currency-tag">Kč</span></div>
+      </div>
+      <div class="hud-stat-box">
+        <div class="hud-stat-header"><span class="hud-stat-icon">⛽</span> CENA NAFTY</div>
+        <div class="hud-stat-value fuel-val"><span id="ui-fuel-price">0</span> <span class="hud-unit">Kč/l</span></div>
+      </div>
+      <div class="hud-stat-box">
+        <div class="hud-stat-header"><span class="hud-stat-icon">⏱️</span> SYSTÉMOVÝ ČAS</div>
+        <div class="hud-stat-value time-val"><span class="day-tag">Den <span id="ui-day">1</span></span> <span class="time-clock" id="ui-time">08:00</span></div>
+      </div>
+      <div class="hud-stat-box">
+        <div class="hud-stat-header"><span class="hud-stat-icon">⭐</span> REPUTACE FIRMY</div>
+        <div class="hud-stat-value rep-val"><span id="ui-rep">100</span><span class="hud-unit">%</span></div>
+      </div>
+      <div class="hud-stat-box">
+        <div class="hud-stat-header"><span class="hud-stat-icon">☀️</span> METEO & POČASÍ</div>
+        <div class="hud-stat-value weather-val" id="ui-weather">☀️ Slunečno</div>
+      </div>
     </div>
-    <div style="display:flex; gap:10px">
-      <button class="btn btn-green btn-sm" onclick="manualRefresh()">🔄 REFRESH</button>
-      <button class="btn btn-blue btn-sm" onclick="skipTime(1)">⏩ +1h</button>
-      <button class="btn btn-orange btn-sm" onclick="openSaveManager()">💾 ULOŽIT</button>
-      <button class="btn btn-red btn-sm" style="background:transparent; border:1px solid var(--red); color:var(--red); box-shadow:none" onclick="resetGame()">RESET</button>
+    
+    <div class="hud-actions-container">
+      <button class="hud-btn hud-btn-default" onclick="manualRefresh()" title="Obnovit data"><span style="font-size:13px">🔄</span> REFRESH</button>
+      <button class="hud-btn hud-btn-primary-blue" onclick="skipTime(1)" title="Posunout čas o 1 hodinu"><span style="font-size:13px">⏩</span> +1H</button>
+      <button class="hud-btn hud-btn-primary-green" onclick="openSaveManager()" title="Uložit stav hry"><span style="font-size:13px">💾</span> ULOŽIT</button>
+      <button class="hud-btn hud-btn-danger-subtle" onclick="resetGame()" title="Resetovat hru">RESET</button>
     </div>
   </div>
 
@@ -96,25 +130,15 @@
       <span id="jirstan-pressure-timer" style="font-size:12px; background:var(--red); color:white; padding:2px 8px; border-radius:4px">ZBYVÁ: 3 DNY</span>
     </div>
 
-    <!-- OVERVIEW -->
+    <!-- OVERVIEW (GLASSMORPHISM CARDS) -->
     <div id="tab-overview" class="tab-pane active">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-        <h2 style="margin:0; color:var(--orange)">📋 DISPEČERSKÝ PŘEHLED</h2>
+        <h2 style="margin:0; color:var(--orange)">📋 DISPEČERSKÝ PŘEHLED VOZIDEL</h2>
       </div>
-      <table>
-        <thead>
-          <tr><th>Vozidlo / Typ</th><th>Přiřazený Řidič</th><th>Status Trasy & Fronta</th><th>Nádrž</th><th>Energie</th><th>Morálka</th><th>Rychlé Akce</th></tr>
-        </thead>
-        <tbody id="overview-body"></tbody>
-      </table>
+      <div id="overview-body" class="overview-cards-list"></div>
       
-      <h2 style="margin:40px 0 20px 0; color:var(--cyan)">🚢 LETECKÁ A NÁMOŘNÍ DOPRAVA (ZÁMOŘÍ)</h2>
-      <table>
-        <thead>
-          <tr><th>Stroj / Typ</th><th>Posádka</th><th>Status Trasy</th><th>Palivo</th><th>Stav</th><th>-</th><th>Akce</th></tr>
-        </thead>
-        <tbody id="overview-overseas-body"></tbody>
-      </table>
+      <h2 style="margin:40px 0 20px 0; color:var(--cyan)">🚢 ZÁMOŘSKÁ A LETECKÁ FLOTILA</h2>
+      <div id="overview-overseas-body" class="overview-cards-list"></div>
     </div>
 
     <!-- DISPATCH -->
@@ -500,38 +524,86 @@
 
     <!-- HR -->
     <div id="tab-hr" class="tab-pane">
-      <h2>⭐ ZAKLADATELÉ & VEDENÍ</h2>
-      <div class="founders-row">
-        <div class="founder-card">
-            <img src="JA.jpg" class="founder-img" style="height: 160px; object-fit: cover; border-bottom: 2px solid var(--orange);" onerror="this.src=DEFAULT_CEO_SILHOUETTE">
-            <div class="card-body">
-                <h2 style="margin:0; color:var(--orange)">STANISLAV STAROSTA</h2>
-                <b style="color:var(--text-muted); font-size:12px; letter-spacing:1px">CEO & MAJITEL</b>
-                <p style="font-style:italic; font-size:13px; color:#888; margin-top:12px">Hlavní vizionář a stratég Jirstan Logistics.</p>
+      
+      <!-- SEKCE A: VEDENÍ FIRMY (VIP KARTY MANAGEMENTU) -->
+      <div class="hr-section-header">
+        <h2 style="color:var(--gold); margin:0;">👑 VEDENÍ FIRMY (EXECUTIVE BOARD)</h2>
+        <span class="hr-section-subtitle">Klíčový management a zakladatelé řídící celou korporaci Jirstan Logistics.</span>
+      </div>
+
+      <div class="vip-management-grid">
+        <!-- 1. STANISLAV STAROSTA (CEO) -->
+        <div class="vip-executive-card vip-gold">
+          <div class="vip-img-wrap">
+            <img src="JA.jpg" class="vip-img" alt="Stanislav Starosta" onerror="this.src='staff_dispatcher.jpg'">
+            <span class="vip-badge badge-gold">CEO & ZAKLADATEL</span>
+          </div>
+          <div class="vip-card-body">
+            <h3 class="vip-name">Stanislav Starosta</h3>
+            <div class="vip-role">CEO & Zakladatel</div>
+            <p class="vip-bio">Hlavní vizionář a stratég Jirstan Logistics.</p>
+            <div class="vip-stats-row">
+              <span class="vip-stat-pill">⭐ Vize: 100%</span>
+              <span class="vip-stat-pill">🌐 Expanze: Aktivní</span>
             </div>
+          </div>
         </div>
-        <div class="founder-card">
-            <img src="BRACHA.jpg" class="founder-img" style="height: 160px; object-fit: cover; border-bottom: 2px solid var(--blue);" onerror="this.src=DEFAULT_CTO_SILHOUETTE">
-            <div class="card-body">
-                <h2 style="margin:0; color:var(--blue)">JIŘÍ ČEČÁK</h2>
-                <b style="color:var(--text-muted); font-size:12px; letter-spacing:1px">CTO & HLAVNÍ TECHNIK</b>
-                <p style="font-style:italic; font-size:13px; color:#888; margin-top:12px">Technický génius starající se o vozový park a nově i o leteckou flotilu.</p>
+
+        <!-- 2. JIŘÍ ČEČÁK (COO) -->
+        <div class="vip-executive-card vip-cyan">
+          <div class="vip-img-wrap">
+            <img src="BRACHA.jpg" class="vip-img" alt="Jiří Čečák" onerror="this.src='staff_dispatcher.jpg'">
+            <span class="vip-badge badge-cyan">COO & SPOLUZAKLADATEL</span>
+          </div>
+          <div class="vip-card-body">
+            <h3 class="vip-name">Jiří Čečák</h3>
+            <div class="vip-role">COO & Spoluzakladatel</div>
+            <p class="vip-bio">Technický a operativní ředitel flotily.</p>
+            <div class="vip-stats-row">
+              <span class="vip-stat-pill">🔧 Provoz: 100%</span>
+              <span class="vip-stat-pill">⚡ Výkon: Max</span>
             </div>
+          </div>
+        </div>
+
+        <!-- 3. KATEŘINA FUTEROVÁ (CFO) -->
+        <div class="vip-executive-card vip-pink">
+          <div class="vip-img-wrap">
+            <img src="katerina.jpg" class="vip-img" alt="Kateřina Futerová" onerror="this.src='staff_dispatcher.jpg'">
+            <span class="vip-badge badge-pink">CFO & HLAVNÍ ÚČETNÍ</span>
+          </div>
+          <div class="vip-card-body">
+            <h3 class="vip-name">Kateřina Futerová</h3>
+            <div class="vip-role">CFO & Hlavní účetní</div>
+            <p class="vip-bio">Železná pěst firemních financí, přítelkyně CEO a bráchova oblíbená teta.</p>
+            <div class="vip-stats-row">
+              <span class="vip-stat-pill">📈 Cashflow: +1.5%</span>
+              <span class="vip-stat-pill">🛡️ Audit: 100%</span>
+            </div>
+          </div>
         </div>
       </div>
-      <h3 style="margin-top:40px; border-bottom:1px solid var(--border-light); padding-bottom:10px">🏢 MANAŽEŘI KANCELÁŘE</h3>
-      <p style="color:var(--text-muted); font-size:13px; margin-bottom:20px">Udržuj platné smlouvy, jinak ztratíš jejich silné bonusy a automatizaci.</p>
+
+      <!-- KANCELÁŘŠTÍ MANAŽEŘI (DISPEČER, MECHANIK, ÚČETNÍ SMLOUVY) -->
+      <div class="hr-section-header" style="margin-top: 40px;">
+        <h3 style="color:var(--text-main); margin:0;">🏢 SPECIALIZOVANÍ MANAŽEŘI KANCELÁŘE</h3>
+        <span class="hr-section-subtitle">Udržuj platné smlouvy, jinak ztratíš jejich silné bonusy a automatizaci.</span>
+      </div>
       <div class="grid" id="staff-hire-grid" style="margin-bottom:40px; grid-template-columns:1fr 1fr"></div>
       
-      <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid var(--border-light); padding-bottom:10px; margin-bottom:20px">
-        <h3 style="margin:0">👥 ŘIDIČI KAMIONŮ A DODÁVEK & LICENCE</h3>
+      <!-- SEKCE B: ŘIDIČI A ZAMĚSTNANCI -->
+      <div class="hr-section-header" style="margin-top: 40px; display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>
+          <h2 style="color:var(--blue); margin:0;">👥 ŘIDIČI FLOTILY A ZAMĚSTNANCI</h2>
+          <span class="hr-section-subtitle">Aktivní posádka vozidel, jejich kondice, morálka a profesní licence.</span>
+        </div>
         <div style="display:flex; gap:10px">
           <button class="btn btn-green btn-sm" onclick="hireNewDriver()">➕ NAJMOUT ŘIDIČE</button>
           <button class="btn btn-teal btn-sm" onclick="openTrainingCenter()">🎓 TRÉNINKOVÉ CENTRUM</button>
           <button class="btn btn-cyan btn-sm" onclick="openMoraleCenter()">😊 CENTRUM POHODY</button>
         </div>
       </div>
-      <div class="grid" id="hr-grid"></div>
+      <div class="grid" id="hr-grid" style="grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:18px;"></div>
     </div>
 
     <!-- COMPETITION -->
@@ -571,6 +643,10 @@
         <img src="billboard.jpg" onerror="this.style.display='none'">
         <div class="banner-overlay"><h2>FINANCE, TRH A MARKETING</h2></div>
       </div>
+
+      <!-- Lichvář Debt Banner (If active) -->
+      <div id="bank-shark-banner" style="display:none; margin-bottom:20px;"></div>
+
       <div class="grid" style="grid-template-columns:1fr 1fr 1fr 1fr; gap:20px">
         
         <!-- Debt -->
@@ -698,13 +774,16 @@
 
   </div><!-- /content -->
 
-  <!-- BOTTOM TICKER -->
+  <!-- BOTTOM LIVE FEED (COMPACT STATIC 3-LINE PANEL) -->
   <div id="ticker-bar">
-    <div class="ticker-track" id="ticker-track">
-      <span class="ticker-item info">🌐 JIRSTAN OS V4.0 ONLINE — GLOBÁLNÍ EXPANZE AKTIVNÍ: LODNÍ A LETECKÁ PŘEPRAVA</span>
-      <span class="ticker-item success">✅ UPDATE FLOTILY: Nové mezinárodní destinace přidány do satelitního systému.</span>
-      <span class="ticker-item warning">📊 Přístavní cla v Americe mohou nepatrně zpozdit dodávky.</span>
-      <span class="ticker-item danger">⚠️ OZNÁMENÍ: Letecké palivo je drahé. Plánuj lety strategicky!</span>
+    <div class="livefeed-header">
+      <span class="livefeed-indicator"></span>
+      <span class="livefeed-title">LIVE FEED</span>
+    </div>
+    <div class="livefeed-container" id="ticker-track">
+      <div class="ticker-item info"><span class="ticker-time">[START]</span> <span class="ticker-text">🌐 JIRSTAN OS V65 ONLINE — Systém připraven k provozu.</span></div>
+      <div class="ticker-item success"><span class="ticker-time">[START]</span> <span class="ticker-text">✅ DISPEČINK: Satelitní sledování flotily aktivní.</span></div>
+      <div class="ticker-item steel"><span class="ticker-time">[START]</span> <span class="ticker-text">📊 TRH: Ceny pohonných hmot a zakázek aktualizovány.</span></div>
     </div>
   </div>
 </div><!-- /main -->
